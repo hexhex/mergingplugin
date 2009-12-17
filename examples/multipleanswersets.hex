@@ -1,0 +1,13 @@
+answer(Prog1) :- &hex["
+
+pred1(x, y, z).
+pred1(xx, yy, zz).
+pred2(a, b) v pred2(aa, bb).
+
+",""](Prog1).
+
+answersets(Prog, AS) :- answer(Prog), &answersets[Prog](AS).
+
+pred1(AS, Arg0, Arg1, Arg2) :- answersets(Prog1, AS), &tuples[Prog1, AS](Pred, 3), &arguments[Prog1, AS, Pred](RunningNr, 0, Arg0), &arguments[Prog1, AS, Pred](RunningNr, 1, Arg1), &arguments[Prog1, AS, Pred](RunningNr, 2, Arg2).
+
+pred2(AS, Arg0, Arg1) :- answersets(Prog1, AS), &tuples[Prog1, AS](Pred, 2), &arguments[Prog1, AS, Pred](RunningNr, 0, Arg0), &arguments[Prog1, AS, Pred](RunningNr, 1, Arg1).

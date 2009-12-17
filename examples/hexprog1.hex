@@ -1,0 +1,3 @@
+fact.
+predicateB(y).
+predicateA(X) :- fact, predicateB(X).

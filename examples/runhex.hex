@@ -1,0 +1,1 @@
+answer(X) :- &hex["testpred.",""](X).

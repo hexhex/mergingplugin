@@ -1,0 +1,1 @@
+arguments(Pred, Arg) :- &hexfile["hexprog1.hex",""](Answer), &answersets[Answer](AnswerSet), &tuples[Answer, AnswerSet](Pred, Arity), &arguments[Answer, AnswerSet, Pred](RunningNr, 0, Arg).
