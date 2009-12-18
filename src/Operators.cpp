@@ -46,10 +46,15 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	query.getInterpretation().matchPredicate(predname, opparams);
 	std::vector<HexAnswer*> answers;
 	std::vector<int> answersIndices;
+	answers.resize(opparams.size());
+	answersIndices.resize(opparams.size());
 	for (AtomSet::const_iterator it = opparams.begin(); it != opparams.end(); it++){
-		int answernr = it->getArgument(1).getInt();
-		answers.push_back(&(resultsetCache[answernr].second));
-		answersIndices.push_back(answernr);
+		int answernrpos = it->getArgument(1).getInt();
+		int answernr = it->getArgument(2).getInt();
+		answers[answernrpos] = &(resultsetCache[answernr].second);
+		answersIndices[answernrpos] = answernr;
+		//answers.push_back(&(resultsetCache[answernr].second));
+		//answersIndices.push_back(answernr);
 	}
 
 	// Extract the operator's key-value arguments
@@ -87,7 +92,7 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	if (builtinOperators.find(opname) != builtinOperators.end()){
 		// Built-In operator
 		//std::cout << "CALLING INTERNAL OP";
-		opanswer = builtinOperators["union"]->apply(parameters.size() + 1, answers, parameters);
+		opanswer = builtinOperators["union"]->apply(answersIndices.size(), answers, parameters);
 	}else{
 		// External operator
 		//std::cout << "CALLING EXTERNAL OP";
@@ -109,7 +114,7 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		}
 		// Finally call the operator
 		IOperator* externalOperator = getOperator();
-		opanswer = externalOperator->apply(parameters.size() + 1, answers, parameters);
+		opanswer = externalOperator->apply(answersIndices.size(), answers, parameters);
 	}
 
 	// Put operator's answer into cache
