@@ -5,7 +5,10 @@ noinst_HEADERS = DLVHexProcess.h \
 		 Operators.h \
 		 HexExecution.h \
 		 Operators.h \
-		 InternalTypes.h
+		 InternalTypes.h \
+		 DecisionDiagram.h \
+		 UnionOp.h \
+		 UnfoldOp.h
 
 pkginclude_HEADERS = \
  	PublicTypes.h \

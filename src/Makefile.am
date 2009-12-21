@@ -9,7 +9,7 @@ plugin_LTLIBRARIES = libdlvhexasp.la
 # replace 'plugin' on the left side as above and
 # add all sources of your plugin
 #
-libdlvhexasp_la_SOURCES = ASPPlugin.cpp DLVHexProcess.cpp UnionOp.cpp HexExecution.cpp Operators.cpp InternalTypes.cpp
+libdlvhexasp_la_SOURCES = ASPPlugin.cpp DLVHexProcess.cpp UnionOp.cpp HexExecution.cpp Operators.cpp InternalTypes.cpp DecisionDiagram.cpp UnfoldOp.cpp
 
 #
 # extend compiler flags by CFLAGS of other needed libraries

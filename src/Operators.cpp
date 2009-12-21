@@ -14,6 +14,7 @@
 
 // Built-In Operators
 #include <UnionOp.h>
+#include <UnfoldOp.h>
 
 using namespace dlvhex::asp;
 
@@ -26,12 +27,14 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 
 	// Provide built-In operators
 	builtinOperators["union"] = new UnionOp();
+	builtinOperators["unfold"] = new UnfoldOp();
 }
 
 OperatorAtom::~OperatorAtom()
 {
 	// Delete built-In operators
 	delete builtinOperators["union"];
+	delete builtinOperators["unfold"];
 }
 
 void
@@ -53,8 +56,6 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		int answernr = it->getArgument(2).getInt();
 		answers[answernrpos] = &(resultsetCache[answernr].second);
 		answersIndices[answernrpos] = answernr;
-		//answers.push_back(&(resultsetCache[answernr].second));
-		//answersIndices.push_back(answernr);
 	}
 
 	// Extract the operator's key-value arguments
@@ -92,7 +93,7 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	if (builtinOperators.find(opname) != builtinOperators.end()){
 		// Built-In operator
 		//std::cout << "CALLING INTERNAL OP";
-		opanswer = builtinOperators["union"]->apply(answersIndices.size(), answers, parameters);
+		opanswer = builtinOperators[opname]->apply(answersIndices.size(), answers, parameters);
 	}else{
 		// External operator
 		//std::cout << "CALLING EXTERNAL OP";
