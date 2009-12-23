@@ -90,41 +90,45 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	HexAnswer opanswer;
 
 	// If the operator name matches one of the built-in operators, it is executed
-	if (builtinOperators.find(opname) != builtinOperators.end()){
-		// Built-In operator
-		//std::cout << "CALLING INTERNAL OP";
-		opanswer = builtinOperators[opname]->apply(answersIndices.size(), answers, parameters);
-	}else{
-		// External operator
-		//std::cout << "CALLING EXTERNAL OP";
+	try{
+		if (builtinOperators.find(opname) != builtinOperators.end()){
+			// Built-In operator
+			//std::cout << "CALLING INTERNAL OP";
+			opanswer = builtinOperators[opname]->apply(answersIndices.size(), answers, parameters);
+		}else{
+			// External operator
+			//std::cout << "CALLING EXTERNAL OP";
 
-		// Look for the operator library
-		lt_dlhandle dlHandle = lt_dlopenext(opname.c_str());							// Absolute path
-		if (dlHandle == NULL){
-			for (int i = 0; dlHandle == NULL && i < operatorpaths.size(); i++){
-				dlHandle = lt_dlopenext((operatorpaths[i] + std::string("/") + opname).c_str());	// Prefix path with one search location after the other
+			// Look for the operator library
+			lt_dlhandle dlHandle = lt_dlopenext(opname.c_str());							// Absolute path
+			if (dlHandle == NULL){
+				for (int i = 0; dlHandle == NULL && i < operatorpaths.size(); i++){
+					dlHandle = lt_dlopenext((operatorpaths[i] + std::string("/") + opname).c_str());	// Prefix path with one search location after the other
+				}
 			}
+			// Check if the operator library was found
+			if (dlHandle == 0){
+				throw PluginError((std::string("Operator library \"") + opname + std::string("\" not found")).c_str());
+			}
+			t_getOperator getOperator = (t_getOperator) lt_dlsym(dlHandle, "getOperator");
+			if (getOperator == 0){
+				throw PluginError((std::string("Function getOperator not found in operator library \"") + opname + std::string("\"")).c_str());
+			}
+			// Finally call the operator
+			IOperator* externalOperator = getOperator();
+			opanswer = externalOperator->apply(answersIndices.size(), answers, parameters);
 		}
-		// Check if the operator library was found
-		if (dlHandle == 0){
-			throw PluginError((std::string("Operator library \"") + opname + std::string("\" not found")).c_str());
-		}
-		t_getOperator getOperator = (t_getOperator) lt_dlsym(dlHandle, "getOperator");
-		if (getOperator == 0){
-			throw PluginError((std::string("Function getOperator not found in operator library \"") + opname + std::string("\"")).c_str());
-		}
-		// Finally call the operator
-		IOperator* externalOperator = getOperator();
-		opanswer = externalOperator->apply(answersIndices.size(), answers, parameters);
+
+		// Put operator's answer into cache
+		resultsetCache.push_back(HexAnswerCacheEntry(hc, opanswer));
+
+		// Return answer index
+		Tuple out;
+		out.push_back(Term(resultsetCache.size() - 1));
+		answer.addTuple(out);
+	}catch(IOperator::OperatorException oe){
+		throw PluginError(oe.getMessage());
 	}
-
-	// Put operator's answer into cache
-	resultsetCache.push_back(HexAnswerCacheEntry(hc, opanswer));
-
-	// Return answer index
-	Tuple out;
-	out.push_back(Term(resultsetCache.size() - 1));
-	answer.addTuple(out);
 }
 
 void OperatorAtom::setSearchPaths(std::vector<std::string> paths){
