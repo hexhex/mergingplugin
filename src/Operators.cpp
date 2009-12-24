@@ -15,6 +15,7 @@
 // Built-In Operators
 #include <UnionOp.h>
 #include <UnfoldOp.h>
+#include <MajorityVotingOp.h>
 
 using namespace dlvhex::asp;
 
@@ -28,6 +29,7 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 	// Provide built-In operators
 	builtinOperators["union"] = new UnionOp();
 	builtinOperators["unfold"] = new UnfoldOp();
+	builtinOperators["majorityvoting"] = new MajorityVotingOp();
 }
 
 OperatorAtom::~OperatorAtom()
@@ -35,6 +37,7 @@ OperatorAtom::~OperatorAtom()
 	// Delete built-In operators
 	delete builtinOperators["union"];
 	delete builtinOperators["unfold"];
+	delete builtinOperators["majorityvoting"];
 }
 
 void

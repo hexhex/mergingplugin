@@ -89,6 +89,11 @@ std::string DecisionDiagram::LeafNode::getClassification(){
 	return classification;
 }
 
+
+void DecisionDiagram::LeafNode::setClassification(std::string c){
+	classification = c;
+}
+
 std::string DecisionDiagram::LeafNode::toString() const{
 	return label + std::string("[") + classification + std::string("]");
 }
@@ -308,7 +313,7 @@ DecisionDiagram::Node* DecisionDiagram::addNode(DecisionDiagram::Node* template_
 DecisionDiagram::Edge* DecisionDiagram::addEdge(DecisionDiagram::Node* from, DecisionDiagram::Node* to, DecisionDiagram::Condition c){
 	// Check if both endpoints of the edge are members of this decision diagram
 	if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end()){
-		throw InvalidDecisionDiagram(std::string("Tried to add an edge from \"") + from->getLabel() + std::string("\" to \"") + to->getLabel() + std::string("\". Error Both endpoints of an edge need to be part of the decision diagram before it can be added."));
+		throw InvalidDecisionDiagram(std::string("Tried to add an edge from \"") + from->getLabel() + std::string("\" to \"") + to->getLabel() + std::string("\". Error: Both endpoints of an edge need to be part of the decision diagram before it can be added. ") + (nodes.find(from) == nodes.end() ? from->getLabel() : to->getLabel()) + std::string(" is not a member."));
 	}else{
 		// Create the edge
 		Edge *e = new Edge(from, to, c);
@@ -329,7 +334,7 @@ DecisionDiagram::Edge* DecisionDiagram::addEdge(std::string from, std::string to
 DecisionDiagram::ElseEdge* DecisionDiagram::addElseEdge(DecisionDiagram::Node* from, DecisionDiagram::Node* to){
 	// Check if both endpoints of the edge are members of this decision diagram
 	if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end()){
-		throw InvalidDecisionDiagram(std::string("Tried to add an edge from \"") + from->getLabel() + std::string("\" to \"") + to->getLabel() + std::string("\". Error Both endpoints of an edge need to be part of the decision diagram before it can be added."));
+		throw InvalidDecisionDiagram(std::string("Tried to add an edge from \"") + from->getLabel() + std::string("\" to \"") + to->getLabel() + std::string("\". Error: Both endpoints of an edge need to be part of the decision diagram before it can be added. ") + (nodes.find(from) == nodes.end() ? from->getLabel() : to->getLabel()) + std::string(" is not a member."));
 	}else{
 		// Create the edge
 		ElseEdge *e = new ElseEdge(from, to);
@@ -393,6 +398,33 @@ void DecisionDiagram::removeEdge(DecisionDiagram::Edge* e){
 	delete e;
 }
 
+DecisionDiagram::Node* DecisionDiagram::addDecisionDiagram(DecisionDiagram* dd2){
+	// Check for node label uniqueness
+	std::set<Node*> dd2nodes = dd2->getNodes();
+	for (std::set<Node*>::iterator nodeIt = nodes.begin(); nodeIt != nodes.end(); nodeIt++){
+		for (std::set<Node*>::iterator dd2it = dd2nodes.begin(); dd2it != dd2nodes.end(); dd2it++){
+			if ((*nodeIt)->getLabel() == (*dd2it)->getLabel()) throw DecisionDiagram::InvalidDecisionDiagram(std::string("Tried to union decision diagrams. Node label \"") + (*nodeIt)->getLabel() + std::string("\" is not unique."));
+		}
+	}
+
+	// Merge all nodes and edges
+	Node* root = NULL;
+	std::set<Edge*> dd2edges = dd2->getEdges();
+	for (std::set<Node*>::iterator it = dd2nodes.begin(); it != dd2nodes.end(); it++){
+//std::cout << "ADDING " << (*it)->toString() << std::endl;
+		Node* n = addNode(*it);
+		if ((*it) == dd2->getRoot()){
+			root = n;
+		}
+	}
+	for (std::set<Edge*>::iterator it = dd2edges.begin(); it != dd2edges.end(); it++){
+//std::cout << "ADDING " << (*it)->toString() << std::endl;
+		addEdge(*it);
+	}
+
+	return root;
+}
+
 int DecisionDiagram::nodeCount() const{
 	return nodes.size();
 }
@@ -419,8 +451,99 @@ void DecisionDiagram::setRoot(Node* root){
 	this->root = root;
 }
 
+void DecisionDiagram::useUniqueLabels(DecisionDiagram* dd2){
+
+	//    Check all nodes
+	for (std::set<DecisionDiagram::Node*>::iterator nodeIt = nodes.begin(); nodeIt != nodes.end(); nodeIt++){
+		std::string originalname = (*nodeIt)->getLabel();
+		int appendixctr = 0;
+		bool dupfound = true;
+		while (dupfound){
+			dupfound = false;
+			std::stringstream newname;
+
+			// Compare each of them with all nodes of dd2
+			std::set<DecisionDiagram::Node*> dd2nodes = dd2->getNodes();
+			for (std::set<DecisionDiagram::Node*>::iterator dd2it = dd2nodes.begin(); dd2it != dd2nodes.end(); dd2it++){
+				if ((*nodeIt)->getLabel() == (*dd2it)->getLabel()){
+					appendixctr++;
+
+					// rename node
+					newname << originalname << "_" << appendixctr;
+					(*nodeIt)->setLabel(newname.str());
+
+					// recheck for duplicates until a unique name was found
+					dupfound = true;
+					break;
+				}
+			}
+
+			// This condition is just for the sake of performance enhancement
+			//   if dupfound is true, the final result is already clear and another check is unnecessary
+			//   if appendixctr == 0, the node label was not changes so far. In this case it is unique for sure, since labels are already checked for uniqueness when nodes are inserted.
+			if (!dupfound && appendixctr > 0){
+				//   Compare each of them with all other nodes of this decision diagram
+				for (std::set<DecisionDiagram::Node*>::iterator nodeIt2 = nodes.begin(); nodeIt2 != nodes.end(); nodeIt2++){
+					if ((*nodeIt) != (*nodeIt2) && (*nodeIt)->getLabel() == (*nodeIt2)->getLabel()){
+						appendixctr++;
+
+						// rename node
+						newname << originalname << "_" << appendixctr;
+						(*nodeIt)->setLabel(newname.str());
+
+						// recheck for duplicates until a unique name was found
+						dupfound = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+std::string DecisionDiagram::getUniqueLabel(std::string proposal) const{
+
+	std::string result = proposal;
+	bool dupfound = true;
+	int appendixctr = 0;
+	while (dupfound){
+		dupfound = false;
+		std::stringstream newname;
+
+		// Compare the proposal with all nodes
+		for (std::set<DecisionDiagram::Node*>::iterator it = nodes.begin(); it != nodes.end(); it++){
+			// Duplicate?
+			if ((*it)->getLabel() == result){
+				appendixctr++;
+//std::cout << "!" << std::endl;
+				// rename node
+				newname << proposal << "_" << appendixctr;
+				result = newname.str();
+
+				// recheck for duplicates until a unique name was found
+				dupfound = true;
+				break;
+			}
+		}
+	}
+//std::cout << result << std::endl;
+	return result;
+}
+
 std::set<DecisionDiagram::Node*> DecisionDiagram::getNodes() const{
 	return nodes;
+}
+
+std::set<DecisionDiagram::LeafNode*> DecisionDiagram::getLeafNodes() const{
+	std::set<DecisionDiagram::LeafNode*> leafs;
+	// For all nodes
+	for (std::set<DecisionDiagram::Node*>::iterator it = nodes.begin(); it != nodes.end(); it++){
+		// Check if this is a leaf
+		if (dynamic_cast<DecisionDiagram::LeafNode*>(*it) != NULL){
+			leafs.insert(dynamic_cast<DecisionDiagram::LeafNode*>(*it));
+		}
+	}
+	return leafs;
 }
 
 std::set<DecisionDiagram::Edge*> DecisionDiagram::getEdges() const{

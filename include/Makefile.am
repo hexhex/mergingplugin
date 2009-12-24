@@ -8,7 +8,8 @@ noinst_HEADERS = DLVHexProcess.h \
 		 InternalTypes.h \
 		 DecisionDiagram.h \
 		 UnionOp.h \
-		 UnfoldOp.h
+		 UnfoldOp.h \
+		 MajorityVotingOp.h
 
 pkginclude_HEADERS = \
  	PublicTypes.h \

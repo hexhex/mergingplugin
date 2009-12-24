@@ -1,7 +1,6 @@
 #include <UnfoldOp.h>
 #include <DecisionDiagram.h>
 
-#include <iostream>
 #include <sstream>
 #include <set>
 
@@ -27,6 +26,10 @@ DecisionDiagram UnfoldOp::unfold(DecisionDiagram::Node* root, DecisionDiagram& d
 			DecisionDiagram unfoldedChild = unfold(currentChild, ddin);
 
 			// Avoid duplicate node names
+			unfoldedChild.useUniqueLabels(&ddResult);
+			ddResult.addDecisionDiagram(&unfoldedChild);
+
+/*
 			bool dupfound = false;
 			std::set<DecisionDiagram::Node*> ccNodes = unfoldedChild.getNodes();
 			std::set<DecisionDiagram::Edge*> ccEdges = unfoldedChild.getEdges();
@@ -67,6 +70,7 @@ DecisionDiagram UnfoldOp::unfold(DecisionDiagram::Node* root, DecisionDiagram& d
 			for (std::set<DecisionDiagram::Edge*>::iterator currentChildIt = ccEdges.begin(); currentChildIt != ccEdges.end(); currentChildIt++){
 				ddResult.addEdge(*currentChildIt);
 			}
+*/
 		}
 
 		// Connect the current root node with it's children

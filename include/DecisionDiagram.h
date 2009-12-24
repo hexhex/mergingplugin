@@ -150,6 +150,7 @@ namespace dlvhex{
 			public:
 				virtual ~LeafNode();
 				std::string getClassification();
+				void setClassification(std::string c);
 
 				virtual std::string toString() const;
 			};
@@ -162,6 +163,17 @@ namespace dlvhex{
 
 			/*! \fn DecisionDiagram::LeafNode::~LeafNode()
 			 *  \brief Destructor
+			 */
+
+			/*! \fn std::string DecisionDiagram::LeafNode::getClassification()
+			 *  \brief Returns the classification of this leaf node.
+			 *  \return std::string The classification of this leaf node.
+			 */
+
+			/*! \fn void DecisionDiagram::LeafNode::setClassification(std::string c)
+			 *  \brief Sets a new classification for this leaf node.
+			 *  \param c The new classification
+			 *  \return void
 			 */
 
 			/*! \fn std::string DecisionDiagram::LeafNode::toString()
@@ -368,11 +380,15 @@ namespace dlvhex{
 			ElseEdge* addElseEdge(std::string from, std::string to);
 			Edge* addEdge(Edge* template_);
 			void removeEdge(Edge* e);
+			Node* addDecisionDiagram(DecisionDiagram* dd2);
 
 			void setRoot(Node* root);
+			void useUniqueLabels(DecisionDiagram* dd2);
+			std::string getUniqueLabel(std::string proposal) const;
 
 			// Getter
 			std::set<Node*> getNodes() const;
+			std::set<LeafNode*> getLeafNodes() const;
 			std::set<Edge*> getEdges() const;
 			Node* getRoot() const;
 			Node* getNodeByLabel(std::string label) const;
@@ -504,15 +520,38 @@ namespace dlvhex{
  *  \throws InvalidDecisionDiagram If e is not part of this decision diagram
  */
 
+/*! \fn Node* DecisionDiagram::addDecisionDiagram(DecisionDiagram* dd2)
+ * Unions this decision diagram with dd2.
+ *  \param dd2 A second decision diagram to be added to this one. The caller has to make sure that the node labels of dd2 are distinct from the labels in this diagram.
+ *  \return Node* A pointer to the root node of the added decision diagram within this decision diagram.
+ *  \throws InvalidDecisionDiagram If dd2 and this decision diagram have node labels in common.
+ */
+
 /*! \fn void DecisionDiagram::setRoot(Node* root)
  * Changes the root of this decision diagram.
  *  \param root A pointer to the new root node.
  *  \throws InvalidDecisionDiagram If root is not part of this decision diagram
  */
 
+/*! \fn void DecisionDiagram::useUniqueLabels(DecisionDiagram* dd2)
+ * Modifies the labels of this diagram's nodes s.t. they are unique also within dd2.
+ *  \param dd2 A reference decision diagram. The node's labels will be uique within this decision diagram and within dd2.
+ */
+
+/*! \fn std::string DecisionDiagram::getUniqueLabel(std::string proposal) const
+ * Returns a new node label which is as similar to the proposal as possible, such that it is unique within the decision diagram.
+ *  \param proposal The desired node label. If it is unique, it is returned unchanged. Otherwise, a number will be added such that it becomes unique.
+ *  \param std::string A new unique node label similar or equal to the proposal
+ */
+
 /*! \fn std::set<Node*> DecisionDiagram::getNodes() const
  * Returns a set with the nodes (pointers) of this decision diagram.
  *  \return std::set<Node*> Nodes (pointers) of this decision diagram.
+ */
+
+/*! \fn std::set<LeafNode*> DecisionDiagram::getLeafNodes() const
+ * Returns a set with the leaf nodes (pointers) of this decision diagram.
+ *  \return std::set<LeafNode*> Leaf nodes (pointers) of this decision diagram.
  */
 
 /*! \fn std::set<Edge*> DecisionDiagram::getEdges() const
