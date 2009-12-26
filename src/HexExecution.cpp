@@ -84,6 +84,7 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 	// solve hex program
 	DLVHexProcess proc;
+
 	if (cmdargs.size() > 0) proc.addOption(cmdargs);
 	std::vector<AtomSet> as;
 	BaseASPSolver* solver = proc.createSolver();
