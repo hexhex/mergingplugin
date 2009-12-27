@@ -6,6 +6,39 @@
 
 using namespace dlvhex::asp;
 
+// -------------------- Util --------------------
+/*
+std::string Util::rewrite(std::string rewriterpath, std::string input){
+std::cout << "CALLING" << std::endl;
+	ArbProcess rewriter(rewriterpath);
+	rewriter.spawn();
+
+	std::istream& pi = rewriter.getInput();
+	std::ostream& po = rewriter.getOutput();
+	std::string line;
+
+	// Send program to input rewriter
+	po << input;
+	rewriter.endoffile();
+
+	// Read output from input rewriter and overwrite the input program with modified one
+	std::stringstream routput;
+	while(getline(pi, line)) {
+		routput << line << std::endl;
+	}
+	std::string result = routput.str();
+
+	// On errors throw a PluginError
+	int errcode;
+	if((errcode = rewriter.close()) != 0){
+		throw PluginError(std::string("Error from rewriter \"") + rewriterpath + std::string("\""));
+	}
+
+	return result;
+}
+*/
+
+
 // -------------------- HexAtom --------------------
 
 HexAtom::HexAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
@@ -100,6 +133,7 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	answer.addTuple(out);
 }
 
+
 // -------------------- HexFileAtom --------------------
 
 HexFileAtom::HexFileAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
@@ -149,6 +183,7 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		program = program + line;
 	}
 	inFile.close();
+
 	// parse and assemble hex program (parameter 0)
 	std::stringstream ss(program);
 	Program prog;
@@ -163,15 +198,42 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	BaseASPSolver* solver = proc.createSolver();
 	solver->solve(prog, facts, as);
 
-/*				MORE EFFICIENT BUT DOES NOT WORK YET
+
+//				MORE EFFICIENT BUT DOES NOT WORK YET
+
+/*
+
+	std::cout << "Solving hex program" << std::endl;
+
+
 	// solve hex program
-	DLVHexProcess proc(programpath);
+	DLVProcess proc;
 	Program prog;
 	AtomSet facts;
 	std::vector<AtomSet> as;
+
+
+
+//	Works
+//
+	proc.addOption(programpath);
 	BaseASPSolver* solver = proc.createSolver();
+
+//	Does not work
+//
+//	std::vector<std::string> o;
+//	o.push_back("-silent");
+//	o.push_back(programpath);
+//	ASPFileSolver<DLVresultParserDriver>* solver = new ASPFileSolver<DLVresultParserDriver>(proc, o);
+
+
+
 	solver->solve(prog, facts, as);
+
+	std::cout << "DONE" << std::endl;
+
 */
+
 	// store output (answer sets)
 	int rn = resultsetCache.size();
 	resultsetCache.push_back(HexAnswerCacheEntry(hc, as));

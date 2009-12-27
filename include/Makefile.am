@@ -1,6 +1,7 @@
 AUTOMAKE_OPTIONS = gnu
 
 noinst_HEADERS = DLVHexProcess.h \
+		 ArbProcess.h \
 		 HexExecution.h \
 		 Operators.h \
 		 HexExecution.h \

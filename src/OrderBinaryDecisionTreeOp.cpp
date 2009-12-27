@@ -6,5 +6,5 @@
 
 using namespace dlvhex::asp;
 
-DecisionDiagram OrderBinaryDecisionTreeOp::apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters){
+HexAnswer OrderBinaryDecisionTreeOp::apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters){
 }

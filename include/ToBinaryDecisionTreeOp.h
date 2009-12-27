@@ -18,6 +18,7 @@ namespace dlvhex{
 		 */
 		class ToBinaryDecisionTreeOp : public IOperator{
 		private:
+			void toBinary(DecisionDiagram* dd, DecisionDiagram::Node* root);
 		public:
 			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters);
 		};

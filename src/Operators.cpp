@@ -16,6 +16,10 @@
 #include <UnionOp.h>
 #include <UnfoldOp.h>
 #include <MajorityVotingOp.h>
+#include <ToBinaryDecisionTreeOp.h>
+#include <UserPreferencesOp.h>
+#include <OrderBinaryDecisionTreeOp.h>
+#include <MajorityVotingOp.h>
 
 using namespace dlvhex::asp;
 
@@ -30,6 +34,9 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 	builtinOperators["union"] = new UnionOp();
 	builtinOperators["unfold"] = new UnfoldOp();
 	builtinOperators["majorityvoting"] = new MajorityVotingOp();
+	builtinOperators["tobinarydecisiontree"] = new ToBinaryDecisionTreeOp();
+	builtinOperators["userpreferences"] = new UserPreferencesOp();
+	builtinOperators["orderbinarydecisiontree"] = new OrderBinaryDecisionTreeOp();
 }
 
 OperatorAtom::~OperatorAtom()
@@ -38,6 +45,9 @@ OperatorAtom::~OperatorAtom()
 	delete builtinOperators["union"];
 	delete builtinOperators["unfold"];
 	delete builtinOperators["majorityvoting"];
+	delete builtinOperators["tobinarydecisiontree"];
+	delete builtinOperators["userpreferences"];
+	delete builtinOperators["orderbinarydecisiontree"];
 }
 
 void

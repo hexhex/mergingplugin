@@ -612,6 +612,15 @@ std::vector<DecisionDiagram::Node*> DecisionDiagram::containsCycles() const{
 	return std::vector<Node*>();
 }
 
+bool DecisionDiagram::isTree() const{
+	// Check for all nodes if they have more than one ingoing edges
+	for (std::set<Node*>::iterator it = nodes.begin(); it != nodes.end(); it++){
+		if ((*it)->getInEdgesCount() > 1) return false;
+	}
+	// No such node was found
+	return true;
+}
+
 DecisionDiagram::Node* DecisionDiagram::getNodeByLabel(std::string label) const{
 	for (std::set<Node*>::iterator it = nodes.begin(); it != nodes.end(); it++){
 		if ((*it)->getLabel() == label){

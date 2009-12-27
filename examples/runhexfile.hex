@@ -1,1 +1,2 @@
-answer(X) :- &hex["testpred.",""](X).
+answer(X) :- &hexfile["./examples/hexprog1.hex",""](X).
+as(P, A) :- answer(X), &answersets[X](AS), &tuples[X, AS](P, A).

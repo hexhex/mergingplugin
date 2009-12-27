@@ -18,7 +18,7 @@ namespace dlvhex{
 		 *	DD	... predicate with handles to arbitrary many decision diagrams
 		 *	A	... answer to the operator result
 		 */
-		class MajorityVotingOp : public IOperator{
+		class UserPreferencesOp : public IOperator{
 		public:
 			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters);
 		};

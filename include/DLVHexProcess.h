@@ -2,11 +2,13 @@
 #define __DLVHexProcess_h_
 
 #include <dlvhex/Process.h>
-//#include <dlvhex/ASPSolver.h>
 #include <dlvhex/DLVProcess.h>
-//#include <dlvhex/DLVresultParserDriver.h>
 #include <dlvhex/globals.h>
 #include <dlvhex/PrintVisitor.h>
+
+#include <dlvhex/ASPSolver.h>
+//#include <dlvhex/ASPSolver.tcc>
+#include <dlvhex/DLVresultParserDriver.h>
 
 #include <stdio.h>
 
@@ -36,10 +38,9 @@ public:
 		std::vector<std::string> tmp;
 		tmp.push_back(path());
 		tmp.insert(tmp.end(), argv.begin(), argv.end());
-		// never show state information
 		tmp.push_back("--silent");
+		// never show state information
 		tmp.push_back(fromfile ? filename : "--"); // request stdin as last parameter!
-
 		return tmp;
 	}
 
@@ -48,6 +49,7 @@ public:
 	{
 		setupStreams();
 		proc.open(commandline());
+
 		// workaround: dlvhex crashes on empty input
 		this->getOutput() << "%" << std::endl;
 	}

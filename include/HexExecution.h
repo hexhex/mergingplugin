@@ -6,6 +6,7 @@
 #include <dlvhex/ASPSolver.h>
 #include <dlvhex/HexParserDriver.h>
 #include <stdlib.h>
+#include <string>
 
 namespace dlvhex {
 	namespace asp {

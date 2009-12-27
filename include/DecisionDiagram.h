@@ -398,6 +398,7 @@ namespace dlvhex{
 
 			// Advanced
 			std::vector<Node*> containsCycles() const;
+			bool isTree() const;
 
 			// Output generation
 			AtomSet toAnswerSet() const;
@@ -588,6 +589,11 @@ namespace dlvhex{
 /*! \fn std::vector<Node*> DecisionDiagram::bool containsCycles() const
  * Checks if the decision diagram contains at least one cycle. While most kinds of inconsistencies are automatically prevented while the decision diagram is creates, cycles are not detected on the fly because of performance reasons. This method starts a cycle detection algorithm and returns the result.
  *  \return std::vector<Node*> Will be empty if the decision diagram contains no cycle. Otherwise, the result will be the list of nodes building a cycle.
+ */
+
+/*! \fn bool DecisionDiagram::isTree() const
+ * Checks if this decision diagram is a tree.
+ *  \throws bool True iff this decision diagram is a tree, otherwise false.
  */
 
 /*! \fn AtomSet DecisionDiagram::toAnswerSet() const
