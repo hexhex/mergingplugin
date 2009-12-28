@@ -95,7 +95,7 @@ void DecisionDiagram::LeafNode::setClassification(std::string c){
 }
 
 std::string DecisionDiagram::LeafNode::toString() const{
-	return label + std::string("[") + classification + std::string("]");
+	return std::string("\"") + label + std::string("[") + classification + std::string("]") + std::string("\"");
 }
 
 
@@ -680,6 +680,27 @@ AtomSet DecisionDiagram::toAnswerSet() const{
 		as.insert(AtomPtr(new Atom("root", arg)));
 	}
 	return as;
+}
+
+std::string DecisionDiagram::toDotFileString() const{
+
+	// Create a list of nodes
+	std::stringstream output;
+	output << "digraph {" << std::endl;
+
+	// Create list of edges (nodes are generated implicitly)
+	for (std::set<Edge*>::iterator it = edges.begin(); it != edges.end(); it++){
+		Edge* e = *it;
+		if (dynamic_cast<ElseEdge*>(e) != NULL){
+			output << "     " << e->getFrom()->toString() << " -> " << e->getTo()->toString() << ";" << std::endl;
+		}else{
+			output << "     " << e->getFrom()->toString() << " -> " << e->getTo()->toString() << " [label=\"" << e->getCondition().toString() << "\"]" << ";" << std::endl;
+		}
+	}
+
+	output << "}" << std::endl;
+
+	return output.str();
 }
 
 std::string DecisionDiagram::toString() const{

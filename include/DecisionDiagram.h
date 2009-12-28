@@ -402,6 +402,7 @@ namespace dlvhex{
 
 			// Output generation
 			AtomSet toAnswerSet() const;
+			std::string toDotFileString() const;
 			std::string toString() const;
 		};
 	}
@@ -599,6 +600,11 @@ namespace dlvhex{
 /*! \fn AtomSet DecisionDiagram::toAnswerSet() const
  * Creates an answer set representing this decision diagram with the predicates root(Name), innernode(Label), leafnode(Label, Classification), edge(Node1, Node2, Operand1, comparisonOperator, Operand2) and elseedge(Node1, Node2).
  *  \return AtomSet An answer set representing this decision diagram with the predicates root(Name), innernode(Label), leafnode(Label, Classification), edge(Node1, Node2, Operand1, comparisonOperator, Operand2) and elseedge(Node1, Node2).
+ */
+
+/*! \fn std::string DecisionDiagram::toDotFileString() const
+ * Returns a string representation of this decision diagram in dot file format.
+ *  \return A string representation of this decision diagram in dot file format.
  */
 
 /*! \fn std::string DecisionDiagram::toString() const
