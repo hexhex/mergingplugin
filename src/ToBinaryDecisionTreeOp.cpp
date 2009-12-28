@@ -22,6 +22,8 @@ void ToBinaryDecisionTreeOp::toBinary(DecisionDiagram* dd, DecisionDiagram::Node
 			// Just take the first conditional edge as it is
 			if (dynamic_cast<DecisionDiagram::ElseEdge*>(*it) == NULL && firstOutEdge){
 				firstOutEdge = false;
+				// Convert the sub decision diagram into a binary one
+				toBinary(dd, (*it)->getTo());
 			}else{
 				// All other edges are redirected to the intermediate node
 				DecisionDiagram::Node *currentSubNode = (*it)->getTo();
