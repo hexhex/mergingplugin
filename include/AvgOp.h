@@ -17,7 +17,10 @@ namespace dlvhex{
 		 *	DD	... predicate with handles to exactly 2 answers containing one ordered binary decision tree each
 		 *	A	... answer to the operator result
 		 */
-		class MajorityVotingOp : public IOperator{
+		class AvgOp : public IOperator{
+			std::string unquote(std::string str);
+			DecisionDiagram::Condition getCondition(DecisionDiagram::Node* node);
+			DecisionDiagram::Node* average(DecisionDiagram* result, DecisionDiagram* dd1, DecisionDiagram::Node* n1, DecisionDiagram* dd2, DecisionDiagram::Node* n2);
 		public:
 			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters);
 		};

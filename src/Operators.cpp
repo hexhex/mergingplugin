@@ -20,6 +20,7 @@
 #include <UserPreferencesOp.h>
 #include <OrderBinaryDecisionTreeOp.h>
 #include <MajorityVotingOp.h>
+#include <AvgOp.h>
 
 using namespace dlvhex::asp;
 
@@ -37,6 +38,7 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 	builtinOperators["tobinarydecisiontree"] = new ToBinaryDecisionTreeOp();
 	builtinOperators["userpreferences"] = new UserPreferencesOp();
 	builtinOperators["orderbinarydecisiontree"] = new OrderBinaryDecisionTreeOp();
+	builtinOperators["average"] = new AvgOp();
 }
 
 OperatorAtom::~OperatorAtom()
@@ -48,6 +50,7 @@ OperatorAtom::~OperatorAtom()
 	delete builtinOperators["tobinarydecisiontree"];
 	delete builtinOperators["userpreferences"];
 	delete builtinOperators["orderbinarydecisiontree"];
+	delete builtinOperators["average"];
 }
 
 void

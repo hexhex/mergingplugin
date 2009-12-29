@@ -18,6 +18,9 @@ namespace dlvhex{
 		 */
 		class OrderBinaryDecisionTreeOp : public IOperator{
 		private:
+			std::string getCompareAttribute(DecisionDiagram::Node* node);
+			DecisionDiagram::Node* sink(DecisionDiagram* dd, DecisionDiagram::Node* root);
+			DecisionDiagram::Node* order(DecisionDiagram* dd, DecisionDiagram::Node* root);
 		public:
 			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters);
 		};

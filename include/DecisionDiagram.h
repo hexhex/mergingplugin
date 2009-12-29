@@ -66,6 +66,9 @@ namespace dlvhex{
 				int getEdgesCount() const;
 				int getInEdgesCount() const;
 				int getOutEdgesCount() const;
+				Node* getChild(int index);
+				int getChildCount() const;
+				Edge* getOutEdge(int index);
 
 				virtual std::string toString() const;
 			};
@@ -79,24 +82,24 @@ namespace dlvhex{
 			 *  \brief Destructor
 			 */
 
-			/*! \fn void DecisionDiagram::LeafNode::addEdge(Edge* e)
+			/*! \fn void DecisionDiagram::Node::addEdge(Edge* e)
 			 *  \brief Adds a new edge to this node. Note that the edge must be inzident with this node, otherwise an InvalidDecisionDiagram instance will be thrown.
 			 *  \param e The edge to add
 			 *  \throws InvalidDecisionDiagram If e is not inzident with this node.
 			 */
 
-			/*! \fn void DecisionDiagram::LeafNode::removeEdge(Edge* e)
+			/*! \fn void DecisionDiagram::Node::removeEdge(Edge* e)
 			 *  \brief Removes an edge from this node. Note that the edge must have been added previously.
 			 *  \param e The edge to remove
 			 *  \throws InvalidDecisionDiagram If e was not added to this node.
 			 */
 
-			/*! \fn void DecisionDiagram::LeafNode::setLabel(std::string l)
+			/*! \fn void DecisionDiagram::Node::setLabel(std::string l)
 			 *  \brief Changes the label of this node.
 			 *  \param l The new label of the node
 			 */
 
-			/*! \fn std::string DecisionDiagram::LeafNode::getLabel()
+			/*! \fn std::string DecisionDiagram::Node::getLabel()
 			 *  \brief Retrieves the label of this node.
 			 *  \return std::string The label of the node
 			 */
@@ -106,29 +109,48 @@ namespace dlvhex{
 			 *  \return std::set<Edge*> A set of all edges inzident with this node.
 			 */
 
-			/*! \fn std::set<Edge*> DecisionDiagram::LeafNode::getOutEdges() const
+			/*! \fn std::set<Edge*> DecisionDiagram::Node::getOutEdges() const
 			 *  \brief Retrieves the outgoing edges of this node.
 			 *  \return std::set<Edge*> A set of outgoing edges of this node.
 			 */
 
-			/*! \fn std::set<Edge*> DecisionDiagram::LeafNode::getInEdges() const
+			/*! \fn std::set<Edge*> DecisionDiagram::Node::getInEdges() const
 			 *  \brief Retrieves the ingoing edges of this node.
 			 *  \return std::set<Edge*> A set of ingoing edges of this node.
 			 */
 
-			/*! \fn int DecisionDiagram::LeafNode::getEdgesCount() const
+			/*! \fn int DecisionDiagram::Node::getEdgesCount() const
 			 *  \brief Returns the number of edges inzident with this node.
 			 *  \return int The number of edges inzident with this node.
 			 */
 
-			/*! \fn int DecisionDiagram::LeafNode::getOutEdgesCount() const
+			/*! \fn int DecisionDiagram::Node::getOutEdgesCount() const
 			 *  \brief Returns the number of outgoing edges of this node.
 			 *  \return int The number of edges outgoing edges of this node.
 			 */
 
-			/*! \fn int DecisionDiagram::LeafNode::getInEdgesCount() const
+			/*! \fn int DecisionDiagram::Node::getInEdgesCount() const
 			 *  \brief Returns the number of ingoing edges of this node.
 			 *  \return int The number of edges ingoing edges of this node.
+			 */
+
+			/*! \fn int DecisionDiagram::Node::getChildCount() const
+			 *  \brief Returns the number of child nodes.
+			 *  \return int The number of child nodes.
+			 */
+
+			/*! \fn Node* DecisionDiagram::Node::getChild(int index) const
+			 *  \brief Returns a pointer to the child with the given index.
+			 *  \param index The 0-based index of a child to retrieve.
+			 *  \return Node* A pointer to the child with the given index
+			 *  \throws InvalidDecisionDiagram If the index is out of bounds
+			 */
+
+			/*! \fn Node* DecisionDiagram::Node::getOutEdge(int index) const
+			 *  \brief Returns a pointer to the outgoing edge with the given index.
+			 *  \param index The 0-based index of an outgoing edge to retrieve.
+			 *  \return Edge* A pointer to the outgoing edge with the given index
+			 *  \throws InvalidDecisionDiagram If the index is out of bounds
 			 */
 
 			/*! \fn std::string DecisionDiagram::Node::toString()
@@ -195,7 +217,8 @@ namespace dlvhex{
 					le,
 					eq,
 					ge,
-					gt
+					gt,
+					else_
 				};
 			private:
 				std::string operand1;
@@ -381,6 +404,7 @@ namespace dlvhex{
 			Edge* addEdge(Edge* template_);
 			void removeEdge(Edge* e);
 			Node* addDecisionDiagram(DecisionDiagram* dd2);
+			Node* partialAddDecisionDiagram(DecisionDiagram *dd2, Node *n);
 
 			void setRoot(Node* root);
 			void useUniqueLabels(DecisionDiagram* dd2);
@@ -476,10 +500,10 @@ namespace dlvhex{
  */
 
 /*! \fn Edge* DecisionDiagram::addEdge(Node* from, Node* to, Condition c)
- * Adds a directed conditional edge between two nodes of this decision diagram.
+ * Adds a directed conditional or unconditional edge between two nodes of this decision diagram.
  *  \param from A pointer to a node of this decision diagram acting as the edge's source. Note that it must be a pointer to exactly the node to use, not only one with the same attribute values.
  *  \param to A pointer to a node of this decision diagram acting as the edge's destination. Note that it must be a pointer to exactly the node to use, not only one with the same attribute values.
- *  \param c The condition of the edge
+ *  \param c The condition of the edge. If Condition::else_ is used as operation, an else edge will be created.
  *  \return Edge* A pointer to the added edge
  *  \throws InvalidDecisionDiagram If one of the endpoints is not part of this decision diagram
  */
@@ -525,6 +549,15 @@ namespace dlvhex{
 /*! \fn Node* DecisionDiagram::addDecisionDiagram(DecisionDiagram* dd2)
  * Unions this decision diagram with dd2.
  *  \param dd2 A second decision diagram to be added to this one. The caller has to make sure that the node labels of dd2 are distinct from the labels in this diagram.
+ *  \return Node* A pointer to the root node of the added decision diagram within this decision diagram.
+ *  \throws InvalidDecisionDiagram If dd2 and this decision diagram have node labels in common.
+ */
+
+/*! \fn Node* DecisionDiagram::partialAddDecisionDiagram(DecisionDiagram *dd2, *n)
+ *  \brief "Partial copy". Copies only the component of the graph reachable from n. This is especially useful if the graph is a tree. The nodes and edges will be added to this decision diagram
+ *  i.e. existing element will be kept.
+ *  \param dd2 Template decision diagram
+ *  \param n Some node of dd2
  *  \return Node* A pointer to the root node of the added decision diagram within this decision diagram.
  *  \throws InvalidDecisionDiagram If dd2 and this decision diagram have node labels in common.
  */

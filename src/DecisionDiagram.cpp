@@ -72,6 +72,26 @@ int DecisionDiagram::Node::getOutEdgesCount() const{
 	return outEdges.size();
 }
 
+DecisionDiagram::Node* DecisionDiagram::Node::getChild(int index){
+	for (std::set<Edge*>::iterator it = outEdges.begin(); it != outEdges.end(); it++){
+		if (index-- == 0) return (*it)->getTo();
+	}
+	// Error: Index out of bounds
+	throw InvalidDecisionDiagram("Tried to retrieve child. Index was out of bounds.");
+}
+
+int DecisionDiagram::Node::getChildCount() const{
+	return getOutEdgesCount();
+}
+
+DecisionDiagram::Edge* DecisionDiagram::Node::getOutEdge(int index){
+	for (std::set<Edge*>::iterator it = outEdges.begin(); it != outEdges.end(); it++){
+		if (index-- == 0) return *it;
+	}
+	// Error: Index out of bounds
+	throw InvalidDecisionDiagram("Tried to retrieve child. Index was out of bounds.");
+}
+
 std::string DecisionDiagram::Node::toString() const{
 	return label;
 }
@@ -139,6 +159,7 @@ std::string DecisionDiagram::Condition::cmpOpToString(DecisionDiagram::Condition
 		case Condition::eq: return std::string("=");
 		case Condition::ge: return std::string(">=");
 		case Condition::gt: return std::string(">");
+		case Condition::else_: return std::string("else");
 		default: assert(false);
 	}
 }
@@ -174,7 +195,7 @@ std::string DecisionDiagram::Edge::toString() const{
 
 // ------------------------------ ElseEdge ------------------------------
 
-DecisionDiagram::ElseEdge::ElseEdge(Node *u, Node *v) : Edge(u, v, Condition(std::string("none"), std::string("none"), Condition::le)){
+DecisionDiagram::ElseEdge::ElseEdge(Node *u, Node *v) : Edge(u, v, Condition(std::string(""), std::string(""), Condition::else_)){
 }
 
 DecisionDiagram::ElseEdge::~ElseEdge(){
@@ -315,15 +336,27 @@ DecisionDiagram::Edge* DecisionDiagram::addEdge(DecisionDiagram::Node* from, Dec
 	if (nodes.find(from) == nodes.end() || nodes.find(to) == nodes.end()){
 		throw InvalidDecisionDiagram(std::string("Tried to add an edge from \"") + from->getLabel() + std::string("\" to \"") + to->getLabel() + std::string("\". Error: Both endpoints of an edge need to be part of the decision diagram before it can be added. ") + (nodes.find(from) == nodes.end() ? from->getLabel() : to->getLabel()) + std::string(" is not a member."));
 	}else{
-		// Create the edge
-		Edge *e = new Edge(from, to, c);
-		edges.insert(e);
+		if (c.getOperation() == Condition::else_){
+			// Create the else edge
+			ElseEdge *e = new ElseEdge(from, to);
+			edges.insert(e);
 
-		// Add it to it's inzident nodes
-		from->addEdge(e);
-		to->addEdge(e);
+			// Add it to it's inzident nodes
+			from->addEdge(e);
+			to->addEdge(e);
 
-		return e;
+			return e;
+		}else{
+			// Create the edge
+			Edge *e = new Edge(from, to, c);
+			edges.insert(e);
+
+			// Add it to it's inzident nodes
+			from->addEdge(e);
+			to->addEdge(e);
+
+			return e;
+		}
 	}
 }
 
@@ -423,6 +456,25 @@ DecisionDiagram::Node* DecisionDiagram::addDecisionDiagram(DecisionDiagram* dd2)
 	}
 
 	return root;
+}
+
+DecisionDiagram::Node* DecisionDiagram::partialAddDecisionDiagram(DecisionDiagram *dd2, DecisionDiagram::Node *n){
+	try{
+		DecisionDiagram::Node* root = addNode(n);
+
+		// Copy child nodes and the connecting out-edges
+		std::set<Edge*> oedges = n->getOutEdges();
+		for (std::set<Edge*>::iterator it = oedges.begin(); it != oedges.end(); it++){
+			partialAddDecisionDiagram(dd2, (*it)->getTo());
+			addEdge(*it);
+		}
+
+		setRoot(root);
+		return root;
+	}catch(InvalidDecisionDiagram idde){
+		// Avoid running into loops
+		NULL;
+	}
 }
 
 int DecisionDiagram::nodeCount() const{

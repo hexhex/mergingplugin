@@ -1,0 +1,36 @@
+[common signature]
+predicate: root/1;
+predicate: innernode/1;
+predicate: leafnode/2;
+predicate: conditionaledge/5;
+predicate: elseedge/2;
+
+[belief base]
+name: tnm;
+mapping: "
+	root(\'check m\').
+
+	innernode(\'check m\').
+	innernode(\'check t\').
+	innernode(\'check n\').
+
+	leafnode(stage1, stage1).
+	leafnode(stage2, stage2).
+	leafnode(stage3, stage2).
+	leafnode(stage4, stage2).
+
+	conditionaledge(\'check m\', stage4, m, \'=\', 1).
+	elseedge(\'check m\', \'check n\').
+
+	conditionaledge(\'check n\', stage3, n, \'>\', 0).
+	elseedge(\'check n\', \'check t\').
+
+	conditionaledge(\'check t\', stage2, t, \'>=\', 3).
+	elseedge(\'check t\', stage1).
+";
+
+[revision plan]
+{
+
+				tnm
+}
