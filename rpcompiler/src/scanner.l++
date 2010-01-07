@@ -1,0 +1,202 @@
+SECTIONCS	"[common\ signature]"
+SECTIONBB	"[belief\ base]"
+SECTIONRP	"[revision\ plan]"
+SEMICOLON	";"
+ORBRACKET	"("
+CRBRACKET	")"
+IMPLICATION	":\-"
+COLON		":"
+OCBRACKET	"{"
+CCBRACKET	"}"
+IDENTIFIER	([a-zA-Z][a-zA-Z0-9_\-,.()]*)|(\"([^\"]|(\\(\")))*\")
+NUMBER		[0-9]+
+WHITESPACE	[ \t\r]+
+NEWLINE		\n
+COMMENT		"%".*
+SLASH		"/"
+	#include <Parser.h>
+	#include <ParseTreeNode.h>
+	#include "parser.h"	// Contains definitinos for terminal symbols (tokens)
+
+	#include <vector>
+	#include <string>
+
+	int scannererrors = 0;			/* Counts scanner error */
+	int sourceline = 1;			/* Counts sourceline number */
+	std::vector<std::string> symboltable;	/* Table of identifiers and literals */
+	Parser *parserinst;			/* pointer to the currently executed parser instance (necessary to iterate through the input files) */
+
+	//#define DEBUG
+%%
+
+{SECTIONCS}		{
+				#ifdef DEBUG
+					std::cout << "SECTION " << yytext << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TSECTIONCS;
+			}
+{SECTIONBB}		{
+				#ifdef DEBUG
+					std::cout << "SECTION " << yytext << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TSECTIONBB;
+			}
+{SECTIONRP}		{
+				#ifdef DEBUG
+					std::cout << "SECTION " << yytext << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TSECTIONRP;
+			}
+{ORBRACKET}		{
+				#ifdef DEBUG
+					std::cout << yytext << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TORBRACKET;
+			}
+				
+{CRBRACKET}		{
+				#ifdef DEBUG
+					std::cout << yytext << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TCRBRACKET;
+			}
+
+{OCBRACKET}		{
+				#ifdef DEBUG
+					std::cout << "{" << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TOCBRACKET;
+			}
+
+{CCBRACKET}		{
+				#ifdef DEBUG
+					std::cout << "}" << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TCCBRACKET;
+			}
+
+{NUMBER}		{
+				long number = 0;
+				int print = 0;	// Makes sure that leading 0's are cut off
+
+				#ifdef DEBUG
+					std::cout << "NUMBER ";
+				#endif
+
+				// Simple itoa implementation
+				for (long i = 0; i < yyleng; i++){
+					if (yytext[i] != '0' || i == (yyleng - 1)){
+						print = 1;
+					}
+					if (print == 1){
+						#ifdef DEBUG
+							std::cout << yytext[i] << std::endl;
+						#endif
+						number = number * 10 + (yytext[i] - '0');
+					}
+				}
+				#ifdef DEBUG
+					std::cout << std::endl;
+				#endif
+				yylval.terminaltoken.iValue = number;
+				yylval.terminaltoken.linenr = sourceline;
+				return TNUMBER;
+			}
+
+{IMPLICATION}		{
+				#ifdef DEBUG
+					std::cout << "IMPLICATION" << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TIMPLICATION;
+			}
+
+{COLON}			{
+				#ifdef DEBUG
+					std::cout << "COLON" << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TCOLON;
+			}
+
+{SEMICOLON}		{
+				#ifdef DEBUG
+					std::cout << "SEMICOLON" << std::endl;
+				#endif
+	
+				yylval.terminaltoken.linenr = sourceline;
+				return TSEMICOLON;
+			}
+
+{IDENTIFIER}		{
+				// Put into symbol table
+				std::string id(yytext);
+				// If the symbol contains quoting characters, remove it
+				if (id.length() >= 2){
+					if (id[0] == '\"' && id[id.length() - 1] == '\"'){
+						id = id.substr(1, id.length() - 2);
+					}
+				}
+				symboltable.push_back(id);
+
+				#ifdef DEBUG
+					std::cout << "IDENTIFIER " << id << std::endl;
+				#endif
+
+				// Store index of the symbol table entry within this token
+				yylval.terminaltoken.iValue = symboltable.size() - 1;
+				yylval.terminaltoken.linenr = sourceline;
+				return TIDENTIFIER;
+			}
+
+{SLASH}			{
+				#ifdef DEBUG
+					std::cout << "SLASH" << std::endl;
+				#endif
+				yylval.terminaltoken.linenr = sourceline;
+				return TSLASH;
+			}
+
+{WHITESPACE}		;
+{NEWLINE}		sourceline++;
+
+{COMMENT}		;
+
+.			{
+				std::cerr << "Error: Character '" << yytext[0] << "' in file " << parserinst->getInputFileName(parserinst->getCurrentInputFileIndex()) << ", line " << sourceline << " is an invalid token\n" << std::endl;
+				scannererrors++;
+			}
+%%
+
+/*
+ * yywrap is called when EOF is reached.
+ * Returns: 1 if scanning is done, 0 if it continues
+ */
+int yywrap(){
+
+	FILE *input = parserinst->getNextInputFile();
+	if (input != NULL){
+		yyin = input;
+		sourceline = 1;
+		return 0;	// Continue scanning
+	}else{
+		return 1;	// Stop scanning
+	}
+}
+
+YY_BUFFER_STATE string_buffer;
+void creaetStringBuffer(const char* str){
+	string_buffer = yy_scan_string(str);
+	yyin = string_buffer->yy_input_file;
+}
+
+void releaseStringBuffer(){
+	yy_delete_buffer(string_buffer);
+}

@@ -1,0 +1,2 @@
+../revisionplan1.txt referenceoutput1.out 10
+../revisionplan2.txt referenceoutput2.out 20 --filter=x,p1

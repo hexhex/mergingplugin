@@ -1,0 +1,21 @@
+[common signature]
+predicate: pred1/4;
+predicate: pred2/2;
+
+[revision plan]
+{
+	operator:union;
+	test:"\'s asdfs addaf\'";
+	constraint: abc;
+	{kb1};
+	{kb2};
+	{
+		operator:union;
+		{kb3};
+		{kb4};
+	};
+}
+
+[belief base]name: kb1;
+mapping: "pred1(a, b, c, d).";
+mapping: "pred2(x, y).";

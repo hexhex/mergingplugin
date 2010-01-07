@@ -1,0 +1,37 @@
+[common signature]
+predicate: pred1/1;
+
+[belief base]
+name: kb1;
+mapping: "pred1(a).pred1(b).";
+
+[belief base]
+name: kb2;
+mapping: "pred1(x).pred1(y).";
+
+[belief base]
+name: kb3;
+mapping: "pred1(test).";
+
+[revision plan]
+{
+	operator: union;
+	{
+		operator: union;
+		{
+			kb1
+		};
+		{
+			kb2
+		};
+	};
+	{
+		operator: union;
+		{
+			kb3
+		};
+		{
+			kb1
+		};
+	};
+}

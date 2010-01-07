@@ -1,0 +1,1 @@
+answers(X) :- &hex["a.", ""](X).

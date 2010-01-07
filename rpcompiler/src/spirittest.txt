@@ -1,0 +1,20 @@
+[common signature]
+
+
+
+
+
+predicate:ba/123;
+predicate:p/5;
+
+[belief base]
+name:bb;
+mapping:sdaf;
+
+[revision plan]
+{
+	flag:value;
+	{
+		asdf
+	};
+}

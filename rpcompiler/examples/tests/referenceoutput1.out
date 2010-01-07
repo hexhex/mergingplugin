@@ -1,0 +1,24 @@
+% -------------------- Mappings for belief bases -------------------- 
+
+
+% -------------------- Revision plan -------------------- 
+
+
+% ---------- Extraction of final answer sets ---------- 
+finalanswersets(AnswerNr, AnswerSetNr) :- finalresult(AnswerNr), &answersets[AnswerNr](AnswerSetNr).
+% Each answer set can be selected or not
+selectedas(AnswerSetNr) v -selectedas(AnswerSetNr) :- finalanswersets(AnswerNr, AnswerSetNr).
+
+% Select exactly one:
+%    Select at least one
+atleastoneasselected :- selectedas(AnswerSetNr).
+:- not atleastoneasselected.
+%    Select at most one
+:- selectedas(AnswerSetNr1), selectedas(AnswerSetNr2), AnswerSetNr1 != AnswerSetNr2.
+
+% Take content of the selected virtual answer set and transfer it into the "real" answer sets of the hex program
+
+
+% -------------------- Additional information --------------------
+% dlvhex call:
+%   dlvhex -filter= [name of hex file]

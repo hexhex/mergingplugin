@@ -1,8 +1,8 @@
 AC_PREREQ(2.64)
 
-AC_INIT([dlvhex-aspplugin],[0.3.0],[e0525250@mail.student.tuwien.ac.at])
+AC_INIT([dlvhex-mergingplugin],[0.3.0],[e0525250@mail.student.tuwien.ac.at])
 
-AC_CONFIG_SRCDIR([src/ASPPlugin.cpp])
+AC_CONFIG_SRCDIR([src/MergingPlugin.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/config.h])
 
@@ -10,9 +10,9 @@ MAJOR=`echo $PACKAGE_VERSION | sed "s/^\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1
 MINOR=`echo $PACKAGE_VERSION | sed "s/^\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/"`
 MICRO=`echo $PACKAGE_VERSION | sed "s/^\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/"`
 
-AC_DEFINE_UNQUOTED([ASPPLUGIN_MAJOR], [$MAJOR], [Major version number of the asp-plugin])
-AC_DEFINE_UNQUOTED([ASPPLUGIN_MINOR], [$MINOR], [Minor version number of the asp-plugin])
-AC_DEFINE_UNQUOTED([ASPPLUGIN_MICRO], [$MICRO], [Micro version number of the asp-plugin])
+AC_DEFINE_UNQUOTED([MERGINGPLUGIN_MAJOR], [$MAJOR], [Major version number of the merging-plugin])
+AC_DEFINE_UNQUOTED([MERGINGPLUGIN_MINOR], [$MINOR], [Minor version number of the merging-plugin])
+AC_DEFINE_UNQUOTED([MERGINGPLUGIN_MICRO], [$MICRO], [Micro version number of the merging-plugin])
 
 
 AM_INIT_AUTOMAKE
@@ -30,6 +30,8 @@ esac
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_LEX
+AC_PROG_YACC
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -81,6 +83,9 @@ AC_CONFIG_FILES([
            include/Makefile
            src/Makefile
            examples/Makefile
+           rpcompiler/Makefile 
+           rpcompiler/src/Makefile
+           rpcompiler/examples/Makefile
 ])
 
 AC_OUTPUT
