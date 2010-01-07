@@ -9,7 +9,7 @@
 #include <string>
 
 namespace dlvhex {
-	namespace asp {
+	namespace merging {
 
 		/**
 		 * This class implements an external atom which is capable of executing a hex program given as string.

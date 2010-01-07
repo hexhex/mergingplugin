@@ -7,7 +7,7 @@
 DLVHEX_NAMESPACE_USE
 
 namespace dlvhex{
-	namespace asp{
+	namespace merging{
 		// key-value pairs as they are used as arguments of operators
 		typedef std::pair<std::string, std::string> KeyValuePair;
 		// Operators take a list of key-value pairs as arguments

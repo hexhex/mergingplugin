@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 
-using namespace dlvhex::asp;
+using namespace dlvhex::merging;
 
 // -------------------- Util --------------------
 /*

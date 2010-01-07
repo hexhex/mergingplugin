@@ -6,7 +6,7 @@
 DLVHEX_NAMESPACE_USE
 
 namespace dlvhex{
-	namespace asp{
+	namespace merging{
 		/**
 		 * Unique identification of a certain hex or operator call
 		 */

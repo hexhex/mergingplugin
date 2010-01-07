@@ -10,7 +10,7 @@
 #include <ArbProcess.h>
 
 namespace dlvhex {
-	namespace asp {
+	namespace merging {
 
 		class Rewriter : public PluginConverter
 		{
@@ -56,7 +56,7 @@ namespace dlvhex {
 		//
 		// A plugin must derive from PluginInterface
 		//
-		class ASPPlugin : public PluginInterface
+		class MergingPlugin : public PluginInterface
 		{
 		private:
 			// Cache for answer sets
@@ -85,7 +85,7 @@ namespace dlvhex {
 				}
 			}
 		public:
-			ASPPlugin(){
+			MergingPlugin(){
 				hex_atom = NULL;
 				hexfile_atom = NULL;
 				as_atom = NULL;
@@ -96,7 +96,7 @@ namespace dlvhex {
 				outputrewriter = NULL;
 			}
 
-			virtual ~ASPPlugin(){
+			virtual ~MergingPlugin(){
 				if (hexfile_atom) delete hexfile_atom;
 				if (hex_atom) delete hex_atom;
 				if (as_atom) delete as_atom;
@@ -126,7 +126,9 @@ namespace dlvhex {
 				tuples_atom = new TuplesAtom(resultsetCache);
 				arguments_atom = new ArgumentsAtom(resultsetCache);
 				operator_atom = new OperatorAtom(resultsetCache);
-				operator_atom->setSearchPaths(searchpaths);
+				for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
+					operator_atom->addOperators(*it);
+				}
 
 				boost::shared_ptr<PluginAtom> hex_atom_ptr(hex_atom);
 				boost::shared_ptr<PluginAtom> hexfile_atom_ptr(hexfile_atom);
@@ -164,7 +166,7 @@ namespace dlvhex {
 								if (rest != std::string("")){
 									searchpaths.push_back(rest);
 								}
-								std::cout << "ASPPlugin: Operator search paths:" << std::endl;
+								std::cout << "MergingPlugin: Operator search paths:" << std::endl;
 								for (int i = 0; i < searchpaths.size(); i++){
 									std::cout << "   " << searchpaths[i] << std::endl;
 								}
@@ -194,11 +196,13 @@ namespace dlvhex {
 						}
 					}
 					if (operator_atom != NULL){
-						operator_atom->setSearchPaths(searchpaths);
+						for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
+							operator_atom->addOperators(*it);
+						}
 					}
 				}else{
-					out	<< "ASP-plugin" << std::endl
-						<< "----------" << std::endl
+					out	<< "Merging-plugin" << std::endl
+						<< "--------------" << std::endl
 						<< " Provided external atoms:" << std::endl
 						<< "   &hex[Prog, Args](A)   ... Will execture the hex program in Prog with the dlvhex" << std::endl
 						<< "                             arguments given in Args. A will be a handle to the" << std::endl
@@ -255,7 +259,7 @@ namespace dlvhex {
 		//
 		// now instantiate the plugin
 		//
-		ASPPlugin theASPPlugin;
+		MergingPlugin theMergingPlugin;
 
 	} // namespace asp
 } // namespace dlvhex
@@ -264,14 +268,12 @@ namespace dlvhex {
 // and let it be loaded by dlvhex!
 //
 extern "C"
-dlvhex::asp::ASPPlugin*
+dlvhex::merging::MergingPlugin*
 PLUGINIMPORTFUNCTION()
 {
-  dlvhex::asp::theASPPlugin.setPluginName("dlvhex-ASPPlugin");
-  dlvhex::asp::theASPPlugin.setVersion(	0,
-					0,
-					1);
-  return &dlvhex::asp::theASPPlugin;
+  dlvhex::merging::theMergingPlugin.setPluginName("dlvhex-MergingPlugin");
+  dlvhex::merging::theMergingPlugin.setVersion(	0,
+						0,
+						2);
+  return &dlvhex::merging::theMergingPlugin;
 }
-
-

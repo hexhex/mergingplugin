@@ -12,17 +12,7 @@
 #include <sstream>
 #include <iostream>
 
-// Built-In Operators
-#include <UnionOp.h>
-#include <UnfoldOp.h>
-#include <MajorityVotingOp.h>
-#include <ToBinaryDecisionTreeOp.h>
-#include <UserPreferencesOp.h>
-#include <OrderBinaryDecisionTreeOp.h>
-#include <MajorityVotingOp.h>
-#include <AvgOp.h>
-
-using namespace dlvhex::asp;
+using namespace dlvhex::merging;
 
 OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 {
@@ -30,27 +20,10 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 	addInputPredicate();	// predicate containing all the answer indices which shall be passed to the operator
 	addInputPredicate();	// predicate containing all the key-value pairs which are passed as parameter
 	setOutputArity(1);	// answer index of result
-
-	// Provide built-In operators
-	builtinOperators["union"] = new UnionOp();
-	builtinOperators["unfold"] = new UnfoldOp();
-	builtinOperators["majorityvoting"] = new MajorityVotingOp();
-	builtinOperators["tobinarydecisiontree"] = new ToBinaryDecisionTreeOp();
-	builtinOperators["userpreferences"] = new UserPreferencesOp();
-	builtinOperators["orderbinarydecisiontree"] = new OrderBinaryDecisionTreeOp();
-	builtinOperators["average"] = new AvgOp();
 }
 
 OperatorAtom::~OperatorAtom()
 {
-	// Delete built-In operators
-	delete builtinOperators["union"];
-	delete builtinOperators["unfold"];
-	delete builtinOperators["majorityvoting"];
-	delete builtinOperators["tobinarydecisiontree"];
-	delete builtinOperators["userpreferences"];
-	delete builtinOperators["orderbinarydecisiontree"];
-	delete builtinOperators["average"];
 }
 
 void
@@ -105,8 +78,34 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	// call operator, let opanswer be it's result
 	HexAnswer opanswer;
 
-	// If the operator name matches one of the built-in operators, it is executed
+	// If the operator name matches one of the loaded operators, it is executed
 	try{
+		// Search for the oprator
+		std::map<std::string, IOperator*>::const_iterator itOp = operators.find(opname);
+		if (itOp != operators.end()){
+
+			// Found
+			IOperator* op = (*itOp).second;
+	
+			// Finally call the operator
+			opanswer = op->apply(answersIndices.size(), answers, parameters);
+
+			// Put operator's answer into cache
+			resultsetCache.push_back(HexAnswerCacheEntry(hc, opanswer));
+
+			// Return answer index
+			Tuple out;
+			out.push_back(Term(resultsetCache.size() - 1));
+			answer.addTuple(out);
+
+			return;
+		}else{
+			// Operator with the specified name was not loaded
+			std::stringstream msg;
+			msg << "Operator \"" << opname << "\" was not loaded";
+			throw IOperator::OperatorException(msg.str());
+		}
+/*
 		if (builtinOperators.find(opname) != builtinOperators.end()){
 			// Built-In operator
 			//std::cout << "CALLING INTERNAL OP";
@@ -134,19 +133,36 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 			IOperator* externalOperator = getOperator();
 			opanswer = externalOperator->apply(answersIndices.size(), answers, parameters);
 		}
+*/
 
-		// Put operator's answer into cache
-		resultsetCache.push_back(HexAnswerCacheEntry(hc, opanswer));
-
-		// Return answer index
-		Tuple out;
-		out.push_back(Term(resultsetCache.size() - 1));
-		answer.addTuple(out);
 	}catch(IOperator::OperatorException oe){
 		throw PluginError(oe.getMessage());
 	}
 }
 
-void OperatorAtom::setSearchPaths(std::vector<std::string> paths){
-	this->operatorpaths = paths;
+void OperatorAtom::addOperators(std::string lib){
+
+	// Open the specified library
+	lt_dlhandle dlHandle = lt_dlopenext(lib.c_str());							// Absolute path
+
+	// Check if the operator library was found
+	if (dlHandle == 0){
+		throw PluginError((std::string("Operator library \"") + lib + std::string("\" not found")).c_str());
+	}
+	t_operatorImportFunction operatorImportFunction = (t_operatorImportFunction) lt_dlsym(dlHandle, "OPERATORIMPORTFUNCTION");
+	if (operatorImportFunction == 0){
+		throw PluginError((std::string("Operator import function (signature: \"std::vector<dlvhex::merging::IOperator*> OPERATORIMPORTFUNCTION()\") was not found in operator library \"") + lib + std::string("\"")).c_str());
+	}
+
+	// Finally call the operator import function to retrieve the operators in this library
+	std::vector<IOperator*> externalOperators = operatorImportFunction();
+
+	// Add the operators to the operator list
+	for (std::vector<IOperator*>::iterator it = externalOperators.begin(); it != externalOperators.end(); it++){
+		// Check if the operator name is unique
+		if (operators.find((*it)->getName()) != operators.end()){
+			// Name is not unique
+			throw PluginError((std::string("Operator name\"") + (*it)->getName() + std::string("\" is not unique. A duplicate was find in library \"") + lib + std::string("\".")).c_str());
+		}
+	}
 }

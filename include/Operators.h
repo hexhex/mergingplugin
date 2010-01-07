@@ -4,10 +4,11 @@
 #include <InternalTypes.h>
 #include <dlvhex/PluginInterface.h>
 #include <stdlib.h>
+#include <vector>
 #include <IOperator.h>
 
 namespace dlvhex {
-	namespace asp {
+	namespace merging {
 		/**
 		 * This class implements an external atom which can be used to call an external operator.
 		 * Operators take sets of answer sets as arguments and compute another set of answer sets as result.
@@ -17,19 +18,18 @@ namespace dlvhex {
 		 *	Params		... name of a unary predicate containing all the result indices which shall be passed to the operator
 		 *	R		... handle to the answer of the operator applicatoin
 		 */
-		typedef IOperator* (*t_getOperator)();
+		typedef std::vector<IOperator*> (*t_operatorImportFunction)();
 		class OperatorAtom : public PluginAtom
 		{
 		private:
 			HexAnswerCache &resultsetCache;
-			std::map<std::string, IOperator*> builtinOperators;
-			std::vector<std::string> operatorpaths;
+			std::map<std::string, IOperator*> operators;
 		public:
 
 			OperatorAtom(HexAnswerCache &rsCache);
 			virtual ~OperatorAtom();
 			virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
-			void setSearchPaths(std::vector<std::string> paths);
+			void addOperators(std::string lib);
 		};
 	}
 }

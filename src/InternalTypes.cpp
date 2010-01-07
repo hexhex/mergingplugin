@@ -2,7 +2,7 @@
 
 
 using namespace dlvhex;
-using namespace asp;
+using namespace merging;
 
 HexCall::HexCall(CallType ct, std::string prog, std::string args) : type(ct), program(prog), arguments(args){
 }
