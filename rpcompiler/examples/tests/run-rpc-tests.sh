@@ -35,6 +35,8 @@ echo ============ revision plan tests start ============
 for t in $(find $TESTDIR -name '*.test' -type f)
 do
     # REFERENCERETVAL
+    #   00 -> RP compiler output is expected to be 0; compare return value only
+    #   01 -> RP compiler output is expected to be 1; compare return value only
     #   10 -> RP compiler output is expected to be 0; compare RP compiler output
     #   11 -> RP compiler output is expected to be 1; compare RP compiler output
     #   20 -> RP compiler output is expected to be 0; pass compiler output to dlvhex and compare answer sets
@@ -121,27 +123,26 @@ EOF
 		# COMPARE COMPILER OUTPUT
 
 		# Drop first digit of reference return value since it is only used for the distinction if answer sets or compiler output shall be compared
-		if test $REFERENCERETVAL -eq 10
+		if test $REFERENCERETVAL -eq 10 || test $REFERENCERETVAL -eq 00
 		then
-			REFERENCERETVAL=0
+			CMPRETVAL=0
 		else
-			REFERENCERETVAL=1
+			CMPRETVAL=1
 		fi
-echo "CALLING $REVISIONPLAN $REFERENCEOUTPUT $REFERENCERETVAL $ADDRPCPARAM"
 
 		# run rpcompiler with specified parameters and program
-		$RPCOMPILER  $RPCPARAMETERS $ADDPARM $REVISIONPLAN > $TMPFILE
+		$RPCOMPILER  $RPCPARAMETERS $ADDPARM $REVISIONPLAN >& $TMPFILE
 		RPCOMPILERRETVAL=$?
 
 		# compare compiler output with reference result
-		if cmp -s $TMPFILE $REFERENCEOUTPUT && test $REFERENCERETVAL -eq $RPCOMPILERRETVAL
+		if (cmp -s $TMPFILE $REFERENCEOUTPUT || test $REFERENCERETVAL -eq 00 || test $REFERENCERETVAL -eq 01) && test $CMPRETVAL -eq $RPCOMPILERRETVAL
 		then
 			echo PASS: $REVISIONPLAN
 		else
 			echo FAILED: $REVISIONPLAN
-			if ! test $RPCOMPILERRETVAL -eq $REFERENCERETVAL
+			if ! test $RPCOMPILERRETVAL -eq $CMPRETVAL
 			then
-				echo "Return values differ: $RPCOMPILERRETVAL (should be $REFERENCERETVAL)"
+				echo "Return values differ: $RPCOMPILERRETVAL (should be $CMPRETVAL)"
 			else
 				echo "Outputs differ:"
 				diff $REVISIONPLAN $REFERENCEOUTPUT

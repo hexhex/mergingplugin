@@ -1,7 +1,0 @@
-../runhex.hex runhex.out
-../runhexfile.hex runhexfile.out
-../accesstuples1.hex accesstuples1.out
-../accesstuples2.hex accesstuples2.out
-../accessarguments1.hex accessarguments1.out
-../accessarguments2.hex accessarguments2.out
-../multipleanswersets.hex multipleanswersets.out

@@ -1,0 +1,7 @@
+Error: Character '_' in file ../../rpcompiler/examples/tests/../invalidcs1.txt, line 3 is an invalid token
+
+Error: Character '_' in file ../../rpcompiler/examples/tests/../invalidcs1.txt, line 3 is an invalid token
+
+Error in ../../rpcompiler/examples/tests/../invalidcs1.txt, line 3: predicate definition expected
+Parsing finished with errors:
+   3 errors, 0 warnings

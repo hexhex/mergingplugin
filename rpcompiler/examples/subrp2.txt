@@ -1,0 +1,24 @@
+[common signature]
+predicate:x/0;
+predicate:y/0;
+
+[belief base]
+name:bb1;
+mapping: "x. y.";
+
+[revision plan]
+{
+	operator: none;
+	{
+		bb1
+	};
+	{
+		operator: none;
+		{
+			bb1
+		};
+		{
+			bb1
+		};
+	};
+}

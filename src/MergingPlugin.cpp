@@ -9,6 +9,15 @@
 #include <Operators.h>
 #include <ArbProcess.h>
 
+#include "dlvhex/globals.h"
+
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <dirent.h>
+
+
+
 namespace dlvhex {
 	namespace merging {
 
@@ -59,6 +68,9 @@ namespace dlvhex {
 		class MergingPlugin : public PluginInterface
 		{
 		private:
+			bool silentMode;
+			bool debugMode;
+
 			// Cache for answer sets
 			HexAnswerCache resultsetCache;
 
@@ -94,6 +106,14 @@ namespace dlvhex {
 				operator_atom = NULL;
 				inputrewriter = NULL;
 				outputrewriter = NULL;
+
+				// Create external atoms
+				hex_atom = new HexAtom(resultsetCache);
+				hexfile_atom = new HexFileAtom(resultsetCache);
+				as_atom = new AnswerSetsAtom(resultsetCache);
+				tuples_atom = new TuplesAtom(resultsetCache);
+				arguments_atom = new ArgumentsAtom(resultsetCache);
+				operator_atom = new OperatorAtom(resultsetCache);
 			}
 
 			virtual ~MergingPlugin(){
@@ -119,17 +139,6 @@ namespace dlvhex {
 			virtual void
 			getAtoms(AtomFunctionMap& a)
 			{
-				// Create external atoms
-				hex_atom = new HexAtom(resultsetCache);
-				hexfile_atom = new HexFileAtom(resultsetCache);
-				as_atom = new AnswerSetsAtom(resultsetCache);
-				tuples_atom = new TuplesAtom(resultsetCache);
-				arguments_atom = new ArgumentsAtom(resultsetCache);
-				operator_atom = new OperatorAtom(resultsetCache);
-				for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
-					operator_atom->addOperators(*it);
-				}
-
 				boost::shared_ptr<PluginAtom> hex_atom_ptr(hex_atom);
 				boost::shared_ptr<PluginAtom> hexfile_atom_ptr(hexfile_atom);
 				boost::shared_ptr<PluginAtom> as_atom_ptr(as_atom);
@@ -149,13 +158,16 @@ namespace dlvhex {
 			virtual void
 			setOptions(bool doHelp, std::vector<std::string>& argv, std::ostream& out)
 			{
+				debugMode = false;
+				silentMode = Globals::Instance()->getOption("Silent") ? true : false;
+
 				if (!doHelp){
 					bool argFound = true;
 					while (argFound){
 						argFound = false;
 						for (std::vector<std::string>::iterator it = argv.begin(); it != argv.end(); it++){
-							if (	it->substr(0, std::string("--operatorpath").size()) == std::string("--operatorpath") ||
-								it->substr(0, std::string("--op").size()) == std::string("--op")){
+							if (	it->substr(0, std::string("--operatorpath=").size()) == std::string("--operatorpath=") ||
+								it->substr(0, std::string("--op=").size()) == std::string("--op=")){
 								// Extract search paths for operator libs
 								searchpaths.clear();
 								std::string rest = it->substr(it->find_first_of('=', 0) + 1);
@@ -166,26 +178,32 @@ namespace dlvhex {
 								if (rest != std::string("")){
 									searchpaths.push_back(rest);
 								}
-								std::cout << "MergingPlugin: Operator search paths:" << std::endl;
-								for (int i = 0; i < searchpaths.size(); i++){
-									std::cout << "   " << searchpaths[i] << std::endl;
-								}
 								// Argument was processed
 								argv.erase(it);
 								argFound = true;
 								break;	// iterator is invalid now
 							}
-							if (	it->substr(0, std::string("--inputrewriter").size()) == std::string("--inputrewriter") ||
-								it->substr(0, std::string("--irw").size()) == std::string("--irw")){
+							if (	it->substr(0, std::string("--inputrewriter=").size()) == std::string("--inputrewriter=") ||
+								it->substr(0, std::string("--irw=").size()) == std::string("--irw=")){
 								inputrewriter = new Rewriter(removeQuotes(it->substr(it->find_first_of('=', 0) + 1)));
 								// Argument was processed
 								argv.erase(it);
 								argFound = true;
 								break;
 							}
+							if (	(*it) == std::string("--operatordebug") ||
+								(*it) == std::string("--od")){
+								debugMode = true;
+
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;
+							}
+
 	/*
-							if (	it->substr(0, std::string("--outputrewriter").size()) == std::string("--outputrewriter") ||
-								it->substr(0, std::string("--orw").size()) == std::string("--orw")){
+							if (	it->substr(0, std::string("--outputrewriter=").size()) == std::string("--outputrewriter=") ||
+								it->substr(0, std::string("--orw=").size()) == std::string("--orw=")){
 								outputrewriter = it->substr(it->find_first_of('=', 0) + 1);
 								// Argument was processed
 								argv.erase(it);
@@ -195,9 +213,22 @@ namespace dlvhex {
 	*/
 						}
 					}
+
 					if (operator_atom != NULL){
+						// Load all operators found in dlvhex' system plugin libraries
+						std::stringstream sysplugindir;
+						sysplugindir << SYS_PLUGIN_DIR;
+						operator_atom->addOperators(sysplugindir.str(), silentMode, debugMode);
+
+						// Load all operators found in dlvhex' user plugin libraries
+						std::stringstream userplugindir;
+						const char* homedir = ::getpwuid(::geteuid())->pw_dir;
+						userplugindir << homedir << "/" << USER_PLUGIN_DIR;
+						operator_atom->addOperators(userplugindir.str(), silentMode, debugMode);
+
+						// Load additional operator directories
 						for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
-							operator_atom->addOperators(*it);
+							operator_atom->addOperators(*it, silentMode, debugMode);
 						}
 					}
 				}else{
@@ -239,7 +270,11 @@ namespace dlvhex {
 						<< "   &operator[N, As, KV]  ... N is the name of an operator" << std::endl << std::endl
 						<< " Arguments:" << std::endl
 						<< " --operatorpath  This option adds additional search paths for operator libraries." << std::endl
-						<< " or        --op  It is necessary for the &operator predicate." << std::endl
+						<< " or        --op  It is necessary for the &operator predicate. A path can either" << std::endl
+						<< "                 point to a directory containing .so libraries or directly to an" << std::endl
+						<< "                 .so library. In case of directories, operators located in" << std::endl
+						<< "                 subdirectories will _NOT_ be found!" << std::endl
+						<< "                 By default, the system and user plugin directory will be added" << std::endl
 						<< "" << std::endl
 						<< " --inputrewriter This option causes ASP-plugin to exectute the given command line" << std::endl
 						<< "                 string, pass the dlvhex input to this process and use the result" << std::endl
@@ -249,6 +284,8 @@ namespace dlvhex {
 						<< "                          is actually executed (however, cat has no effect of" << std::endl
 						<< "                          course, since it just echos the standard input)" << std::endl
 						<< " or        --irw" << std::endl
+						<< " --operatordebug Adds more details during operator loading and is useful for operator." << std::endl
+						<< "                 debugging. If --silent is passed, this flag is ignored." << std::endl
 						<< "" << std::endl << std::endl;
 				}
 			}
@@ -271,9 +308,9 @@ extern "C"
 dlvhex::merging::MergingPlugin*
 PLUGINIMPORTFUNCTION()
 {
-  dlvhex::merging::theMergingPlugin.setPluginName("dlvhex-MergingPlugin");
+  dlvhex::merging::theMergingPlugin.setPluginName("dlvhex-mergingplugin");
   dlvhex::merging::theMergingPlugin.setVersion(	0,
-						0,
-						2);
+						1,
+						0);
   return &dlvhex::merging::theMergingPlugin;
 }

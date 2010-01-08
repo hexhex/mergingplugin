@@ -1,0 +1,5 @@
+answer(Prog1) :- &hexfile["hexprog1.hex",""](Prog1).
+
+facts(Pred) :- answer(Answer), &answersets[Answer](AnswerSet), &tuples[Answer, AnswerSet](Pred, 0).
+
+unarypreds(Pred, Arg0) :- answer(Answer), &answersets[Answer](AnswerSet), &tuples[Answer, AnswerSet](Pred, 1), &arguments[Answer, AnswerSet, Pred](RunningNr, 0, Arg0).

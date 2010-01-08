@@ -1,0 +1,12 @@
+../runhex.hex runhex.out
+../runhexfile.hex runhexfile.out
+../accesstuples1.hex accesstuples1.out
+../accesstuples2.hex accesstuples2.out
+../accesstuples3.hex accesstuples3.out
+../accessarguments1.hex accessarguments1.out
+../accessarguments2.hex accessarguments2.out
+../accessarguments3.hex accessarguments3.out
+../multipleanswersets.hex multipleanswersets.out
+../operators1.hex operators1.out --operatorpath=./testoperators/src/.libs/libtestoperators.so --filter=result
+../operators2.hex operators2.out --operatorpath=./testoperators/src/.libs/libtestoperators.so --filter=result
+../operators3.hex operators3.out --operatorpath=./testoperators/src/.libs/libtestoperators.so --filter=result

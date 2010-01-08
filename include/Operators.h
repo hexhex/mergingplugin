@@ -24,12 +24,14 @@ namespace dlvhex {
 		private:
 			HexAnswerCache &resultsetCache;
 			std::map<std::string, IOperator*> operators;
+
+			void registerBuiltInOperators();
 		public:
 
 			OperatorAtom(HexAnswerCache &rsCache);
 			virtual ~OperatorAtom();
 			virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
-			void addOperators(std::string lib);
+			void addOperators(std::string lib, bool silent, bool debug);
 		};
 	}
 }

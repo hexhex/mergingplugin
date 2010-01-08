@@ -1,0 +1,4 @@
+pass(0, X) :- &hex["testpred.",""](X).
+
+opanswer(X) :- &operator["testop1", pass, kv](X).
+result(Pred, Arity) :- opanswer(X), &answersets[X](AS), &tuples[X, AS](Pred, Arity).

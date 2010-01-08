@@ -120,3 +120,4 @@ echo $failed failed tests, $warned warnings
 echo ============= dlvhex tests end =============
 
 exit $failed
+
