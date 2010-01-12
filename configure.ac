@@ -114,6 +114,7 @@ AC_CONFIG_FILES([
            examples/testoperators/Makefile
            examples/testoperators/src/Makefile
            rpcompiler/Makefile 
+           rpcompiler/include/Makefile 
            rpcompiler/src/Makefile
            rpcompiler/examples/Makefile
 ])
