@@ -72,23 +72,24 @@ namespace dlvhex {
 		};
 
 		/**
-		 * This class implements an external atom which can be used to access the tuples of an answer set computed before.
+		 * This class implements an external atom which can be used to access the predicates and their arities that occur
+		 * in a certain answer set.
 		 * Usage:
-		 * &tuples[R, AS](Pred, Arity)
+		 * &predicates [R, AS](Pred, Arity)
 		 *	R		... handle to the answer of a program or an operator application
 		 *	AS		... handle to an answer set within answer R
 		 *	Pred		... a string containing a predicate occurring in answer set AS within answer R
 		 *	Arity		... arity of pred (0 for propositional atoms)
 		 */
-		class TuplesAtom : public PluginAtom
+		class PredicatesAtom : public PluginAtom
 		{
 		private:
 			HexAnswerCache &resultsetCache;
 
 		public:
 
-		    TuplesAtom(HexAnswerCache &rsCache);
-		    virtual ~TuplesAtom();
+		    PredicatesAtom(HexAnswerCache &rsCache);
+		    virtual ~PredicatesAtom();
 		    virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
 		};
 

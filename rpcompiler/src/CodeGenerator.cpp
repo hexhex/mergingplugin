@@ -284,7 +284,7 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 				os << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << "." << std::endl;
 			}else{
 				os << "%    " << currentPred << " with arity " << currentArity << std::endl;
-				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &tuples[AnswerNr, AnswerSetNr](" << currentPred << ", 0)." << std::endl;
+				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0)." << std::endl;
 			}
 		}
 	}

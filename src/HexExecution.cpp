@@ -271,21 +271,21 @@ AnswerSetsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	}
 }
 
-// -------------------- TuplesAtom --------------------
+// -------------------- PredicatesAtom --------------------
 
-TuplesAtom::TuplesAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+PredicatesAtom::PredicatesAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 {
 	addInputConstant();	// answer index
 	addInputConstant();	// answerset index
 	setOutputArity(2);	// list of answer set handles
 }
 
-TuplesAtom::~TuplesAtom()
+PredicatesAtom::~PredicatesAtom()
 {
 }
 
 void
-TuplesAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
+PredicatesAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
 	// Retrieve answer index and answer set index
 	int answerindex = query.getInputTuple()[0].getInt();
@@ -302,7 +302,7 @@ TuplesAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	}
 }
 
-// -------------------- ArgumentsAtom --------------------
+// -------------------- PredicatesAtom --------------------
 
 ArgumentsAtom::ArgumentsAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 {
