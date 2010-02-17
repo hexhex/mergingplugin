@@ -1,14 +1,14 @@
-../emptyrevisionplan.txt emptyrevisionplan.out 10
-../singleanswerset1.txt singleanswerset1.out 20 --filter=x,y
-../singleanswerset2.txt singleanswerset2.out 20 --filter=x,y
-../multipleanswersets1.txt multipleanswersets1.out 20 --filter=x,p1
-../multipleanswersets2.txt multipleanswersets2.out 20 --filter=a,x,y,z
-../commonsignature.txt commonsignature.out 20 --filter=x,y
-../invalidcs1.txt invalidcs1.out 11
-../invalidcs2.txt invalidcs2.out 01
-../invalidbeliefbase1.txt invalidbeliefbase1.out 01
-../invalidbeliefbase2.txt invalidbeliefbase2.out 01
-../invalidrp1.txt invalidrp1.out 01
-../invalidrp2.txt invalidrp2.out 01
-../subrp1.txt subrp1.out 00
-../subrp2.txt subrp2.out 00
+../emptyrevisionplan.rp emptyrevisionplan.out 10
+../singleanswerset1.rp singleanswerset1.as 20 --filter=x,y
+../singleanswerset2.rp singleanswerset2.as 20 --filter=x,y
+../multipleanswersets1.rp multipleanswersets1.as 20 --filter=x,p1
+../multipleanswersets2.rp multipleanswersets2.as 20 --filter=a,x,y,z
+../commonsignature.rp commonsignature.as 20 --filter=x,y
+../invalidcs1.rp invalidcs1.out 11
+../invalidcs2.rp invalidcs2.out 01
+../invalidbeliefbase1.rp invalidbeliefbase1.out 01
+../invalidbeliefbase2.rp invalidbeliefbase2.out 01
+../invalidrp1.rp invalidrp1.out 01
+../invalidrp2.rp invalidrp2.out 01
+../subrp1.rp subrp1.out 00
+../subrp2.rp subrp2.out 00

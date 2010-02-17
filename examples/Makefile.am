@@ -9,7 +9,7 @@ EXTRA_DIST = \
   multipleanswersets.hex
 
 TESTS = tests/run-dlvhex-tests.sh
-TESTS_ENVIRONMENT = DLVHEX=dlvhex TESTDIR=$(top_srcdir)/examples/tests PARAMETERS="-s --plugindir=$(top_builddir)/src"
+TESTS_ENVIRONMENT = DLVHEX=dlvhex RPCOMPILER=$(top_srcdir)/rpcompiler/src/rpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests PARAMETERS="-s --plugindir=$(top_builddir)/src"
 
 SUBDIRS = \
 	  testoperators

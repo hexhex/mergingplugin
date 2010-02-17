@@ -2,4 +2,4 @@ pass(0, X) :- &hex["a.",""](X).
 pass(1, X) :- &hex["b. a.",""](X).
 
 opanswer(X) :- &operator["testop2", pass, kv](X).
-result(Pred, Arity) :- opanswer(X), &answersets[X](AS), &tuples[X, AS](Pred, Arity).
+result(Pred, Arity) :- opanswer(X), &answersets[X](AS), &predicates[X, AS](Pred, Arity).

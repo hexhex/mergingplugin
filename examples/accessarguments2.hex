@@ -6,6 +6,6 @@ pred2(a, b).
 
 ",""](Prog1).
 
-pred1(Arg0, Arg1, Arg2) :- answer(Answer), &answersets[Answer](AnswerSet), &tuples[Answer, AnswerSet](Pred, Arity), &tuples[Answer, AnswerSet](Pred, 3), &arguments[Answer, AnswerSet, Pred](RunningNr, 0, Arg0), &arguments[Answer, AnswerSet, Pred](RunningNr, 1, Arg1), &arguments[Answer, AnswerSet, Pred](RunningNr, 2, Arg2).
+pred1(Arg0, Arg1, Arg2) :- answer(Answer), &answersets[Answer](AnswerSet), &predicates[Answer, AnswerSet](Pred, Arity), &predicates[Answer, AnswerSet](Pred, 3), &arguments[Answer, AnswerSet, Pred](RunningNr, 0, Arg0), &arguments[Answer, AnswerSet, Pred](RunningNr, 1, Arg1), &arguments[Answer, AnswerSet, Pred](RunningNr, 2, Arg2).
 
-pred2(Arg0, Arg1) :- answer(Answer), &answersets[Answer](AnswerSet), &tuples[Answer, AnswerSet](Pred, Arity), &tuples[Answer, AnswerSet](Pred, 2), &arguments[Answer, AnswerSet, Pred](RunningNr, 0, Arg0), &arguments[Answer, AnswerSet, Pred](RunningNr, 1, Arg1).
+pred2(Arg0, Arg1) :- answer(Answer), &answersets[Answer](AnswerSet), &predicates[Answer, AnswerSet](Pred, Arity), &predicates[Answer, AnswerSet](Pred, 2), &arguments[Answer, AnswerSet, Pred](RunningNr, 0, Arg0), &arguments[Answer, AnswerSet, Pred](RunningNr, 1, Arg1).

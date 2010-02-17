@@ -1,1 +1,1 @@
-predicates(Pred, Arity) :- &hex["testpred.",""](Answer), &answersets[Answer](AnswerSet), &tuples[Answer, AnswerSet](Pred, Arity).
+predicates(Pred, Arity) :- &hex["testpred.",""](Answer), &answersets[Answer](AnswerSet), &predicates[Answer, AnswerSet](Pred, Arity).
