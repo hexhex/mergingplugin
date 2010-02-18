@@ -8,8 +8,8 @@ EXTRA_DIST = \
   accessarguments2.hex \
   multipleanswersets.hex
 
-TESTS = tests/run-dlvhex-tests.sh
-TESTS_ENVIRONMENT = DLVHEX=dlvhex RPCOMPILER=$(top_srcdir)/rpcompiler/src/rpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests PARAMETERS="-s --plugindir=$(top_builddir)/src"
+TESTS = tests/run-mergingplugin-tests.sh
+TESTS_ENVIRONMENT = DLVHEX=dlvhex RPCOMPILER=$(top_srcdir)/rpcompiler/src/rpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src"
 
 SUBDIRS = \
 	  testoperators

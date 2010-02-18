@@ -3,6 +3,7 @@
 #
 # dlvhex -- Answer-Set Programming with external interfaces.
 # Copyright (C) 2005, 2006, 2007 Roman Schindlauer
+# Modified by Christoph Redl in Feburary 2010
 # 
 # This file is part of dlvhex.
 #
@@ -22,18 +23,15 @@
 # USA.
 #
 
-MKTEMP="mktemp -t tmp.XXXXXXXXXX"
-TMPFILE=$($MKTEMP) # global temp. file for answer sets
-
 failed=0
 warned=0
 ntests=0
 
-echo ============ dlvhex tests start ============
+echo ============ mergingplugin tests start ============
 
 for t in $(find $TESTDIR -name '*.test' -type f)
 do
-    while read INPUT REFOUTPUT ADDPARM
+    while read INPUT REFOUTPUT ADDDHPARAM
     do
 	let ntests++
 
@@ -47,8 +45,10 @@ do
 	fi
 
 	OLDDLVHEXPARAMETERS=$DLVHEXPARAMETERS
-	DLVHEXPARAMETERS="$DLVHEXPARAMETERS $ADDPARAM"
+	DLVHEXPARAMETERS="$DLVHEXPARAMETERS $ADDDHPARAM"
+	export DLVHEXPARAMETERS
 
+	# compare with reference output
 	if $CMPSCRIPT $INPUT $REFOUTPUT > /dev/null
 	then
 		echo "PASS: $INPUT"
@@ -58,18 +58,15 @@ do
 	fi
 
 	DLVHEXPARAMETERS=$OLDDLVHEXPARAMETERS
+	export DLVHEXPARAMETERS
     done < $t # redirect test file to the while loop
 done
 
-# cleanup
-rm -f $TMPFILE
-
-echo ========== dlvhex tests completed ==========
+echo ========== mergingplugin tests completed ==========
 
 echo Tested $ntests dlvhex programs
 echo $failed failed tests, $warned warnings
 
-echo ============= dlvhex tests end =============
+echo ============= mergingplugin tests end =============
 
 exit $failed
-

@@ -4,7 +4,7 @@
 ../multipleanswersets1.rp multipleanswersets1.as 20 --filter=x,p1
 ../multipleanswersets2.rp multipleanswersets2.as 20 --filter=a,x,y,z
 ../commonsignature.rp commonsignature.as 20 --filter=x,y
-../invalidcs1.rp invalidcs1.out 11
+../invalidcs1.rp invalidcs1.out 01
 ../invalidcs2.rp invalidcs2.out 01
 ../invalidbeliefbase1.rp invalidbeliefbase1.out 01
 ../invalidbeliefbase2.rp invalidbeliefbase2.out 01

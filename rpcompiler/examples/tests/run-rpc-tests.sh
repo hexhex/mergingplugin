@@ -40,7 +40,7 @@ do
     #   10 -> RP compiler output is expected to be 0; compare RP compiler output
     #   11 -> RP compiler output is expected to be 1; compare RP compiler output
     #   20 -> RP compiler output is expected to be 0; pass compiler output to dlvhex and compare answer sets
-    while read INPUT REFOUTPUT REFERENCERETVAL ADDDLVPARAM  ## ADDRPCPARAM
+    while read INPUT REFOUTPUT REFERENCERETVAL ADDDHPARAM
     do
 	let ntests++
 
@@ -60,16 +60,20 @@ do
 		# Drop first digit of reference return value since it is only used for the distinction if answer sets or compiler output shall be compared
 		REFERENCERETVAL=0
 
-		$CMPSCRIPT $INPUT $REFOUTPUT > /dev/null
-		succ=$?
+		OLDDLVHEXPARAMETERS=$DLVHEXPARAMETERS
+		DLVHEXPARAMETERS="$DLVHEXPARAMETERS $ADDDHPARAM"
+		export DLVHEXPARAMETERS
 
-		if [ $succ ]
+		if $CMPSCRIPT $INPUT $REFOUTPUT > /dev/null
 		then
 			echo "PASS: $INPUT"
 		else
 			echo "FAIL: $INPUT"
 			let failed++
 		fi
+
+		DLVHEXPARAMETERS=$OLDDLVHEXPARAMETERS
+		export DLVHEXPARAMETERS
 	else
 		# COMPARE COMPILER OUTPUT
 

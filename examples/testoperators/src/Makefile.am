@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = gnu
 
-plugin_LTLIBRARIES = libtestoperators.la
+plugin_LTLIBRARIES = libdlvhextestoperators.la
 
-libtestoperators_la_SOURCES = TestOperators.cpp
+libdlvhextestoperators_la_SOURCES = TestOperators.cpp
 
 #
 # extend compiler flags by CFLAGS of other needed libraries
@@ -12,8 +12,8 @@ AM_CPPFLAGS = \
 	$(BOOST_CPPFLAGS) \
 	$(DLVHEX_CFLAGS)
 
-libtestoperators_la_LDFLAGS = -avoid-version -module
+libdlvhextestoperators_la_LDFLAGS = -avoid-version -module
 
 
-libtestoperators-static.la: $(libtestoperators_la_OBJECTS)
-	$(CXXLINK) -avoid-version -module -rpath $(plugindir) $(libtestoperators_la_OBJECTS)
+libdlvhextestoperators-static.la: $(libdlvhextestoperators_la_OBJECTS)
+	$(CXXLINK) -avoid-version -module -rpath $(plugindir) $(libdlvhextestoperators_la_OBJECTS)
