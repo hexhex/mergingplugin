@@ -11,6 +11,14 @@
 #     hex	--> file contains a hex program
 #     as	--> file contains answer-sets
 #     dot	--> file contains a dot graph
+#     err	--> symbolic representation of errors of any kind (file content is irrelevant)
+#
+# A comparison to err succeeds if and only if the other computation fails. In detail:
+#   err = err
+#   err = any failed computation (with arbitrary output!)
+#   err != any successful computation (with arbitrary output!)
+# Thus, for instance, err = rp if any of the tools involved in revision plan evaluation returns
+# an error.
 #
 # The selection of the comparison algorithm is done according to the following rules:
 #
@@ -39,6 +47,11 @@
 #     hex/as	-> Run dlvhex on the hex program, then compare the sets of answer-sets
 #     dot/as	-> Convert the answer-set into a dot graph and compare it.
 #
+# Note: When comparing answer-sets, predicate and constant names are treated as equivalent iff they are
+# equal UNTIL the first occurrence of underscore (_). E.g. leaf = leaf_2 = leaf_3 = leaf_1_1, etc.. This
+# enables an efficient comparison of decision diagrams, since they can contain duplicates of nodes that
+# are named according to this schema.
+#
 # The third and forth parameter are optional. If present, they need to be one of the
 # listed hex extensions and overwrites the default compare mode determined by inspection
 # of the filename.
@@ -50,7 +63,7 @@
 # If only 3 parameters are passed, the forth one is implicitly given (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# February 17, 2010, 21:30
+# February 18, 2010, 21:43
 
 
 # ================================================== answer-sets ==================================================
@@ -65,6 +78,8 @@ function sortAnswerSets {
 	first=1
 	for literal in $sortedliterals
 	do
+		# restrict predicate and constant names to the part before the first occurrence of underscore
+		literal=$(echo "$literal" | sed 's/_[^,\)\("}]*//g')
 		if [ $first = 1 ]
 		then
 			as="$as$literal"
@@ -270,6 +285,14 @@ function compare {
 			echo "      hex	--> file contains a hex program"
 			echo "      as	--> file contains answer-sets"
 			echo "      dot	--> file contains a dot graph"
+			echo "      err --> symbolic representation of errors of any kind (file content is irrelevant)"
+			echo " "
+			echo "  A comparison to err succeeds if and only if the other computation fails. In detail:"
+			echo "    err = err"
+			echo "    err = any failed computation (with arbitrary output!)"
+			echo "    err != any successful computation (with arbitrary output!)"
+			echo "  Thus, for instance, err = rp if any of the tools involved in revision plan evaluation returns"
+			echo "  an error."
 			echo " "
 			echo "  The selection of the comparison algorithm is done according to the following rules:"
 			echo " "
@@ -297,6 +320,11 @@ function compare {
 			echo "      hex/as	-> Run dlvhex on the hex program, then compare the sets of answer-sets"
 			echo "      dot/as	-> Convert the answer-set into a dot graph and compare it."
 			echo " "
+			echo "  Note: When comparing answer-sets, predicate and constant names are treated as equivalent iff they are"
+			echo "  equal UNTIL the first occurrence of underscore (_). E.g. leaf = leaf_2 = leaf_3 = leaf_1_1, etc.. This"
+			echo "  enables an efficient comparison of decision diagrams, since they can contain duplicates of nodes that"
+			echo "  are named according to this schema."
+			echo " "
 			echo "  The third and forth parameter are optional. If present, they need to be one of the"
 			echo "  listed hex extensions and overwrites the default compare mode determined by inspection"
 			echo "  of the filename."
@@ -308,7 +336,7 @@ function compare {
 			echo "  If only 3 parameters are passed, the forth one is implicitly given (the same as the third)."
 			echo "  "
 			echo "  Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)"
-			echo "  February 17, 2010"
+			echo "  February 18, 2010, 21:43"
 			;;
 		2)
 			# extract filename extensions
@@ -342,112 +370,180 @@ function compare {
 		fi
 	fi
 
-	# extended cases
-	# conversion
-	# 	rp < hex < as < dot
-	if [ "$extension1" != "$extension2" ]
-	then
-		case "$extension1/$extension2" in
-			"rp/hex")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
-					$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS1
-					$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
-					extension="as"
-					;;
-			"hex/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
-					$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
-					$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS2
-					extension="as"
-					;;
-			"rp/as")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
-					$RPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1
-					cp $2 $TMPFILE_AS2
-					extension="as"
-					;;
-			"as/rp")	cp $1 $TMPFILE_AS1
-					$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
-					extension="as"
-					;;
-			"rp/dot")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
-					$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --toas > $TMPFILE_DOT1
-					cp $2 $TMPFILE_DOT2
-					extension="dot"
-					;;
-			"dot/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
-					cp $1 $TMPFILE_DOT1
-					$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --toas > $TMPFILE_DOT2
-					extension="dot"
-					;;
-			"hex/as")	$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
-					cp $2 $TMPFILE_AS2
-					extension="as"
-					;;
-			"as/hex")	cp $1 $TMPFILE_AS1
-					$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
-					extension="as"
-					;;
-			"hex/as")	$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
-					cp $2 $TMPFILE_AS2
-					extension="as"
-					;;
-			"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER --toas > $TMPFILE_DOT1
-					cp $2 $TMPFILE_DOT2
-					extension="dot";
-					;;
-			"dot/hex")	cp $1 $TMPFILE_DOT1
-					$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER --toas > $TMPFILE_DOT2
-					extension="dot";
-					;;
-			"as/dot")	$DOTCONVERTER --toas < $1 > $TMPFILE_DOT1
-					cp $2 $TMPFILE_DOT2
-					extension="dot"
-					;;
-			"dot/as")	cp $1 $TMPFILE_DOT1
-					$DOTCONVERTER --toas < $2 > $TMPFILE_DOT2
-					extension="dot"
-					;;
-			*)		echo "Invalid combination of input types: $extension1/$extension2"
-					return 1
-					;;
-		esac
+	# counter for errors from subprogram calls
+	rv=0
 
-		echo "Filename extensions differ: $extension1/$extension2. Will use $extension for comparison algorithm selection."
+	if [ "$extension1" == "err" ] || [ "$extension2" == "err" ]
+	then
+		# comparisons with errors
+
+		# if both are errors, the result is: equal
+		if [ "$extension1" == "err" ] && [ "$extension2" == "err" ]
+		then
+			retval=0
+		else
+			# otherwise: compute the "non-error" operand
+			if [ "$extension1" == "err" ]; then
+				nonerrextension=$extension2
+				nonerrfile=$2
+			else
+				nonerrextension=$extension1
+				nonerrfile=$1
+			fi
+			case "$nonerrextension1" in
+				"rp")   $RPCOMPILER < $nonerrfile | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
+					let rv=rv+$?
+					;;
+				"hex")  $DLVHEX --silent $DLVHEXPARAMETERS $nonerrfile > $TMPFILE_AS1
+					let rv=rv+$?
+					;;
+			esac
+			if [ "$rv" != 0 ]; then
+				retval=1
+			fi
+		fi
 	else
-		# derived cases
-		case "$extension1" in
-			"rp")
-				$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
-				$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
-				extension="as"
+		# other cases (non-errors)
+
+		# extended cases
+		# conversion
+		# 	rp < hex < as < dot
+		if [ "$extension1" != "$extension2" ]
+		then
+			case "$extension1/$extension2" in
+				"rp/hex")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+						let rv=rv+$?
+						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS1
+						let rv=rv+$?
+						$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
+						let rv=rv+$?
+						extension="as"
+						;;
+				"hex/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+						let rv=rv+$?
+						$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+						let rv=rv+$?
+						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS2
+						let rv=rv+$?
+						extension="as"
+						;;
+				"rp/as")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+						let rv=rv+$?
+						$RPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1
+						let rv=rv+$?
+						cp $2 $TMPFILE_AS2
+						extension="as"
+						;;
+				"as/rp")	cp $1 $TMPFILE_AS1
+						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
+						let rv=rv+$?
+						extension="as"
+						;;
+				"rp/dot")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+						let rv=rv+$?
+						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --toas > $TMPFILE_DOT1
+						let rv=rv+$?
+						cp $2 $TMPFILE_DOT2
+						extension="dot"
+						;;
+				"dot/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+						let rv=rv+$?
+						cp $1 $TMPFILE_DOT1
+						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --toas > $TMPFILE_DOT2
+						let rv=rv+$?
+						extension="dot"
+						;;
+				"hex/as")	$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+						let rv=rv+$?
+						cp $2 $TMPFILE_AS2
+						extension="as"
+						;;
+				"as/hex")	cp $1 $TMPFILE_AS1
+						$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
+						let rv=rv+$?
+						extension="as"
+						;;
+				"hex/as")	$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+						let rv=rv+$?
+						cp $2 $TMPFILE_AS2
+						extension="as"
+						;;
+				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER --toas > $TMPFILE_DOT1
+						let rv=rv+$?
+						cp $2 $TMPFILE_DOT2
+						extension="dot";
+						;;
+				"dot/hex")	cp $1 $TMPFILE_DOT1
+						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER --toas > $TMPFILE_DOT2
+						let rv=rv+$?
+						extension="dot";
+						;;
+				"as/dot")	$DOTCONVERTER --toas < $1 > $TMPFILE_DOT1
+						let rv=rv+$?
+						cp $2 $TMPFILE_DOT2
+						extension="dot"
+						;;
+				"dot/as")	cp $1 $TMPFILE_DOT1
+						$DOTCONVERTER --toas < $2 > $TMPFILE_DOT2
+						let rv=rv+$?
+						extension="dot"
+						;;
+				*)		echo "Invalid combination of input types: $extension1/$extension2"
+						return 1
+						;;
+			esac
+
+			echo "Filename extensions differ: $extension1/$extension2. Will use $extension for comparison algorithm selection."
+		else
+			# derived cases
+			case "$extension1" in
+				"rp")
+					$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
+					let rv=rv+$?
+					$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
+					let rv=rv+$?
+					extension="as"
+					;;
+				"hex")
+					$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+					let rv=rv+$?
+					$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
+					let rv=rv+$?
+					extension="as"
+					;;
+				*)
+					# basic cases
+					extension=$extension1
+					;;
+			esac
+		fi
+
+		# basic cases
+		case "$extension" in
+			"dot")
+				# compare dot graphs
+				compareDotFiles $TMPFILE_DOT1 $TMPFILE_DOT2
+				retval=$?
+				# check if all subprogram calls succeeded
+				if [ $rv != 0 ]; then
+					retval=1
+				fi
 				;;
-			"hex")
-				$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
-				$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
-				extension="as"
+		 	"as")
+				# compare set of answer-sets
+				compareSetsOfAnswerSets $TMPFILE_AS1 $TMPFILE_AS2
+				retval=$?
+				# check if all subprogram calls succeeded
+				if [ $rv != 0 ]; then
+					retval=1
+				fi
 				;;
 			*)
-				# basic cases
-				extension=$extension1
+				echo "Unknown extension: $extension"
+				retval=1
 				;;
 		esac
 	fi
-
-	# basic cases
-	case "$extension" in
-		"dot")
-			# compare dot graphs
-			compareDotFiles $TMPFILE_DOT1 $TMPFILE_DOT2
-			retval=$?
-			;;
-	 	"as")
-			# compare set of answer-sets
-			compareSetsOfAnswerSets $TMPFILE_AS1 $TMPFILE_AS2
-			retval=$?
-			;;
-		*)
-			echo "Unknown extension: $extension"
-			retval=1
-			;;
-	esac
 
 	# cleanup
 	rm -f $TMPFILE_AS1

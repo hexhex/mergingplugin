@@ -1,14 +1,14 @@
-../emptyrevisionplan.rp emptyrevisionplan.out 10
-../singleanswerset1.rp singleanswerset1.as 20 --filter=x,y
-../singleanswerset2.rp singleanswerset2.as 20 --filter=x,y
-../multipleanswersets1.rp multipleanswersets1.as 20 --filter=x,p1
-../multipleanswersets2.rp multipleanswersets2.as 20 --filter=a,x,y,z
-../commonsignature.rp commonsignature.as 20 --filter=x,y
-../invalidcs1.rp invalidcs1.out 01
-../invalidcs2.rp invalidcs2.out 01
-../invalidbeliefbase1.rp invalidbeliefbase1.out 01
-../invalidbeliefbase2.rp invalidbeliefbase2.out 01
-../invalidrp1.rp invalidrp1.out 01
-../invalidrp2.rp invalidrp2.out 01
-../subrp1.rp subrp1.out 00
-../subrp2.rp subrp2.out 00
+../emptyrevisionplan.rp emptyrevisionplan.as
+../singleanswerset1.rp singleanswerset1.as
+../singleanswerset2.rp singleanswerset2.as
+../multipleanswersets1.rp multipleanswersets1.as
+../multipleanswersets2.rp multipleanswersets2.as
+../commonsignature.rp commonsignature.as
+../invalidcs1.rp invalidcs1.err
+../invalidcs2.rp invalidcs2.err
+../invalidbeliefbase1.rp invalidbeliefbase1.err
+../invalidbeliefbase2.rp invalidbeliefbase2.err
+../invalidrp1.rp invalidrp1.err
+../invalidrp2.rp invalidrp2.err
+../subrp1.rp subrp1.as --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libtestoperators.so
+../subrp2.rp subrp2.as --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libtestoperators.so

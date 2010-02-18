@@ -8,12 +8,12 @@ mapping: "x. y.";
 
 [revision plan]
 {
-	operator: none;
+	operator: testop2;
 	{
 		bb1
 	};
 	{
-		operator: none;
+		operator: testop2;
 		{
 			bb1
 		};

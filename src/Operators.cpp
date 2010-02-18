@@ -215,7 +215,7 @@ void OperatorAtom::addOperators(std::string lib, bool silent, bool debug){
 					// Check if the operator name is unique
 					if (operators.find((*it)->getName()) != operators.end()){
 						// Name is not unique
-						throw PluginError((std::string("Operator name\"") + (*it)->getName() + std::string("\" is not unique. A duplicate was find in library \"") + lib + std::string("\".")).c_str());
+						throw PluginError((std::string("Operator name \"") + (*it)->getName() + std::string("\" in library \"") + lib + std::string("\" is not unique. A duplicate was find in library \"") + lib + std::string("\".")).c_str());
 					}else{
 						if (!silent && debug){
 							std::cout << "mergingplugin:    Found operator \"" << (*it)->getName() << "\"" << std::endl;

@@ -23,24 +23,23 @@
 # USA.
 #
 
-MKTEMP="mktemp -t tmp.XXXXXXXXXX"
-TMPFILE=$($MKTEMP) # global temp. file for answer sets
-
 failed=0
 warned=0
 ntests=0
 
+# Create temporary files
+MKTEMP="mktemp -t tmp.XXXXXXXXXX"
+TMPFILE=$($MKTEMP) # global temp. file for answer sets
+
+# Check prerequisites
+# library must not be installed
+
+# Tests
 echo ============ revision plan tests start ============
 
 for t in $(find $TESTDIR -name '*.test' -type f)
 do
-    # REFERENCERETVAL
-    #   00 -> RP compiler output is expected to be 0; compare return value only
-    #   01 -> RP compiler output is expected to be 1; compare return value only
-    #   10 -> RP compiler output is expected to be 0; compare RP compiler output
-    #   11 -> RP compiler output is expected to be 1; compare RP compiler output
-    #   20 -> RP compiler output is expected to be 0; pass compiler output to dlvhex and compare answer sets
-    while read INPUT REFOUTPUT REFERENCERETVAL ADDDHPARAM
+    while read INPUT REFOUTPUT ADDDHPARAM
     do
 	let ntests++
 
@@ -53,58 +52,20 @@ do
 	    continue
 	fi
 
-	if test $REFERENCERETVAL -eq 20
+	OLDDLVHEXPARAMETERS=$DLVHEXPARAMETERS
+	DLVHEXPARAMETERS="$DLVHEXPARAMETERS $ADDDHPARAM"
+	export DLVHEXPARAMETERS
+
+	if $CMPSCRIPT $INPUT $REFOUTPUT &> /dev/null
 	then
-		# COMPARE ANSWER SETS
-
-		# Drop first digit of reference return value since it is only used for the distinction if answer sets or compiler output shall be compared
-		REFERENCERETVAL=0
-
-		OLDDLVHEXPARAMETERS=$DLVHEXPARAMETERS
-		DLVHEXPARAMETERS="$DLVHEXPARAMETERS $ADDDHPARAM"
-		export DLVHEXPARAMETERS
-
-		if $CMPSCRIPT $INPUT $REFOUTPUT > /dev/null
-		then
-			echo "PASS: $INPUT"
-		else
-			echo "FAIL: $INPUT"
-			let failed++
-		fi
-
-		DLVHEXPARAMETERS=$OLDDLVHEXPARAMETERS
-		export DLVHEXPARAMETERS
+		echo "PASS: $INPUT"
 	else
-		# COMPARE COMPILER OUTPUT
-
-		# Drop first digit of reference return value since it is only used for the distinction if answer sets or compiler output shall be compared
-		if test $REFERENCERETVAL -eq 10 || test $REFERENCERETVAL -eq 00
-		then
-			CMPRETVAL=0
-		else
-			CMPRETVAL=1
-		fi
-
-		# run rpcompiler with specified parameters and program
-		$RPCOMPILER  $RPCPARAMETERS $ADDPARM $INPUT >& $TMPFILE
-		RPCOMPILERRETVAL=$?
-
-		# compare compiler output with reference result
-		if (cmp -s $TMPFILE $REFOUTPUT || test $REFERENCERETVAL -eq 00 || test $REFERENCERETVAL -eq 01) && test $CMPRETVAL -eq $RPCOMPILERRETVAL
-		then
-			echo "PASS: $INPUT"
-		else
-			echo "FAIL: $INPUT"
-			if ! test $RPCOMPILERRETVAL -eq $CMPRETVAL
-			then
-				echo "Return values differ: $RPCOMPILERRETVAL (should be $CMPRETVAL)"
-			else
-				echo "Outputs differ:"
-				diff $INPUT $REFOUTPUT
-			fi
-			let failed++
-		fi
+		echo "FAIL: $INPUT"
+		let failed++
 	fi
+
+	DLVHEXPARAMETERS=$OLDDLVHEXPARAMETERS
+	export DLVHEXPARAMETERS
     done < $t # redirect test file to the while loop
 done
 

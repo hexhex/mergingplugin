@@ -27,10 +27,20 @@ failed=0
 warned=0
 ntests=0
 
+# Check prerequisites
+# library must not be installed
+if [ -f $SYSPLUGINDIR/libdlvhexmerging.so ] || [ -f $USERPLUGINDIR/libdlvhexmerging.so ]
+then
+	echo "Error: Make sure that the mergingplugin is NOT installed when the tests are run!"
+	exit 1
+fi
+
+# Tests
 echo ============ mergingplugin tests start ============
 
 for t in $(find $TESTDIR -name '*.test' -type f)
 do
+    # input format: [input file] [reference output] [additional dlvhex parameters]
     while read INPUT REFOUTPUT ADDDHPARAM
     do
 	let ntests++
@@ -49,7 +59,7 @@ do
 	export DLVHEXPARAMETERS
 
 	# compare with reference output
-	if $CMPSCRIPT $INPUT $REFOUTPUT > /dev/null
+	if $CMPSCRIPT $INPUT $REFOUTPUT &> /dev/null
 	then
 		echo "PASS: $INPUT"
 	else
