@@ -45,6 +45,7 @@ struct RPParser::rp_grammar : public grammar<rp_grammar>{
 		rule<ScannerT, parser_context<>, parser_tag<TCommonSignatureSection> > CommonSignatureSection;
 		rule<ScannerT, parser_context<>, parser_tag<TBeliefBaseSection> > BeliefBaseSection;
 		rule<ScannerT, parser_context<>, parser_tag<TRevisionPlanSection> > RevisionPlanSection;
+		rule<ScannerT, parser_context<>, parser_tag<TComposedRevisionPlan> > ComposedRevisionPlan;
 		rule<ScannerT, parser_context<>, parser_tag<TSection> > Section;
 		rule<ScannerT, parser_context<>, parser_tag<TProgram> > Program;
 
@@ -60,20 +61,21 @@ struct RPParser::rp_grammar : public grammar<rp_grammar>{
 			COLON =				str_p(":");
 			SLASH =				str_p("/");
 			NUMBER =			token_node_d[ int_p ];
-			IDENTIFIER =			token_node_d[ (ch_p('"') >> *(~ch_p('"')) >> ch_p('"')) | (*(range_p('a','z') | range_p('A','Z') | range_p('0','9'))) ];
+			IDENTIFIER =			token_node_d[ (ch_p('"') >> *(~ch_p('"')) >> ch_p('"')) | (+(range_p('a','z') | range_p('A','Z') | range_p('0','9'))) ];
 
 			// Grammer
-			Source =			RevisionPlanSection >> SEMICOLON;
+			Source =			ComposedRevisionPlan >> SEMICOLON;
 			KeyValuePair =			IDENTIFIER >> COLON >> IDENTIFIER >> SEMICOLON;
 			Predicate =			IDENTIFIER >> COLON >> IDENTIFIER >> SLASH >> NUMBER >> SEMICOLON;
 			CommonSignatureSection =	*Predicate;
 			BeliefBaseSection =		*KeyValuePair;
-			RevisionPlanSection =		(OCBRACKET >> *KeyValuePair >> *Source >> CCBRACKET) |
+			RevisionPlanSection =		ComposedRevisionPlan;
+			ComposedRevisionPlan =		(OCBRACKET >> *KeyValuePair >> *Source >> CCBRACKET) |
 							(OCBRACKET >> IDENTIFIER >> CCBRACKET);
 			Section =			(SECTIONCS >> CommonSignatureSection) |
 							(SECTIONBB >> BeliefBaseSection) |
 							(SECTIONRP >> RevisionPlanSection);
-			Program =			*Section;
+			Program =			*Section >> !end_p;
 	        }
 	        rule<ScannerT, parser_context<>,  parser_tag<TRootNode> > start() const{ 
 			return Program;
@@ -165,16 +167,19 @@ ParseTreeNode* RPParser::createParseTree(iter_t const& i, int l){
 			}
 			break;
 		case TRevisionPlanSection:
+			result = new ParseTreeNode(ParseTreeNode::section_revisionplan, 0);
+			result->addChild(createParseTree(chi, l + 1));
+			break;
+		case TComposedRevisionPlan:
 			// Distinction: data source or sub-revision plan
 			if (i->children.size() == 3){
 				// Data source
-				result = new ParseTreeNode(ParseTreeNode::section_revisionplan, 0);
-				result->addChild(new ParseTreeNode(ParseTreeNode::datasource, 0));
+				result = new ParseTreeNode(ParseTreeNode::datasource, 0);
 				chi++;	// Skip bracket
-				result->getChild(0)->addChild(createParseTree(chi, l + 1));
+				result->addChild(createParseTree(chi, l + 1));
 			}else{
 				// Sub revision plan
-				result = new ParseTreeNode(ParseTreeNode::section_revisionplan, 0);
+				result = new ParseTreeNode(ParseTreeNode::revisionplansection, 0);
 				result->addChild(new ParseTreeNode(ParseTreeNode::kvpairs, 0));
 				result->addChild(new ParseTreeNode(ParseTreeNode::revisionsources, 0));
 
@@ -242,6 +247,14 @@ ParseTreeNode* RPParser::createParseTree(iter_t const& i, int l){
 			}else{
 				rs = std::string("");
 			}
+
+			// unquote
+			if (rs.length() >= 2){
+				if (rs[0] == '\"' && rs[rs.length() - 1] == '\"'){
+					rs = rs.substr(1, rs.length() - 2);
+				}
+			}
+
 			result = new StringTreeNode(rs);
 
 			break;
@@ -279,8 +292,22 @@ void RPParser::parse(){
 			std::string fileContent = readFile(filePtr);
 			parsingContent += fileContent;
 
-			tree_parse_info<> info = pt_parse(fileContent.c_str(), grammer, space_p);
-			parsetree = createParseTree(info.trees.begin(), 0);
+			const char* it_begin = fileContent.c_str();
+			const char* it_end = it_begin+fileContent.size();
+
+			typedef node_val_data_factory<> factory_t;
+
+			tree_parse_info<iterator_t, factory_t> info = pt_parse<factory_t>(it_begin, it_end, grammer, space_p);
+
+			if (!info.full){
+				// extract erroneous line of code
+				int errorpos = info.stop - it_begin + 1; // +1 since .stop points to the end of _successful_ parsed source
+				int lineendpos = ((fileContent.find_first_of("\n", errorpos) == std::string::npos) ? fileContent.length() : fileContent.find_first_of("\n", errorpos));
+				std::cerr << "  Input line: " << fileContent.substr(errorpos, lineendpos - errorpos) << std::endl;
+				syntaxerrors++;
+			}else{
+				parsetree = createParseTree(info.trees.begin(), 0);
+			}
 		}
 		isparsed = true;
 	}else{

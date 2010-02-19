@@ -56,6 +56,7 @@ private:
 	static const int TCommonSignatureSection = 15;
 	static const int TBeliefBaseSection = 16;
 	static const int TRevisionPlanSection = 17;
+	static const int TComposedRevisionPlan = 20;
 	static const int TSection = 18;
 	static const int TProgram = 19;
 

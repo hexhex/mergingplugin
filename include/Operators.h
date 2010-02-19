@@ -7,6 +7,9 @@
 #include <vector>
 #include <IOperator.h>
 
+#include "OpUnion.h"
+#include "OpSetminus.h"
+
 namespace dlvhex {
 	namespace merging {
 		/**
@@ -25,6 +28,8 @@ namespace dlvhex {
 			HexAnswerCache &resultsetCache;
 			std::map<std::string, IOperator*> operators;
 
+			OpUnion _union;
+			OpSetminus _setminus;
 			void registerBuiltInOperators();
 		public:
 

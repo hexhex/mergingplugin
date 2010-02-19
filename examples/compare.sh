@@ -1,69 +1,91 @@
 #!/bin/bash
 
+# -----------------------------------------------------------------------------
+#                                      compare.sh
+# -----------------------------------------------------------------------------
+#
 # This file contains procedures for comparing the following file types
+#   + revision plans
+#   + hex programs
 #   + answer-sets
 #   + dot graphs
-# It is especially useful for writing testcases for dlvhex plugins
+# It is useful for writing testcases for dlvhex plugins, especially for
+#   + mergingplugin
+#   + decisiondiagramsplugin
 #
-# The script expects two filenames as parameters. It will automatically detect the
-# file type by checking the filename extension:
+# The script expects two mandatory filenames as parameters. It will
+# automatically detect the file type by checking the filename extension:
 #     rp	--> revision plan
 #     hex	--> file contains a hex program
 #     as	--> file contains answer-sets
 #     dot	--> file contains a dot graph
-#     err	--> symbolic representation of errors of any kind (file content is irrelevant)
+#     err	--> symbolic representation of errors of any kind (file content
+#                   is irrelevant)
 #
-# A comparison to err succeeds if and only if the other computation fails. In detail:
-#   err = err
-#   err = any failed computation (with arbitrary output!)
-#   err != any successful computation (with arbitrary output!)
-# Thus, for instance, err = rp if any of the tools involved in revision plan evaluation returns
-# an error.
-#
-# The selection of the comparison algorithm is done according to the following rules:
+# The selection of the comparison algorithm is done according to the following
+# rules.
+# -----------------------------------------------------------------------------
+# -- Error cases --
+#     A comparison to err succeeds if and only if the other computation fails.
+#     In detail:
+#       err = err
+#       err = any failed computation (with arbitrary output!)
+#       err != any successful computation (with arbitrary output!)
+#     Thus, for instance, err = rp if any of the tools involved in revision
+#     plan evaluation returns an error.
 #
 # -- Basic cases --
-#     as/as	-> Compare the sets of answer-sets
-#     dot/dot	-> Compare the dot graphs
+#      + as/as   -> Compare the sets of answer-sets.
+#      + dot/dot -> Compare the dot graphs (semantically, see below).
+#    When comparing answer-set files, the order of the answer-sets and literals
+#    within an answer-set is irrelevant
+#    When comparing dot files, the graphs are compared semantically. That is,
+#    the internal node names and file structue are irrelevant as long as the
+#    encoded graphs are equivalent. This enables an efficient comparison of
+#    decision diagrams, since they can contain duplicates of nodes that are
+#    named according to this schema.
 #
 # -- Derived cases --
-#     rp/rp	-> Run the revision plan compiler on the revision plans, then execute
-#		   the resulting hex programs using dlvhex. finally compare their sets
-#		   of answer-sets
-#     hex/hex	-> Execute both hex programs and compare their sets of answer-sets
+#     + rp/rp    -> Run the revision plan compiler on the revision plans, then
+#                   execute the resulting hex programs using dlvhex. Finally
+#		    compare their sets of answer-sets.
+#     + hex/hex  -> Execute both hex programs and compare their sets of
+#                   answer-sets.
 #
 # -- Extended cases --
-#  If two different file types are passed, the "smaller one" is converted into the greater one
-#  by calling the appropriate programs. (rp < hex < as < dot)
+#  If two different file types are passed, the "smaller one" is converted into
+#  the greater one by calling the appropriate programs.
+#    (with rp < hex < as < dot)
 #  Conversion is done as follows:
-#     rp --> [revision plan compiler] --> hex --> [dlvhex] --> [dotconverter] --> dot
-
-#     hex/rp	-> Convert the revision plan into a hex program (using the revision plan compiler),
-#		   then execute both programs and compare their sets of answer-sets.
-#     as/rp	-> Run the revision plan compiler on the revision plan and execute the resulting
-#		   hex program. Then compare the result with the set of answer-sets
-#     dot/rp	-> Convert the revision plan into a hex program (using the revision plan compiler),
-#		   then execute the program and translate the answer into a dot graph that is compared.
-#     hex/as	-> Run dlvhex on the hex program, then compare the sets of answer-sets
-#     dot/as	-> Convert the answer-set into a dot graph and compare it.
+#     {rp --> [rpcompiler] --> hex --> [dlvhex] --> [dotconverter] --> dot}
+#  Therefore:
+#     + hex/rp   -> Convert the revision plan into a hex program (using the
+#                   revision plan compiler), then execute both programs and
+#                   compare their sets of answer-sets.
+#     + as/rp    -> Run the revision plan compiler on the revision plan and
+#                   execute the resulting hex program. Then compare the result
+#                   with the set of answer-sets.
+#     + dot/rp   -> Convert the revision plan into a hex program (using the
+#                   revision plan compiler), then execute the program and
+#                   translate the answer into a dot graph that is compared.
+#     + hex/as   -> Run dlvhex on the hex program, then compare the sets of
+#                   answer-sets.
+#     + dot/as   -> Convert the answer-set into a dot graph and compare it.
+# -----------------------------------------------------------------------------
 #
-# Note: When comparing answer-sets, predicate and constant names are treated as equivalent iff they are
-# equal UNTIL the first occurrence of underscore (_). E.g. leaf = leaf_2 = leaf_3 = leaf_1_1, etc.. This
-# enables an efficient comparison of decision diagrams, since they can contain duplicates of nodes that
-# are named according to this schema.
-#
-# The third and forth parameter are optional. If present, they need to be one of the
-# listed hex extensions and overwrites the default compare mode determined by inspection
-# of the filename.
+# The third and forth parameter are optional. If present, they need to be one
+# of the listed hex extensions and overwrites the default compare mode
+# determined by inspection of the filename.
 # Example:
 #   compare f1.hex f2.hex
 # assumes that both files are hex programs, whereas
 #   compare f1.hex f2.hex as as
-# tells the script that the files rather contain answer-sets despete their extension.
-# If only 3 parameters are passed, the forth one is implicitly given (the same as the third).
+# tells the script that the files rather contain answer-sets despete their
+# extension. If only 3 parameters are passed, the forth one is implicitly given
+# (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# February 18, 2010, 21:43
+# February 19, 2010, 11:09
 
 
 # ================================================== answer-sets ==================================================
@@ -79,7 +101,7 @@ function sortAnswerSets {
 	for literal in $sortedliterals
 	do
 		# restrict predicate and constant names to the part before the first occurrence of underscore
-		literal=$(echo "$literal" | sed 's/_[^,\)\("}]*//g')
+		#literal=$(echo "$literal" | sed 's/_[^,\)\("}]*//g')
 		if [ $first = 1 ]
 		then
 			as="$as$literal"
@@ -172,47 +194,131 @@ function compareSetsOfAnswerSets {
 
 # ================================================== dot graphs ==================================================
 
-# simplifies dot files syntactically by dropping irrelevant tokens (digraph keyword, etc.)
-# such that comparing becomes easier
+# Simplifies dot files syntactically by dropping irrelevant tokens (digraph keyword, etc.) such that comparing becomes easier.
+# In detail, two graphs are equivalent if their structue coincide. The node names and ordering are irrelevant as long as their
+# labels are equal.
 function reduceDotFile {
+	awkscript='
+		{
+			# read input file line by line
+			file[NR]=$0;
+		}
 
-	# read dot file
-	while read line
-	do
-		# trim each line
-		line=$(echo "$line" | sed 's/^[ ]*//')
-		line=$(echo "$line" | sed 's/[ ]*$//')
-		dot="$dot$line"
-	done < $1;
+		# print a subgraph recursivly in a unique and comparable format
+		function output(nodes, node, level, i, s, children, condition, suboutput, retval, indent){
+			retval = ""
+			indent = ""
+			for (i=1; i < level; i++){
+				indent = indent "   "
+			}
 
-	# remove the digraph{ } construct and reduce the graph to the actual content
-	dot=$(echo -e "$dot" | sed "s/^[a-z|A-Z|0-9| ]*{\(.*\)}$/\1/")
+			# print node label
+			# and the total number of accesses to this node
+			#    (this allows to distinct two nodes with the same label from two edges to the same node)
+			retval = retval nodes[node] " {" acccount[node]++ "}";
 
-	# remove double spaces
-	dot=$(echo -e $dot)
+			# find subnodes
+			s=0
+			for (i=1; i <= NR; i++){
+				re=node "[ ]*->";
+				if (match(file[i], re)){
+					nodestring=file[i];
+					gsub(/ /, "", nodestring);
+					gsub(/->/, ",", nodestring);
+					gsub(/\[label=\"/, ",", nodestring);
+					gsub(/\"\];/, "", nodestring);
+					split(nodestring, subnode, ",");
+					children[++s]=subnode[2]
+					condition[s]=subnode[3]
+				}
+			}
 
-	# reduce all sequences of whitespaces to single whitespaces
-	dot=$(echo "$dot" | sed "s/;/\n/g")
+			# sort subnodes by label
+			for (i=1; i <= s; i++){
+				suboutput[i] = indent "{" condition[i] "}\n" indent output(nodes, children[i], level + 1);
+			}
+			asort(suboutput);
+			for (i=1; i <= s; i++){
+				retval = retval "\n" suboutput[i];
+			}
 
-	# sort the lines
-	dot=$(echo -e "$dot" | sort)
+			return retval;
+		}
 
-	echo -e "$dot"
+		# finds the root node of the graph
+		function getRoot(nodes, isroot, re){
+
+			for (key in nodes){
+				# check if this node has an ingoing edge
+				isroot=1
+				for (i=1; i <= NR; i++){
+					re="-> " key
+					if (match(file[i], re)){
+						# yes, thus it is not the root
+						isroot=0
+					}
+				}
+				if (isroot==1){
+					# root was found
+					return key
+				}
+			}
+		}
+
+		END {
+			n=1
+			# create a list of nodes
+			#   extract nodes from edge definition
+			for (i=1; i <= NR; i++){
+				if (file[i] ~ /.*->.*;$/){
+					nodestring=file[i];
+					gsub(/ /, "", nodestring);
+					gsub(/->/, ",", nodestring);
+					gsub(/\[/, ",", nodestring);
+					split(nodestring, node, ",");
+					nodes[node[1]]=node[1]
+					nodes[node[2]]=node[2]
+				}
+			}
+			#   extract explicitly defined nodes
+			for (i=1; i <= NR; i++){
+				if (file[i] ~ /^[^>]*;$/){
+					# extract node name and label
+					nodestring=file[i];
+					gsub(/ /, "", nodestring);
+					gsub(/\[label=\"/, ",", nodestring);
+					gsub(/\"\];/, "", nodestring);
+					split(nodestring, node, ",");
+
+					# make an entry in the nodes array
+					nodes[node[1]] = node[2];
+				}
+			}
+
+			# generate comparable format
+			r=getRoot(nodes);
+			print output(nodes, r, 1);
+		}
+
+		';
+
+	awk "$awkscript" $1
 }
 
 function compareDotFiles {
-	dot1=$(echo -e "$(reduceDotFile $1)")
-	dot2=$(echo -e "$(reduceDotFile $2)")
 
-	# compare
-	if [ "$dot1" = "$dot2" ]
-	then
-		return 0
+	graph1=$(reduceDotFile $1)
+	graph2=$(reduceDotFile $2)
+
+
+	if [ "$graph1" = "$graph2" ]; then
+		return 0;
 	else
 		echo "Error: Graphs $1 and $2 differ:"
-		diff <(echo "$dot1") <(echo "$dot2")
-
-		return 1
+		echo "$graph1"
+		echo "vs."
+		echo "$graph2"
+		return 1;
 	fi
 }
 
@@ -228,7 +334,7 @@ function checkDlvhex {
 	fi
 }
 
-function checkRequirements {
+function checkDotconverter {
 
 	# Check if dotconverter is available
 	if ! which $DOTCONVERTER >/dev/null; then
@@ -274,69 +380,92 @@ function compare {
 
 	case $# in
 		0)
+			echo "  -----------------------------------------------------------------------------"
+			echo "                                       compare.sh"
+			echo "  -----------------------------------------------------------------------------"
+			echo " "
 			echo "  This file contains procedures for comparing the following file types"
+			echo "    + revision plans"
+			echo "    + hex programs"
 			echo "    + answer-sets"
 			echo "    + dot graphs"
-			echo "  It is especially useful for writing testcases for dlvhex plugins"
+			echo "  It is useful for writing testcases for dlvhex plugins, especially for"
+			echo "    + mergingplugin"
+			echo "    + decisiondiagramsplugin"
 			echo " "
-			echo "  The script expects two filenames as parameters. It will automatically detect the"
-			echo "  file type by checking the filename extension:"
+			echo "  The script expects two mandatory filenames as parameters. It will"
+			echo "  automatically detect the file type by checking the filename extension:"
 			echo "      rp	--> revision plan"
 			echo "      hex	--> file contains a hex program"
 			echo "      as	--> file contains answer-sets"
 			echo "      dot	--> file contains a dot graph"
-			echo "      err --> symbolic representation of errors of any kind (file content is irrelevant)"
+			echo "      err	--> symbolic representation of errors of any kind (file content"
+			echo "                    is irrelevant)"
 			echo " "
-			echo "  A comparison to err succeeds if and only if the other computation fails. In detail:"
-			echo "    err = err"
-			echo "    err = any failed computation (with arbitrary output!)"
-			echo "    err != any successful computation (with arbitrary output!)"
-			echo "  Thus, for instance, err = rp if any of the tools involved in revision plan evaluation returns"
-			echo "  an error."
-			echo " "
-			echo "  The selection of the comparison algorithm is done according to the following rules:"
+			echo "  The selection of the comparison algorithm is done according to the following"
+			echo "  rules."
+			echo "  -----------------------------------------------------------------------------"
+			echo "  -- Error cases --"
+			echo "      A comparison to err succeeds if and only if the other computation fails."
+			echo "      In detail:"
+			echo "        err = err"
+			echo "        err = any failed computation (with arbitrary output!)"
+			echo "        err != any successful computation (with arbitrary output!)"
+			echo "      Thus, for instance, err = rp if any of the tools involved in revision"
+			echo "      plan evaluation returns an error."
 			echo " "
 			echo "  -- Basic cases --"
-			echo "      as/as	-> Compare the sets of answer-sets"
-			echo "      dot/dot	-> Compare the dot graphs"
+			echo "       + as/as   -> Compare the sets of answer-sets."
+			echo "       + dot/dot -> Compare the dot graphs (semantically, see below)."
+			echo "     When comparing answer-set files, the order of the answer-sets and literals"
+			echo "     within an answer-set is irrelevant"
+			echo "     When comparing dot files, the graphs are compared semantically. That is,"
+			echo "     the internal node names and file structue are irrelevant as long as the"
+			echo "     encoded graphs are equivalent. This enables an efficient comparison of"
+			echo "     decision diagrams, since they can contain duplicates of nodes that are"
+			echo "     named according to this schema."
 			echo " "
 			echo "  -- Derived cases --"
-			echo "      rp/rp	-> Run the revision plan compiler on the revision plans, then execute"
-			echo " 		   the resulting hex programs using dlvhex. finally compare their sets"
-			echo " 		   of answer-sets"
-			echo "      hex/hex	-> Execute both hex programs and compare their sets of answer-sets"
+			echo "      + rp/rp    -> Run the revision plan compiler on the revision plans, then"
+			echo "                    execute the resulting hex programs using dlvhex. Finally"
+			echo " 		    compare their sets of answer-sets."
+			echo "      + hex/hex  -> Execute both hex programs and compare their sets of"
+			echo "                    answer-sets."
 			echo " "
 			echo "  -- Extended cases --"
-			echo "   If two different file types are passed, the \"smaller one\" is converted into the greater one"
-			echo "   by calling the appropriate programs. (rp < hex < as < dot)"
+			echo "   If two different file types are passed, the "smaller one" is converted into"
+			echo "   the greater one by calling the appropriate programs."
+			echo "     (with rp < hex < as < dot)"
 			echo "   Conversion is done as follows:"
-			echo "      rp --> [revision plan compiler] --> hex --> [dlvhex] --> [dotconverter] --> dot"
-			echo "      hex/rp	-> Convert the revision plan into a hex program (using the revision plan compiler),"
-			echo " 		   then execute both programs and compare their sets of answer-sets."
-			echo "      as/rp	-> Run the revision plan compiler on the revision plan and execute the resulting"
-			echo " 		   hex program. Then compare the result with the set of answer-sets"
-			echo "      dot/rp	-> Convert the revision plan into a hex program (using the revision plan compiler),"
-			echo " 		   then execute the program and translate the answer into a dot graph that is compared."
-			echo "      hex/as	-> Run dlvhex on the hex program, then compare the sets of answer-sets"
-			echo "      dot/as	-> Convert the answer-set into a dot graph and compare it."
+			echo "      {rp --> [rpcompiler] --> hex --> [dlvhex] --> [dotconverter] --> dot}"
+			echo "   Therefore:"
+			echo "      + hex/rp   -> Convert the revision plan into a hex program (using the"
+			echo "                    revision plan compiler), then execute both programs and"
+			echo "                    compare their sets of answer-sets."
+			echo "      + as/rp    -> Run the revision plan compiler on the revision plan and"
+			echo "                    execute the resulting hex program. Then compare the result"
+			echo "                    with the set of answer-sets."
+			echo "      + dot/rp   -> Convert the revision plan into a hex program (using the"
+			echo "                    revision plan compiler), then execute the program and"
+			echo "                    translate the answer into a dot graph that is compared."
+			echo "      + hex/as   -> Run dlvhex on the hex program, then compare the sets of"
+			echo "                    answer-sets."
+			echo "      + dot/as   -> Convert the answer-set into a dot graph and compare it."
+			echo "  -----------------------------------------------------------------------------"
 			echo " "
-			echo "  Note: When comparing answer-sets, predicate and constant names are treated as equivalent iff they are"
-			echo "  equal UNTIL the first occurrence of underscore (_). E.g. leaf = leaf_2 = leaf_3 = leaf_1_1, etc.. This"
-			echo "  enables an efficient comparison of decision diagrams, since they can contain duplicates of nodes that"
-			echo "  are named according to this schema."
-			echo " "
-			echo "  The third and forth parameter are optional. If present, they need to be one of the"
-			echo "  listed hex extensions and overwrites the default compare mode determined by inspection"
-			echo "  of the filename."
+			echo "  The third and forth parameter are optional. If present, they need to be one"
+			echo "  of the listed hex extensions and overwrites the default compare mode"
+			echo "  determined by inspection of the filename."
 			echo "  Example:"
 			echo "    compare f1.hex f2.hex"
 			echo "  assumes that both files are hex programs, whereas"
 			echo "    compare f1.hex f2.hex as as"
-			echo "  tells the script that the files rather contain answer-sets despete their extension."
-			echo "  If only 3 parameters are passed, the forth one is implicitly given (the same as the third)."
+			echo "  tells the script that the files rather contain answer-sets despete their"
+			echo "  extension. If only 3 parameters are passed, the forth one is implicitly given"
+			echo "  (the same as the third)."
 			echo "  "
 			echo "  Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)"
-			echo "  February 18, 2010, 21:43"
+			echo "  February 19, 2010, 17:22"
 			;;
 		2)
 			# extract filename extensions
@@ -364,7 +493,12 @@ function compare {
 	fi
 
 	# some input types need the dotconverter
-	if [ "$extension1" = "dot" ] && [ "$extension2" != "dot" ] || [ "$extension1" != "dot" ] && [ "$extension2" = "dot" ]; then
+	if [ "$extension1" = "dot" ] && [ "$extension2" != "dot" ]; then
+		if ! checkDotconverter; then
+			return 1
+		fi
+	fi
+	if [ "$extension1" != "dot" ] && [ "$extension2" = "dot" ]; then
 		if ! checkDotconverter; then
 			return 1
 		fi
@@ -441,7 +575,7 @@ function compare {
 						;;
 				"rp/dot")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
-						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --toas > $TMPFILE_DOT1
+						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --todot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot"
@@ -449,7 +583,7 @@ function compare {
 				"dot/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						cp $1 $TMPFILE_DOT1
-						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --toas > $TMPFILE_DOT2
+						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --todot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot"
 						;;
@@ -468,13 +602,13 @@ function compare {
 						cp $2 $TMPFILE_AS2
 						extension="as"
 						;;
-				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER --toas > $TMPFILE_DOT1
+				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER --todot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot";
 						;;
 				"dot/hex")	cp $1 $TMPFILE_DOT1
-						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER --toas > $TMPFILE_DOT2
+						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER --todot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot";
 						;;
@@ -511,9 +645,16 @@ function compare {
 					let rv=rv+$?
 					extension="as"
 					;;
-				*)
 					# basic cases
+				"dot")
 					extension=$extension1
+					cp $1 $TMPFILE_DOT1
+					cp $2 $TMPFILE_DOT2
+					;;
+				"as")
+					extension=$extension1
+					cp $1 $TMPFILE_AS1
+					cp $2 $TMPFILE_AS2
 					;;
 			esac
 		fi

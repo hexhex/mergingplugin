@@ -16,6 +16,8 @@
 
 using namespace dlvhex::merging;
 
+OpUnion* _union;
+
 void OperatorAtom::registerBuiltInOperators(){
 
 	// Add a command of the following type for each built-in operator:
@@ -27,6 +29,9 @@ void OperatorAtom::registerBuiltInOperators(){
 	//	
 	// Make sure that ptr does not get invalid before the destructor of this OperatorAtom is called.
 
+	// built-in operators
+	operators[_union.getName()] = &_union;
+	operators[_setminus.getName()] = &_setminus;
 }
 
 OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
@@ -44,6 +49,7 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 
 OperatorAtom::~OperatorAtom()
 {
+//	delete _union;
 }
 
 void

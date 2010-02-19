@@ -301,6 +301,8 @@ namespace dlvhex {
 	} // namespace asp
 } // namespace dlvhex
 
+#include "OpUnion.h"
+
 //
 // and let it be loaded by dlvhex!
 //

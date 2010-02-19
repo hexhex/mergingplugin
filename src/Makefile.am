@@ -9,7 +9,7 @@ plugin_LTLIBRARIES = libdlvhexmerging.la
 # replace 'plugin' on the left side as above and
 # add all sources of your plugin
 #
-libdlvhexmerging_la_SOURCES = MergingPlugin.cpp DLVHexProcess.cpp HexExecution.cpp Operators.cpp InternalTypes.cpp
+libdlvhexmerging_la_SOURCES = MergingPlugin.cpp DLVHexProcess.cpp HexExecution.cpp Operators.cpp InternalTypes.cpp OpUnion.cpp OpSetminus.cpp
 
 #
 # extend compiler flags by CFLAGS of other needed libraries
