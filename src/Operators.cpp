@@ -79,8 +79,8 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	query.getInterpretation().matchPredicate(argumentspredname, arguments);
 	OperatorArguments parameters;
 	for (AtomSet::const_iterator it = arguments.begin(); it != arguments.end(); it++){
-		std::string key = it->getArgument(0).getUnquotedString();
-		std::string value = it->getArgument(1).getUnquotedString();
+		std::string key = it->getArgument(1).getUnquotedString();
+		std::string value = it->getArgument(2).getUnquotedString();
 		parameters.push_back(KeyValuePair(key, value));
 	}
 
@@ -160,9 +160,12 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 			opanswer = externalOperator->apply(answersIndices.size(), answers, parameters);
 		}
 */
-
-	}catch(IOperator::OperatorException oe){
+	}catch(IOperator::OperatorException& oe){
 		throw PluginError(oe.getMessage());
+	}catch(std::runtime_error& e){
+		throw PluginError(e.what());
+	}catch(...){
+		throw PluginError("Operator has thrown an exception of unknown type");
 	}
 }
 

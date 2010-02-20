@@ -1,5 +1,6 @@
 ../runhex.hex runhex.as
 ../runhexfile.hex runhexfile.as
+../runhexnested.hex runhexnested.as --filter=preds_of_inner_prog,preds_of_outer_prog
 ../accesstuples1.hex accesstuples1.as
 ../accesstuples2.hex accesstuples2.as
 ../accesstuples3.hex accesstuples3.as

@@ -20,7 +20,7 @@ namespace dlvhex{
 		class OpSetminus : public IOperator{
 		public:
 			virtual std::string getName();
-			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters);
+			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) throw (OperatorException);
 		};
 	}
 }

@@ -8,7 +8,7 @@ std::string OpUnion::getName(){
 	return "union";
 }
 
-HexAnswer OpUnion::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters){
+HexAnswer OpUnion::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
 	if (arity != 2){
 		throw IOperator::OperatorException("Error: The union operator expects exactly 2 arguments.");
 	}

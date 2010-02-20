@@ -175,7 +175,7 @@ std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetr
 					kvarguments << std::endl;
 				}
 				// Collect the key-value pairs in a new predicate which is unique for this operator application
-				kvarguments << "kv_arg" << operatorapplicationid << "(" << key << "," << value << ").";
+				kvarguments << "kv_arg" << operatorapplicationid << "(" << key << ",\"" << quote(value) << "\").";
 				firstarg = false;
 			}
 		}

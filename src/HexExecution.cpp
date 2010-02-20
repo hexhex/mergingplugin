@@ -38,6 +38,35 @@ std::cout << "CALLING" << std::endl;
 }
 */
 
+// Splits the command line arguments at blanks (if they are not part of a string literal)
+std::vector<std::string> splitArguments(std::string argsstring){
+	std::vector<std::string> args;
+
+	bool stringlit = false;
+	int argstart = 0;
+	for (int i = 0; i <= argsstring.size(); i++){
+		switch (argsstring[i]){
+			case ' ':
+			case '\0':
+				if (!stringlit){
+					if (i == argstart){ argstart++;
+					}else{
+						args.push_back(argsstring.substr(argstart, i - argstart));
+						argstart = i + 1;
+					}
+				}
+				break;
+			case '\"':
+				stringlit = !stringlit;
+				break;
+			default:
+				break;
+		}
+	}
+
+	return args;
+}
+
 
 // -------------------- HexAtom --------------------
 
@@ -55,82 +84,95 @@ HexAtom::~HexAtom()
 void
 HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
-	// resolve escape sequences
-	std::string srcprogram = query.getInputTuple()[0].getUnquotedString();
-	//    \\ --> \ 
-	//    \' --> "
-	std::string program;
-	bool escaped = false;
-	for (std::string::iterator it = srcprogram.begin(); it != srcprogram.end(); it++){
-		if (escaped){
-			switch (*it){
-				case '\\':
-					program += '\\';
-					break;
-				case '\'':
-					program += '\"';
-					break;
-				default:
-					program += *it;
-					break;
-			}
-			escaped = false;
-		}else{
-			switch (*it){
-				case '\\':
-					escaped = true;
-					break;
-				default:
-					program += *it;
-					break;
+	std::string program("");
+	std::string cmdargs("");
+	try{
+		// resolve escape sequences
+		std::string srcprogram = query.getInputTuple()[0].getUnquotedString();
+		//    \\ --> \ 
+		//    \' --> "
+		bool escaped = false;
+		for (std::string::iterator it = srcprogram.begin(); it != srcprogram.end(); it++){
+			if (escaped){
+				switch (*it){
+					case '\\':
+						program += '\\';
+						break;
+					case '\'':
+						program += '\"';
+						break;
+					default:
+						program += *it;
+						break;
+				}
+				escaped = false;
+			}else{
+				switch (*it){
+					case '\\':
+						escaped = true;
+						break;
+					default:
+						program += *it;
+						break;
+				}
 			}
 		}
-	}
 
-	// Retrieve command line arguments
-	std::string cmdargs = query.getInputTuple()[1].getUnquotedString();
+		// Retrieve command line arguments
+		cmdargs = query.getInputTuple()[1].getUnquotedString();
 
-	// Build hex call identifier
-	HexCall hc(HexCall::HexProgram, program, cmdargs);
+		// Build hex call identifier
+		HexCall hc(HexCall::HexProgram, program, cmdargs);
 
-	// Check if result is already cached
-	int i = 0;
-	for (HexAnswerCache::iterator it = resultsetCache.begin(); it != resultsetCache.end(); it++){
-		if (it->first == hc){
-			// Reuse answer
-			Tuple out;
-			out.push_back(Term(i));
-			answer.addTuple(out);
-			return;
+		// Check if result is already cached
+		int i = 0;
+		for (HexAnswerCache::iterator it = resultsetCache.begin(); it != resultsetCache.end(); it++){
+			if (it->first == hc){
+				// Reuse answer
+				Tuple out;
+				out.push_back(Term(i));
+				answer.addTuple(out);
+				return;
+			}
+			i++;
 		}
-		i++;
+
+
+		// Not in cache: Execute program and cache result
+
+		// parse and assemble hex program (parameter 0)
+		std::stringstream ss(program);
+		Program prog;
+		AtomSet facts;
+		HexParserDriver hpd;
+		hpd.parse(ss, prog, facts);
+
+		// solve hex program
+		DLVHexProcess proc;
+		//DLVProcess proc;
+
+		// split command line arguments
+		std::vector<std::string> cmdargsSplit = splitArguments(cmdargs);
+		for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
+
+		std::vector<AtomSet> as;
+		BaseASPSolver* solver = proc.createSolver();
+		solver->solve(prog, facts, as);
+		//proc.solve(program, prog, facts, as);
+
+		// store output (answer sets) in cache
+		int rn = resultsetCache.size();
+		resultsetCache.push_back(HexAnswerCacheEntry(hc, as));
+
+		// return answer handle
+		Tuple out;
+		out.push_back(Term(rn));
+		answer.addTuple(out);
+	}catch(...){
+		std::stringstream msg;
+		msg << "Nested Hex program \"" << program << "\" failed. Command line arguments were: " << cmdargs;
+		throw PluginError(msg.str());
 	}
-
-	// Not in cache: Execute program and cache result
-
-	// parse and assemble hex program (parameter 0)
-	std::stringstream ss(program);
-	Program prog;
-	AtomSet facts;
-	HexParserDriver hpd;
-	hpd.parse(ss, prog, facts);
-
-	// solve hex program
-	DLVHexProcess proc;
-
-	if (cmdargs.size() > 0) proc.addOption(cmdargs);
-	std::vector<AtomSet> as;
-	BaseASPSolver* solver = proc.createSolver();
-	solver->solve(prog, facts, as);
-
-	// store output (answer sets) in cache
-	int rn = resultsetCache.size();
-	resultsetCache.push_back(HexAnswerCacheEntry(hc, as));
-
-	// return answer handle
-	Tuple out;
-	out.push_back(Term(rn));
-	answer.addTuple(out);
 }
 
 
@@ -150,98 +192,87 @@ HexFileAtom::~HexFileAtom()
 void
 HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
-	// load program
-	std::string programpath = query.getInputTuple()[0].getUnquotedString();
+	std::string programpath("");
+	std::string cmdargs("");
+	try{
+		// load program
+		programpath = query.getInputTuple()[0].getUnquotedString();
 
-	// Retrieve command line arguments
-	std::string cmdargs = query.getInputTuple()[1].getUnquotedString();
+		// Retrieve command line arguments
+		cmdargs = query.getInputTuple()[1].getUnquotedString();
 
-	// Build hex call identifier
-	HexCall hc(HexCall::HexFile, programpath, cmdargs);
+		// Build hex call identifier
+		HexCall hc(HexCall::HexFile, programpath, cmdargs);
 
-	// Check if result is already cached
-	int i = 0;
-	for (HexAnswerCache::iterator it = resultsetCache.begin(); it != resultsetCache.end(); it++){
-		if (it->first == hc){
-			// Reuse answer
-			Tuple out;
-			out.push_back(Term(i));
-			answer.addTuple(out);
-			return;
+		// Check if result is already cached
+		int i = 0;
+		for (HexAnswerCache::iterator it = resultsetCache.begin(); it != resultsetCache.end(); it++){
+			if (it->first == hc){
+				// Reuse answer
+				Tuple out;
+				out.push_back(Term(i));
+				answer.addTuple(out);
+				return;
+			}
+			i++;
 		}
-		i++;
-	}
 
-	// Not in cache: Execute program and cache result
-
-	// read source file
-	std::ifstream inFile;
-	inFile.open(programpath.c_str());
-	std::string program;
-	std::string line;
-	while (inFile >> line) {
-		program = program + line;
-	}
-	inFile.close();
-
-	// parse and assemble hex program (parameter 0)
-	std::stringstream ss(program);
-	Program prog;
-	AtomSet facts;
-	HexParserDriver hpd;
-	hpd.parse(ss, prog, facts);
-
-	// solve hex program
-	DLVHexProcess proc;
-	if (cmdargs.size() > 0) proc.addOption(cmdargs);
-	std::vector<AtomSet> as;
-	BaseASPSolver* solver = proc.createSolver();
-	solver->solve(prog, facts, as);
-
-
-//				MORE EFFICIENT BUT DOES NOT WORK YET
-
+		// Not in cache: Execute program and cache result
 /*
+		OLD VERSION SINCE THE CODE BELOW DID NOT WORK (but now it does)
 
-	std::cout << "Solving hex program" << std::endl;
+		// read source file
+		std::ifstream inFile;
+		inFile.open(programpath.c_str());
+		std::string program;
+		std::string line;
+		while (inFile >> line) {
+			program = program + line;
+		}
+		inFile.close();
 
+		// parse and assemble hex program (parameter 0)
+		std::stringstream ss(program);
+		Program prog;
+		AtomSet facts;
+		HexParserDriver hpd;
+		hpd.parse(ss, prog, facts);
 
-	// solve hex program
-	DLVProcess proc;
-	Program prog;
-	AtomSet facts;
-	std::vector<AtomSet> as;
+		// solve hex program
+		DLVHexProcess proc;
 
+		// split command line arguments
+		std::vector<std::string> cmdargsSplit = splitArguments(cmdargs);
+		for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
 
-
-//	Works
-//
-	proc.addOption(programpath);
-	BaseASPSolver* solver = proc.createSolver();
-
-//	Does not work
-//
-//	std::vector<std::string> o;
-//	o.push_back("-silent");
-//	o.push_back(programpath);
-//	ASPFileSolver<DLVresultParserDriver>* solver = new ASPFileSolver<DLVresultParserDriver>(proc, o);
-
-
-
-	solver->solve(prog, facts, as);
-
-	std::cout << "DONE" << std::endl;
-
+		std::vector<AtomSet> as;
+		BaseASPSolver* solver = proc.createSolver();
+		solver->solve(prog, facts, as);
 */
 
-	// store output (answer sets)
-	int rn = resultsetCache.size();
-	resultsetCache.push_back(HexAnswerCacheEntry(hc, as));
+		// solve hex program
+		DLVHexProcess proc(programpath);
+		Program prog;
+		AtomSet facts;
 
-	// return answer handle
-	Tuple out;
-	out.push_back(Term(rn));
-	answer.addTuple(out);
+		std::vector<AtomSet> as;
+		BaseASPSolver* solver = proc.createSolver();
+		solver->solve(prog, facts, as);
+		//proc.solve("", prog, facts, as);
+
+		// store output (answer sets)
+		int rn = resultsetCache.size();
+		resultsetCache.push_back(HexAnswerCacheEntry(hc, as));
+
+		// return answer handle
+		Tuple out;
+		out.push_back(Term(rn));
+		answer.addTuple(out);
+	}catch(...){
+		std::stringstream msg;
+		msg << "Nested Hex program \"" << programpath << "\" failed. Command line arguments were: " << cmdargs;
+		throw PluginError(msg.str());
+	}
 }
 
 // -------------------- AnswerSetsAtom --------------------

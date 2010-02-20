@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 DLVHEX_NAMESPACE_USE
 
@@ -13,15 +14,14 @@ namespace dlvhex{
 	namespace merging{
 		class IOperator{
 		public:
-			class OperatorException{
-			private:
-				std::string msg;
+			class OperatorException : public std::runtime_error{
 			public:
-				OperatorException(std::string m) : msg(m){}
-				std::string getMessage(){ return msg; }
+				OperatorException(std::string m) : std::runtime_error(m){}
+				virtual ~OperatorException() throw() {};
+				std::string getMessage(){ return what(); }
 			};
 			virtual std::string getName() = 0;
-			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) = 0;
+			virtual HexAnswer apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) throw (OperatorException) = 0;
 		};
 	}
 }

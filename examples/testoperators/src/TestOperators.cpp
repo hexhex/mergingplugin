@@ -24,7 +24,7 @@ class TestOp1 : public IOperator{
 	}
 
 	HexAnswer
-	apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters)
+	apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) throw (OperatorException)
 	{
 		std::vector<dlvhex::AtomSet> result;
 		dlvhex::AtomSet as;
@@ -41,7 +41,7 @@ class TestOp2 : public IOperator{
 	}
 
 	HexAnswer
-	apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters)
+	apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) throw (OperatorException)
 	{
 		// Union
 		HexAnswer result;
