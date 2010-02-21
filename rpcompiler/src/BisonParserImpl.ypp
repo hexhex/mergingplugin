@@ -1,5 +1,5 @@
 %{
-	#include <Parser.h>
+	#include <BisonParser.h>
 	#include <stdio.h>
 	#include <stdarg.h>
 
@@ -9,7 +9,7 @@
 	extern std::vector<std::string> symboltable;		/* symbol table */
 	extern int sourceline;  				/* input line number */
 	extern int scannererrors;				/* number of scanner errors */
-	extern Parser *parserinst;				/* the scanner's internal pointer to the currently executed parser instance (necessary to iterate through the input files) */
+	extern BisonParser *parserinst;				/* the scanner's internal pointer to the currently executed parser instance (necessary to iterate through the input files) */
 	extern void creaetStringBuffer(const char* str);	/* Scanning a string rather than files */
 	extern void releaseStringBuffer();
 
@@ -243,97 +243,54 @@ Sources :			RevisionPlanSection TSEMICOLON Sources
 	;
 %%
 
-Parser::Parser(std::vector<std::string> inputfiles, FILE *stdinfile) : parsefiles(true), isparsed(false), stdin(stdinfile), inputFiles(inputfiles), inputFileCounter(-1), currentInputFile(NULL) {
+BisonParser::BisonParser(std::vector<std::string> inputfiles, FILE *stdinfile) : IParser(inputfiles, stdinfile) {
 }
 
-Parser::Parser(std::string i) : parsefiles(false), inputstring(i) {
+BisonParser::BisonParser(std::string i) : IParser(i) {
 }
 
-void Parser::parse(){
+void BisonParser::parse(){
+	reset();
+	scannererrors = syntaxerrors = syntaxwarnings = 0;
+
 	// Parse; lex will call getNextInputFile when EOF is reached
 	parserinst = this;
 
 	if (parsefiles){
 		// Go to first input file
 		yyin = getNextInputFile();
-
 		if (yyparse() == 0 && syntaxerrors == 0){
+			if (parseTree) delete parseTree;
+			parseTree = globalparsetree;
 		}else{
 			delete globalparsetree;
 			globalparsetree = NULL;
 		}
 
-		isparsed = true;
+		wasParsed = true;
 	}else{
 		// Create string buffer
-		creaetStringBuffer(inputstring.c_str());
+		creaetStringBuffer(input.c_str());
 
 		if (yyparse() == 0 && syntaxerrors == 0){
+			if (parseTree) delete parseTree;
+			parseTree = globalparsetree;
 		}else{
 			delete globalparsetree;
 			globalparsetree = NULL;
 		}
 
 		releaseStringBuffer();
-		isparsed = true;
+		wasParsed = true;
 	}
+
+	errorCount = scannererrors + syntaxerrors;
+	warningCount = syntaxwarnings;
 }
 
-FILE* Parser::getNextInputFile(){
-	if (!parsefiles) return NULL;
-
-	// Close current file
-	if (currentInputFile != NULL) fclose(currentInputFile);
-
-	// Go to next file
-	inputFileCounter++;
-	if (inputFileCounter < inputFiles.size()){
-			if (inputFiles[inputFileCounter] != std::string("--")){
-			currentInputFile = fopen(inputFiles[inputFileCounter].c_str(), "r");
-			fseek(currentInputFile, SEEK_SET, 0);
-			return currentInputFile;
-		}else{
-			currentInputFile = this->stdin;
-			return currentInputFile;
-		}
-	}else{
-		// No more files
-		return NULL;
-	}
-}
-
-int Parser::getCurrentInputFileIndex(){
-	return inputFileCounter;
-}
-
-std::string Parser::getInputFileName(int index){
-	return inputFiles[inputFileCounter];
-}
-
-/**
- * "Entry" method for other modules. The method tries to parse the contents of standard input.
- * \param standard input: A valid program is expected to be passed on standard input
- * \return ParseTreeNode* In case of successful parsing, a pointer to the root of the constructed parse tree. Otherwise NULL is returned. Note that is parsing was successful, the tree needs to be freed by calling the root's destructor.
- */
-ParseTreeNode* Parser::getParseTree(){
-	return globalparsetree;
-}
-
-bool Parser::succeeded(){
-	return isparsed && globalparsetree != NULL;
-}
-
-bool Parser::parsed(){
-	return isparsed;
-}
-
-int Parser::getErrorCount(){
-	return syntaxerrors + scannererrors;
-}
-
-int Parser::getWarningCount(){
-	return syntaxwarnings;
-}
+FILE* BisonParser::getNextInputFile(){ return IParser::getNextInputFile(); }
+int BisonParser::getCurrentInputFileIndex(){ return IParser::getCurrentInputFileIndex(); }
+std::string BisonParser::getInputFileName(int index){ return IParser::getInputFileName(index); }
 
 /**
  * Is called on parsing errors.

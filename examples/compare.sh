@@ -85,7 +85,7 @@
 # (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# February 19, 2010, 11:09
+# February 21, 2010, 21:10
 
 
 # ================================================== answer-sets ==================================================
@@ -205,10 +205,10 @@ function reduceDotFile {
 		}
 
 		# print a subgraph recursivly in a unique and comparable format
-		function output(nodes, node, level, i, s, children, condition, suboutput, retval, indent){
+		function output(nodes, node, level, i, s, children, condition, suboutput, retval, indent, j, tmpval, tmparray){
 			retval = ""
 			indent = ""
-			for (i=1; i < level; i++){
+			for (i=1; i <= level; i++){
 				indent = indent "   "
 			}
 
@@ -235,7 +235,13 @@ function reduceDotFile {
 
 			# sort subnodes by label
 			for (i=1; i <= s; i++){
-				suboutput[i] = indent "{" condition[i] "}\n" indent output(nodes, children[i], level + 1);
+				suboutput[i] = output(nodes, children[i], level + 1);
+				tmpval = split(suboutput[i], tmparray, "\n");
+				suboutput[i] = indent "{" condition[i] "}";
+				# make sure that the indention is correct
+				for (j=1; j <= tmpval; j++){
+					suboutput[i] = suboutput[i] "\n" indent tmparray[j];
+				}
 			}
 			asort(suboutput);
 			for (i=1; i <= s; i++){
@@ -252,7 +258,7 @@ function reduceDotFile {
 				# check if this node has an ingoing edge
 				isroot=1
 				for (i=1; i <= NR; i++){
-					re="-> " key
+					re="-> " key "[ ]*[\\[;]";
 					if (match(file[i], re)){
 						# yes, thus it is not the root
 						isroot=0
@@ -283,10 +289,10 @@ function reduceDotFile {
 			#   extract explicitly defined nodes
 			for (i=1; i <= NR; i++){
 				if (file[i] ~ /^[^>]*;$/){
-					# extract node name and label
+					# extract node name and classification (the label is irrelevant)
 					nodestring=file[i];
 					gsub(/ /, "", nodestring);
-					gsub(/\[label=\"/, ",", nodestring);
+					gsub(/\[label=\"([^\[\"]*)?/, ",", nodestring);
 					gsub(/\"\];/, "", nodestring);
 					split(nodestring, node, ",");
 
@@ -310,7 +316,6 @@ function compareDotFiles {
 	graph1=$(reduceDotFile $1)
 	graph2=$(reduceDotFile $2)
 
-
 	if [ "$graph1" = "$graph2" ]; then
 		return 0;
 	else
@@ -318,6 +323,7 @@ function compareDotFiles {
 		echo "$graph1"
 		echo "vs."
 		echo "$graph2"
+
 		return 1;
 	fi
 }
@@ -465,7 +471,7 @@ function compare {
 			echo "  (the same as the third)."
 			echo "  "
 			echo "  Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)"
-			echo "  February 19, 2010, 17:22"
+			echo "  February 21, 2010, 21:10"
 			;;
 		2)
 			# extract filename extensions

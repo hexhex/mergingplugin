@@ -1,20 +1,22 @@
 /**
  * @author Christoph Redl
- * @date   December 07, 2009
+ * @date   February 21, 2010
  *
- * @brief  Revision plan compiler used as stand-alone application or by bm-plugin for DLVHEX
+ * @brief  This compiler translates revision plan files into semantically equivalent hex programs. The revision plan compiler
+ *		(rpcompiler) can be used as stand-alone application or as input rewriter by mergingplugin for dlvhex.
+ *         Note that the generated hex programs depend on the external atoms defined in the mergingplugin.
  */
 
-#include <Parser.h>
 #include <CodeGenerator.h>
 #include <iostream>
 #include <fstream>
-#include <RPParser.h>
 
-std::vector<std::string> parseArgs(int argc, char *argv[], bool *showparsetree, bool *showhelp);
+#include <IParser.h>
+#include <BisonParser.h>
+#include <SpiritParser.h>
+
+std::vector<std::string> parseArgs(int argc, char *argv[], bool *showparsetree, bool *spirit, bool *showhelp);
 void showHelp();
-
-bool spirit;
 
 /**
  * Program entry
@@ -24,97 +26,66 @@ int main(int argc, char *argv[]){
 	// Read list of input files and parse other command line arguments
 	bool showparsetree = false;
 	bool showhelp = false;
-	std::vector<std::string> inputFiles = parseArgs(argc, argv, &showparsetree, &showhelp);
+	bool spirit = true;
+	std::vector<std::string> inputFiles = parseArgs(argc, argv, &showparsetree, &spirit, &showhelp);
 
 	if (showhelp){
 		showHelp();
 	}else{
-		// Try to parse the input
-		// Note: This call has the side effect that stdin is read up to eof
-		if (!spirit){
-			Parser parserinst(inputFiles, stdin);
-			parserinst.parse();
-
-			// Generate output code
-			if (parserinst.succeeded()){
-				// Retrieve parse tree
-				ParseTreeNode* parseTree = parserinst.getParseTree();
-
-				// Parse tree or code output?
-				if (showparsetree){
-					std::cout << "Parse tree:" << std::endl;
-					parseTree->print(std::cout);
-				}else{
-					// GenerateCode
-					// On success, write the code to std::cout and "errors" (in this case warnings) to std::cerr
-					CodeGenerator cginst(parseTree);
-					cginst.generateCode(std::cout, std::cerr);
-
-					if (cginst.succeeded()){
-						// std::cout << "Code generation finished with " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
-					}else{
-						// Code generation failed
-						std::cerr << "Code generation finished with errors:" << std::endl;
-						std::cerr << "   " << cginst.getErrorCount() << " error" << (cginst.getErrorCount() == 0 || cginst.getErrorCount() > 1 ? "s" : "") << ", " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
-						delete parseTree;
-						return 1;
-					}
-				}
-
-				delete parseTree;
-				return 0;
-			}else{
-				std::cerr << "Parsing finished with errors:" << std::endl;
-				std::cerr << "   " << parserinst.getErrorCount() << " error" << (parserinst.getErrorCount() == 0 || parserinst.getErrorCount() > 1 ? "s" : "") << ", " << parserinst.getWarningCount() << " warning" << (parserinst.getWarningCount() == 0 || parserinst.getWarningCount() > 1 ? "s" : "") << std::endl;
-				return 1;
-			}
+		// Create the requested type of parser
+		IParser* parserInst;
+		if (spirit){
+			parserInst = new SpiritParser(inputFiles, stdin);
 		}else{
-			RPParser parserinst(inputFiles, stdin);
-			parserinst.parse();
-
-			// Generate output code
-			if (parserinst.succeeded()){
-				// Retrieve parse tree
-				ParseTreeNode* parseTree = parserinst.getParseTree();
-
-				// Parse tree or code output?
-				if (showparsetree){
-					std::cout << "Parse tree:" << std::endl;
-					parseTree->print(std::cout);
-				}else{
-					// GenerateCode
-					// On success, write the code to std::cout and "errors" (in this case warnings) to std::cerr
-					CodeGenerator cginst(parseTree);
-					cginst.generateCode(std::cout, std::cerr);
-
-					if (cginst.succeeded()){
-						// std::cout << "Code generation finished with " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
-					}else{
-						// Code generation failed
-						std::cerr << "Code generation finished with errors:" << std::endl;
-						std::cerr << "   " << cginst.getErrorCount() << " error" << (cginst.getErrorCount() == 0 || cginst.getErrorCount() > 1 ? "s" : "") << ", " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
-						delete parseTree;
-						return 1;
-					}
-				}
-
-				delete parseTree;
-				return 0;
-			}else{
-				std::cerr << "Parsing finished with errors:" << std::endl;
-				std::cerr << "   " << parserinst.getErrorCount() << " error" << (parserinst.getErrorCount() == 0 || parserinst.getErrorCount() > 1 ? "s" : "") << ", " << parserinst.getWarningCount() << " warning" << (parserinst.getWarningCount() == 0 || parserinst.getWarningCount() > 1 ? "s" : "") << std::endl;
-				return 1;
-			}
+			parserInst = new BisonParser(inputFiles, stdin);
 		}
 
+		// Try to parse the input
+		// Note: This call has the side effect that stdin is read up to eof
+		parserInst->parse();
+
+		// If it was successful, generate output code
+		// otherwise display an error message
+		if (parserInst->succeeded()){
+			// Retrieve parse tree
+			ParseTreeNode* parseTree = parserInst->getParseTree();
+
+			// Parse tree or code output?
+			if (showparsetree){
+				std::cout << "Parse tree:" << std::endl;
+				parseTree->print(std::cout);
+			}else{
+				// GenerateCode
+				// On success, write the code to std::cout and "errors" (in this case warnings) to std::cerr
+				CodeGenerator cginst(parseTree);
+				cginst.generateCode(std::cout, std::cerr);
+
+				if (cginst.succeeded()){
+					// std::cout << "Code generation finished with " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
+				}else{
+					// Code generation failed
+					std::cerr << "Code generation finished with errors:" << std::endl;
+					std::cerr << "   " << cginst.getErrorCount() << " error" << (cginst.getErrorCount() == 0 || cginst.getErrorCount() > 1 ? "s" : "") << ", " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
+					delete parseTree;
+					return 1;
+				}
+			}
+
+			delete parseTree;
+			return 0;
+		}else{
+			std::cerr << "Parsing finished with errors:" << std::endl;
+			std::cerr << "   " << parserInst->getErrorCount() << " error" << (parserInst->getErrorCount() == 0 || parserInst->getErrorCount() > 1 ? "s" : "") << ", " << parserInst->getWarningCount() << " warning" << (parserInst->getWarningCount() == 0 || parserInst->getWarningCount() > 1 ? "s" : "") << std::endl;
+			return 1;
+		}
 	}
 }
 
 /**
  * Recognizes the flags -parsetree and -help as well as filenames and -- and sets the approprite booleans.
  */
-std::vector<std::string> parseArgs(int argc, char *argv[], bool *showparsetree, bool *showhelp){
-spirit=true;
+std::vector<std::string> parseArgs(int argc, char *argv[], bool *showparsetree, bool *spirit, bool *showhelp){
+
 	std::vector<std::string> inputFiles;
 	if (argc == 1){
 		// No arguments: only read from standard input
@@ -128,9 +99,12 @@ spirit=true;
 				if (std::string(argv[i]) == std::string("-parsetree")){
 					*showparsetree = true;
 				}
-if (std::string(argv[i]) == std::string("-nospirit")){
-	spirit = false;
-}
+				if (std::string(argv[i]) == std::string("-spirit")){
+					*spirit = true;
+				}
+				if (std::string(argv[i]) == std::string("-bison")){
+					*spirit = false;
+				}
 				if (std::string(argv[i]) == std::string("-help")){
 					*showhelp = true;
 				}
@@ -151,16 +125,18 @@ if (std::string(argv[i]) == std::string("-nospirit")){
  */
 void showHelp(){
 	std::cout <<	"Revision Plan Compiler" << std::endl <<
-					"-----------------------" << std::endl << std::endl <<
+			"-----------------------" << std::endl << std::endl <<
 
-					"This tool translates a belief revision scenario into a dlvhex program." <<
-					"The scenario is defined in one or more input files or is read from standard input." << std::endl << std::endl <<
+			"This tool translates a belief revision scenario into a dlvhex program." <<
+			"The scenario is defined in one or more input files or is read from standard input." << std::endl << std::endl <<
 
-					"The compiler recognizes the following command line arguments:"  << std::endl <<
-					"-parsetree ... Generates a parse tree rather than dlvhex code" << std::endl <<
-					"-help      ... Displays this text" << std::endl << std::endl <<
+			"The compiler recognizes the following command line arguments:"  << std::endl <<
+			"-parsetree ... generates a parse tree rather than dlvhex code" << std::endl <<
+			"-help      ... displays this text" << std::endl << std::endl <<
+			"-spirit /  ... parses the input using a boost spirit resp." << std::endl <<
+			"-bison         a bison generated parser. Default is -spirit" << std::endl << std::endl <<
 
-					"If no filenames are passed, the compiler will read from standard input." <<
-					"If at least filename is passed, standard input will _not_ be processed by default." <<
-					"However, if -- is passed as additional parameter, standard input will be read additionally." << std::endl;
+			"If no filenames are passed, the compiler will read from standard input." <<
+			"If at least filename is passed, standard input will _not_ be processed by default." <<
+			"However, if -- is passed as additional parameter, standard input will be read additionally." << std::endl;
 }

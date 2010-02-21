@@ -14,9 +14,9 @@ WHITESPACE	[ \t\r]+
 NEWLINE		\n
 COMMENT		"%".*
 SLASH		"/"
-	#include <Parser.h>
+	#include <BisonParser.h>
 	#include <ParseTreeNode.h>
-	#include "parser.h"	// Contains definitinos for terminal symbols (tokens)
+	#include "BisonParserImpl.h"	// Contains definitinos for terminal symbols (tokens)
 
 	#include <vector>
 	#include <string>
@@ -24,7 +24,7 @@ SLASH		"/"
 	int scannererrors = 0;			/* Counts scanner error */
 	int sourceline = 1;			/* Counts sourceline number */
 	std::vector<std::string> symboltable;	/* Table of identifiers and literals */
-	Parser *parserinst;			/* pointer to the currently executed parser instance (necessary to iterate through the input files) */
+	BisonParser *parserinst;		/* pointer to the currently executed parser instance (necessary to iterate through the input files) */
 
 	//#define DEBUG
 %%
@@ -180,7 +180,6 @@ SLASH		"/"
  * Returns: 1 if scanning is done, 0 if it continues
  */
 int yywrap(){
-
 	FILE *input = parserinst->getNextInputFile();
 	if (input != NULL){
 		yyin = input;
