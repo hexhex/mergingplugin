@@ -281,10 +281,12 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 			// Write code to transfer information from virtual answer set to real answer set of this hex program
 			if (currentArity > 0){
 				os << "%    " << currentPred << " with arity " << currentArity << std::endl;
-				os << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << "." << std::endl;
+				os << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << ", &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 0)." << std::endl;
+				os << "-" << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << ", &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 1)." << std::endl;
 			}else{
 				os << "%    " << currentPred << " with arity " << currentArity << std::endl;
-				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0)." << std::endl;
+				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 0)." << std::endl;
+				os << "-" << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 1)." << std::endl;
 			}
 		}
 	}

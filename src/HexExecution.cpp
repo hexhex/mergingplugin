@@ -327,7 +327,7 @@ PredicatesAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	for (AtomSet::const_iterator it = resultsetCache[answerindex].second[answersetindex].begin(); it != resultsetCache[answerindex].second[answersetindex].end(); it++){
 		// Return predicate name and arity of the atom
 		Tuple out;
-		out.push_back(Term(it->getPredicate()));
+		out.push_back(Term(it->getPredicate().getString()));
 		out.push_back(Term(it->getArity()));
 		answer.addTuple(out);
 	}
@@ -360,6 +360,13 @@ ArgumentsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	for (AtomSet::const_iterator it = resultsetCache[answerindex].second[answersetindex].begin(); it != resultsetCache[answerindex].second[answersetindex].end(); it++){
 		// If the atom is built upon the given predicate, return it's parameters
 		if (it->getPredicate() == predicate){
+			// special case of index -1: positive or strongly negated
+			Tuple outsign;
+			outsign.push_back(Term(runningindex));
+			outsign.push_back(Term("s"));
+			outsign.push_back(Term(it->isStronglyNegated() ? 1 : 0));
+			answer.addTuple(outsign);
+
 			// Go through all parameters
 			for (int argindex = 0; argindex < it->getArity(); argindex++){
 				// For each: Return a running index (since the same predicate can occur arbitrary often within an answer set), the argument index and the value
@@ -368,10 +375,8 @@ ArgumentsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 				out.push_back(Term(argindex));
 				out.push_back(it->getArgument(argindex + 1));
 				answer.addTuple(out);
-
 			}
 			runningindex++;
-
 		}
 	}
 }

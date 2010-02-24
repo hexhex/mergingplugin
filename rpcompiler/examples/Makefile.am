@@ -12,7 +12,9 @@ EXTRA_DIST = \
   invalidrp1.rp \
   invalidrp2.rp \
   subrp1.rp \
-  subrp2.rp
+  subrp2.rp \
+  negation1.rp \
+  negation2.rp
 
 
 TESTS = tests/run-rpc-tests.sh

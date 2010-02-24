@@ -11,3 +11,4 @@
 ../operators1.hex operators1.as --operatorpath=./testoperators/src/.libs/libtestoperators.so --filter=result
 ../operators2.hex operators2.as --operatorpath=./testoperators/src/.libs/libtestoperators.so --filter=result
 ../operators3.hex operators3.as --operatorpath=./testoperators/src/.libs/libtestoperators.so --filter=result
+../negatedatom.hex negatedatom.as

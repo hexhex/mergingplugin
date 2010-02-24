@@ -14,6 +14,7 @@ EXTRA_DIST = \
   union1.rp \
   union2.rp \
   setminus1.rp \
+  negatedatom.hex \
   setminus2.rp
 
 TESTS = tests/run-mergingplugin-tests.sh

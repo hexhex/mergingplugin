@@ -1,0 +1,2 @@
+handle(A, AS) :- &hex["a v -a. b. -p(a). p(b).", ""](A), &answersets[A](AS).
+preds(A, AS, Pred, Arity, Sign) :- handle(A, AS), &predicates[A, AS](Pred, Arity), &arguments[A, AS, Pred](I, s, Sign).
