@@ -78,7 +78,8 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 	std::string inputrewriter;
 	bool useInputRewriter = false;
 	std::string filename;
-	bool externalprogram = false;	// false=mapping rules, true=hexfile
+	bool externalprogram = false;
+	bool mappingrules = false;
 
 	// A belief base section has the sub-element "beliefbase" with key-value pairs as it's 0th child
 	for (ParseTreeNodeIterator it = parsetree->getChild(0)->getChild(0)->begin(ParseTreeNode::kvpair); it != parsetree->getChild(0)->getChild(0)->end(); ++it){
@@ -94,6 +95,7 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 			useInputRewriter = true;
 		}
 		if (key == (std::string("mapping"))){
+			mappingrules = true;
 			mappings = mappings + "     " + value + "\n";
 		}
 		if (key == (std::string("source"))){
@@ -105,14 +107,19 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 	os << "% Belief base \"" << name << "\"" << std::endl;
 
 	// belief base from an external program or in form of mapping rules?
-	if (externalprogram){
-		os << "sources(" << name << ", AnswerNr) :- &hexfile[\"";
-		os << filename;
-		os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+	if (externalprogram && mappingrules){
+		errorcount++;
+		err << "Error during code generation for revision plan: Either mapping rules OR an external program can be defined. For belief base \"" << name << "\" both were found." << std::endl;
 	}else{
-		os << "sources(" << name << ", AnswerNr) :- &hex[\"" << std::endl;
-		os << mappings;
-		os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+		if (externalprogram){
+			os << "sources(" << name << ", AnswerNr) :- &hexfile[\"";
+			os << filename;
+			os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+		}else{
+			os << "sources(" << name << ", AnswerNr) :- &hex[\"" << std::endl;
+			os << mappings;
+			os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+		}
 	}
 }
 
