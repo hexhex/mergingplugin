@@ -77,6 +77,8 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 	std::string mappings;
 	std::string inputrewriter;
 	bool useInputRewriter = false;
+	std::string filename;
+	bool externalprogram = false;	// false=mapping rules, true=hexfile
 
 	// A belief base section has the sub-element "beliefbase" with key-value pairs as it's 0th child
 	for (ParseTreeNodeIterator it = parsetree->getChild(0)->getChild(0)->begin(ParseTreeNode::kvpair); it != parsetree->getChild(0)->getChild(0)->end(); ++it){
@@ -94,12 +96,24 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 		if (key == (std::string("mapping"))){
 			mappings = mappings + "     " + value + "\n";
 		}
+		if (key == (std::string("source"))){
+			externalprogram = true;
+			filename = value;
+		}
 	}
 
 	os << "% Belief base \"" << name << "\"" << std::endl;
-	os << "sources(" << name << ", AnswerNr) :- &hex[\"" << std::endl;
-	os << mappings;
-	os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+
+	// belief base from an external program or in form of mapping rules?
+	if (externalprogram){
+		os << "sources(" << name << ", AnswerNr) :- &hexfile[\"";
+		os << filename;
+		os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+	}else{
+		os << "sources(" << name << ", AnswerNr) :- &hex[\"" << std::endl;
+		os << mappings;
+		os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+	}
 }
 
 // Translates one revision plan section recursively

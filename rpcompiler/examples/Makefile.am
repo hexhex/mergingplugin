@@ -14,7 +14,8 @@ EXTRA_DIST = \
   subrp1.rp \
   subrp2.rp \
   negation1.rp \
-  negation2.rp
+  negation2.rp \
+  externalsource1.rp
 
 
 TESTS = tests/run-rpc-tests.sh

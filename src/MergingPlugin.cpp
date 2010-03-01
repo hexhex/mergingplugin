@@ -265,9 +265,7 @@ namespace dlvhex {
 						<< "                               one is a handle to the answer to be passed" << std::endl
 						<< "                             KV is a binary predicate with key-value pairs to" << std::endl
 						<< "                               be passed to the operator" << std::endl
-						<< "                             A is a handle to the answer of the operator" << std::endl
-						<< "   &operator[N, As, KV]  ... N is the name of an operator" << std::endl << std::endl
-						<< "   &operator[N, As, KV]  ... N is the name of an operator" << std::endl << std::endl
+						<< "                             A is a handle to the answer of the operator" << std::endl << std::endl
 						<< " Arguments:" << std::endl
 						<< " --operatorpath  This option adds additional search paths for operator libraries." << std::endl
 						<< " or        --op  It is necessary for the &operator predicate. A path can either" << std::endl
