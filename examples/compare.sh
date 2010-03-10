@@ -57,7 +57,7 @@
 #  the greater one by calling the appropriate programs.
 #    (with rp < hex < as < dot)
 #  Conversion is done as follows:
-#     {rp --> [rpcompiler] --> hex --> [dlvhex] --> [dotconverter] --> dot}
+#     {rp --> [rpcompiler] --> hex --> [dlvhex] --> [graphconverter] --> dot}
 #  Therefore:
 #     + hex/rp   -> Convert the revision plan into a hex program (using the
 #                   revision plan compiler), then execute both programs and
@@ -85,7 +85,7 @@
 # (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# March 09, 2010, 23:55
+# March 10, 2010, 22:33
 
 
 # ================================================== answer-sets ==================================================
@@ -340,11 +340,11 @@ function checkDlvhex {
 	fi
 }
 
-function checkDotconverter {
+function checkGraphConverter {
 
-	# Check if dotconverter is available
-	if ! which $DOTCONVERTER >/dev/null; then
-		echo "dotconverter was not found"
+	# Check if graphconverter is available
+	if ! which $GRAPHCONVERTER >/dev/null; then
+		echo "graphconverter was not found"
 		return 1
 	fi
 }
@@ -364,8 +364,8 @@ function compare {
 	if [ "$DLVHEX" = "" ]; then
 		DLVHEX="dlvhex"
 	fi
-	if [ "$DOTCONVERTER" = "" ]; then
-		DOTCONVERTER="dotconverter"
+	if [ "$GRAPHCONVERTER" = "" ]; then
+		GRAPHCONVERTER="graphconverter"
 	fi
 	if [ "$RPCOMPILER" = "" ]; then
 		RPCOMPILER="rpcompiler"
@@ -443,7 +443,7 @@ function compare {
 			echo "   the greater one by calling the appropriate programs."
 			echo "     (with rp < hex < as < dot)"
 			echo "   Conversion is done as follows:"
-			echo "      {rp --> [rpcompiler] --> hex --> [dlvhex] --> [dotconverter] --> dot}"
+			echo "      {rp --> [rpcompiler] --> hex --> [dlvhex] --> [graphconverter] --> dot}"
 			echo "   Therefore:"
 			echo "      + hex/rp   -> Convert the revision plan into a hex program (using the"
 			echo "                    revision plan compiler), then execute both programs and"
@@ -498,14 +498,14 @@ function compare {
 		fi
 	fi
 
-	# some input types need the dotconverter
+	# some input types need the graphconverter
 	if [ "$extension1" = "dot" ] && [ "$extension2" != "dot" ]; then
-		if ! checkDotconverter; then
+		if ! checkGraphConverter; then
 			return 1
 		fi
 	fi
 	if [ "$extension1" != "dot" ] && [ "$extension2" = "dot" ]; then
-		if ! checkDotconverter; then
+		if ! checkGraphConverter; then
 			return 1
 		fi
 	fi
@@ -581,7 +581,7 @@ function compare {
 						;;
 				"rp/dot")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
-						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER as dot > $TMPFILE_DOT1
+						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot"
@@ -589,7 +589,7 @@ function compare {
 				"dot/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						cp $1 $TMPFILE_DOT1
-						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER as dot > $TMPFILE_DOT2
+						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot"
 						;;
@@ -608,23 +608,23 @@ function compare {
 						cp $2 $TMPFILE_AS2
 						extension="as"
 						;;
-				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER as dot > $TMPFILE_DOT1
+				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $GRAPHCONVERTER as dot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot";
 						;;
 				"dot/hex")	cp $1 $TMPFILE_DOT1
-						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER as dot > $TMPFILE_DOT2
+						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $GRAPHCONVERTER as dot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot";
 						;;
-				"as/dot")	$DOTCONVERTER as dot < $1 > $TMPFILE_DOT1
+				"as/dot")	$GRAPHCONVERTER as dot < $1 > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot"
 						;;
 				"dot/as")	cp $1 $TMPFILE_DOT1
-						$DOTCONVERTER as dot < $2 > $TMPFILE_DOT2
+						$GRAPHCONVERTER as dot < $2 > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot"
 						;;
