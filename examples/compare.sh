@@ -85,7 +85,7 @@
 # (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# February 21, 2010, 21:10
+# March 09, 2010, 23:55
 
 
 # ================================================== answer-sets ==================================================
@@ -581,7 +581,7 @@ function compare {
 						;;
 				"rp/dot")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
-						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --todot > $TMPFILE_DOT1
+						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER as dot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot"
@@ -589,7 +589,7 @@ function compare {
 				"dot/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						cp $1 $TMPFILE_DOT1
-						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER --todot > $TMPFILE_DOT2
+						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $DOTCONVERTER as dot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot"
 						;;
@@ -608,23 +608,23 @@ function compare {
 						cp $2 $TMPFILE_AS2
 						extension="as"
 						;;
-				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER --todot > $TMPFILE_DOT1
+				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $DOTCONVERTER as dot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot";
 						;;
 				"dot/hex")	cp $1 $TMPFILE_DOT1
-						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER --todot > $TMPFILE_DOT2
+						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $DOTCONVERTER as dot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot";
 						;;
-				"as/dot")	$DOTCONVERTER --toas < $1 > $TMPFILE_DOT1
+				"as/dot")	$DOTCONVERTER as dot < $1 > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot"
 						;;
 				"dot/as")	cp $1 $TMPFILE_DOT1
-						$DOTCONVERTER --toas < $2 > $TMPFILE_DOT2
+						$DOTCONVERTER as dot < $2 > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot"
 						;;
