@@ -114,16 +114,11 @@ public:
 	{
 		std::vector<std::string> tmp;
 		tmp.push_back(path());
-//		tmp.insert(tmp.end(), argv.begin(), argv.end());
+		// never show state information
 		tmp.push_back("--silent");
 		tmp.push_back("--firstorder");
 		tmp.insert(tmp.end(), argv.begin(), argv.end());
-		// never show state information
 		tmp.push_back(fromfile ? filename : "--"); // request stdin as last parameter!
-
-for (std::vector<std::string>::iterator it = tmp.begin(); it != tmp.end(); it++){
-//std::cout << "Option: " << *it << std::endl;
-}
 		return tmp;
 	}
 
