@@ -63,6 +63,9 @@ public:
 };
 
 //	This class is an awesome hack.
+//
+//	====> 2010-03-12 The problem in dlvhex was fixed!
+//
 //	dlvhex contains classes for calling DLV for subprograms. We need a similar mechanism but for hex subprograms.
 //	The DLVresultParserDriver has an internal assertion that tests if DLV's result contains propositional atoms. If dlvhex is started in higher-order mode, this is prohibited since
 //	all atoms are passed to DLV in higher-order style by DLVProcess. In this case the assertion is senseful, since DLV will never return propositional facts if the input program
@@ -73,6 +76,7 @@ public:
 //	is was not possible to derive a HexResultParserDriver. Rewriting a new one from the scratch is also a bad idea.
 //	Thus we have to make the DLVresultParserDriver believe that we always run in first-order mode. This makes him happy any everything is fine... However we have to restore the original
 //	flag afterwards.
+/*
 template <typename Builder, typename Parser> class HexSolver : public ASPSolver<Builder, Parser>{
 public:
 
@@ -89,6 +93,13 @@ public:
 		// Restore the old option
 		Globals::Instance()->setOption("NoPredicate", noPred);
 	}
+};
+*/
+
+// Just forces the DLVresultParserDriver to parse in first-order mode
+class HexResultParserDriver : public DLVresultParserDriver{
+public:
+	HexResultParserDriver() : DLVresultParserDriver(DLVresultParserDriver::FirstOrder){}
 };
 
 class DLVHexProcess : public DLVProcess{
@@ -136,7 +147,7 @@ public:
 	{
 		// RawPrintVisitor makes sure that external atoms remain in HEX syntax.
 		// DLVPrintVisitor would replace them and thus prevent arbitrarily nested HEX programs.
-		return new HexSolver<HexPrintVisitor, DLVresultParserDriver>(*this);
+		return new ASPSolver<HexPrintVisitor, HexResultParserDriver>(*this);
 	}
 
 	// THIS METHOD IS NEVER CALLED, but it may is useful for testing
@@ -159,19 +170,27 @@ public:
 			endoffile();
 
 			
-			std::cerr << "OUTPUT IS " << std::endl;
-			std::istream& inp = getInput();
-			std::string s;
+//			std::cerr << "OUTPUT IS " << std::endl;
+//			std::istream& inp = getInput();
+//			std::string s;
 
-			while (inp.good() && std::getline(inp, s))
-			{
-				std::cerr << s << std::endl;
-			}
+//			while (inp.good() && std::getline(inp, s))
+//			{
+//				std::cerr << s << std::endl;
+//			}
 			
 
 			// parse result
+//			Globals::Instance()->setOption("NoPredicate", 0);
 			DLVresultParserDriver parser;
 			parser.parse(getInput(), as);
+
+//			std::cerr << "IN AS-FORMAT " << std::endl;
+			for (std::vector<AtomSet>::iterator it = as.begin(); it != as.end(); it++){
+				DLVPrintVisitor pv(std::cerr);
+//				pv.PrintVisitor::visit(&(*it));
+//std::cerr << it->size() << std::endl;
+			}
 
 			// get exit code of process
 			int retcode = close();

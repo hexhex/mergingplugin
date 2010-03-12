@@ -158,7 +158,7 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		std::vector<AtomSet> as;
 		BaseASPSolver* solver = proc.createSolver();
 		solver->solve(prog, facts, as);
-		//proc.solve(program, prog, facts, as);
+	//	proc.solve(program, prog, facts, as);
 
 		// store output (answer sets) in cache
 		int rn = resultsetCache.size();
