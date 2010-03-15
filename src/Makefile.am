@@ -10,6 +10,7 @@ plugin_LTLIBRARIES = libdlvhexmerging.la
 # add all sources of your plugin
 #
 libdlvhexmerging_la_SOURCES = MergingPlugin.cpp DLVHexProcess.cpp HexExecution.cpp Operators.cpp InternalTypes.cpp OpUnion.cpp OpSetminus.cpp
+libdlvhexmerging_la_LIBADD = $(CRYPTLIB)
 
 #
 # extend compiler flags by CFLAGS of other needed libraries
@@ -17,7 +18,8 @@ libdlvhexmerging_la_SOURCES = MergingPlugin.cpp DLVHexProcess.cpp HexExecution.c
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	$(BOOST_CPPFLAGS) \
-	$(DLVHEX_CFLAGS)
+	$(DLVHEX_CFLAGS) \
+	$(CRYPTLIB_CFLAGS)
 
 libdlvhexmerging_la_LDFLAGS = -avoid-version -module
 

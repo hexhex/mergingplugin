@@ -16,8 +16,6 @@
 
 using namespace dlvhex::merging;
 
-OpUnion* _union;
-
 void OperatorAtom::registerBuiltInOperators(){
 
 	// Add a command of the following type for each built-in operator:
@@ -49,7 +47,6 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 
 OperatorAtom::~OperatorAtom()
 {
-//	delete _union;
 }
 
 void
@@ -61,14 +58,27 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	// Extract the predicate which is true for all indices of answers passed to the parameter
 	AtomSet opparams;
 	std::string predname = query.getInputTuple()[1].getUnquotedString();
+
+	// retrieve the indices of the answers that are passed to the operator
 	query.getInterpretation().matchPredicate(predname, opparams);
 	std::vector<HexAnswer*> answers;
 	std::vector<int> answersIndices;
 	answers.resize(opparams.size());
+	for (int i = 0; i < opparams.size(); i++) answers[i] = NULL;
 	answersIndices.resize(opparams.size());
 	for (AtomSet::const_iterator it = opparams.begin(); it != opparams.end(); it++){
 		int answernrpos = it->getArgument(1).getInt();
 		int answernr = it->getArgument(2).getInt();
+		// index check
+		if (answernr < 0 || answernr >= resultsetCache.size()){
+			throw PluginError("An invalid answer handle was passed to external atom &operator");
+		}
+		// check uniqueness of operator arguments
+		if (answers[answernrpos] != NULL){
+			std::stringstream ss;
+			ss << "Multiple answers were passed as " << answernrpos << "-th argument of operator \"" << opname << "\"";
+			throw PluginError(ss.str());
+		}
 		answers[answernrpos] = &(resultsetCache[answernr].second);
 		answersIndices[answernrpos] = answernr;
 	}
@@ -131,35 +141,6 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 			msg << "Operator \"" << opname << "\" was not loaded";
 			throw IOperator::OperatorException(msg.str());
 		}
-/*
-		if (builtinOperators.find(opname) != builtinOperators.end()){
-			// Built-In operator
-			//std::cout << "CALLING INTERNAL OP";
-			opanswer = builtinOperators[opname]->apply(answersIndices.size(), answers, parameters);
-		}else{
-			// External operator
-			//std::cout << "CALLING EXTERNAL OP";
-
-			// Look for the operator library
-			lt_dlhandle dlHandle = lt_dlopenext(opname.c_str());							// Absolute path
-			if (dlHandle == NULL){
-				for (int i = 0; dlHandle == NULL && i < operatorpaths.size(); i++){
-					dlHandle = lt_dlopenext((operatorpaths[i] + std::string("/") + opname).c_str());	// Prefix path with one search location after the other
-				}
-			}
-			// Check if the operator library was found
-			if (dlHandle == 0){
-				throw PluginError((std::string("Operator library \"") + opname + std::string("\" not found")).c_str());
-			}
-			t_getOperator getOperator = (t_getOperator) lt_dlsym(dlHandle, "getOperator");
-			if (getOperator == 0){
-				throw PluginError((std::string("Function getOperator not found in operator library \"") + opname + std::string("\"")).c_str());
-			}
-			// Finally call the operator
-			IOperator* externalOperator = getOperator();
-			opanswer = externalOperator->apply(answersIndices.size(), answers, parameters);
-		}
-*/
 	}catch(IOperator::OperatorException& oe){
 		throw PluginError(oe.getMessage());
 	}catch(std::runtime_error& e){
@@ -175,6 +156,7 @@ void OperatorAtom::addOperators(std::string lib, bool silent, bool debug){
 	DIR *dp = opendir(lib.c_str());
 	if (dp != NULL){
 		// Directory
+
 		if (!silent){
 			std::cout << "mergingplugin: Searching for operators in directory \"" << lib << "\"" << std::endl;
 		}
@@ -201,9 +183,10 @@ void OperatorAtom::addOperators(std::string lib, bool silent, bool debug){
 		// Check if the operator library was found
 		if (dlHandle == 0){
 			if (!silent && debug){
-				std::cout << std::string("mergingplugin: Operator library or directory \"") << lib << std::string("\" was specified but not found") << std::endl;
+				std::cerr << std::string("mergingplugin: Operator library or directory \"") << lib << std::string("\" was specified but not found") << std::endl;
 			}
 		}else{
+			// check if the library contains an operator import function
 			t_operatorImportFunction operatorImportFunction = (t_operatorImportFunction) lt_dlsym(dlHandle, "OPERATORIMPORTFUNCTION");
 			if (operatorImportFunction == 0){
 				// The library does not contain any operators
@@ -211,14 +194,15 @@ void OperatorAtom::addOperators(std::string lib, bool silent, bool debug){
 					std::cout << std::string("mergingplugin: Library \"") + lib + std::string("\" was found but does not contain operators since the operator import function (signature: \"std::vector<dlvhex::merging::IOperator*> OPERATORIMPORTFUNCTION()\") is not present.") << std::endl;
 				}
 			}else{
+				// yes: load the operators
 				if (!silent){
 					std::cout << "mergingplugin: Loading operators form library \"" << lib << "\"" << std::endl;
 				}
 
-				// Finally call the operator import function to retrieve the operators in this library
+				// call the operator import function to retrieve the operators in this library
 				std::vector<IOperator*> externalOperators = operatorImportFunction();
 
-				// Add the operators to the operator list
+				// finally add the operators to the operator list
 				int opcount = 0;
 				for (std::vector<IOperator*>::iterator it = externalOperators.begin(); it != externalOperators.end(); it++){
 					// Check if the operator name is unique

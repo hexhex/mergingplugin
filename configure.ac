@@ -54,6 +54,10 @@ LT_INIT
 #
 PKG_CHECK_MODULES([DLVHEX], [dlvhex >= 1.7])
 
+# we need the crypt library for MD5 computation
+AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
+AC_SUBST(CRYPTLIB)
+
 
 # checking for boost libs
 BOOST_REQUIRE([1.37.0])

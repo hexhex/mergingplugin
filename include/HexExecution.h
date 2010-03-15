@@ -24,6 +24,7 @@ namespace dlvhex {
 		private:
 			HexAnswerCache &resultsetCache;
 
+			std::string salt;	// salt for MD5 hashing
 		public:
 
 			HexAtom(HexAnswerCache &rsCache);
@@ -44,6 +45,7 @@ namespace dlvhex {
 		private:
 			HexAnswerCache &resultsetCache;
 
+			std::string salt;	// salt for MD5 hashing
 		public:
 
 			HexFileAtom(HexAnswerCache &rsCache);
