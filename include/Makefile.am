@@ -8,7 +8,8 @@ noinst_HEADERS = DLVHexProcess.h \
 		 Operators.h \
 		 InternalTypes.h \
 		 OpUnion.h \
-		 OpSetminus.h
+		 OpSetminus.h \
+		 OpMinHamming.h
 
 pkginclude_HEADERS = \
  	PublicTypes.h \

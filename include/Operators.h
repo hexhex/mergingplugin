@@ -9,6 +9,7 @@
 
 #include "OpUnion.h"
 #include "OpSetminus.h"
+#include "OpMinHamming.h"
 
 namespace dlvhex {
 	namespace merging {
@@ -30,6 +31,8 @@ namespace dlvhex {
 
 			OpUnion _union;
 			OpSetminus _setminus;
+			OpMinHamming _minhamming;
+
 			void registerBuiltInOperators();
 		public:
 

@@ -30,6 +30,7 @@ void OperatorAtom::registerBuiltInOperators(){
 	// built-in operators
 	operators[_union.getName()] = &_union;
 	operators[_setminus.getName()] = &_setminus;
+	operators[_minhamming.getName()] = &_minhamming;
 }
 
 OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
