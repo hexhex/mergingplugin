@@ -13,9 +13,9 @@ namespace dlvhex{
 		/**
 		 * This class implements the union operator. It merges the answer-sets pairwise by computing the union.
 		 * Usage:
-		 * &operator["union", A1, A2](A)
-		 *	A1, A2	... handles of two answers
-		 *	A	... answer to the operator result
+		 * &operator["union", A, K](A)
+		 *	A(H1), ..., A(Hn)	... handles to n answers
+		 *	A			... answer to the operator result
 		 */
 		class OpUnion : public IOperator{
 		public:

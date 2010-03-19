@@ -13,9 +13,9 @@ namespace dlvhex{
 		/**
 		 * This class implements the setminus operator. It computes the pairwise differences between answer sets.
 		 * Usage:
-		 * &operator["setminus", A1, A2](A)
-		 *	A1, A2	... handles of two answers
-		 *	A	... answer to the operator result
+		 * &operator["setminus", A,  K](A)
+		 *	A(H1), ..., A(Hn)	... handles to n answers
+		 *	A			... answer to the operator result
 		 */
 		class OpSetminus : public IOperator{
 		public:

@@ -15,7 +15,8 @@ EXTRA_DIST = \
   union2.rp \
   setminus1.rp \
   negatedatom.hex \
-  setminus2.rp
+  setminus2.rp \
+  minhamming.rp
 
 TESTS = tests/run-mergingplugin-tests.sh
 TESTS_ENVIRONMENT = DLVHEX=dlvhex RPCOMPILER=$(top_srcdir)/rpcompiler/src/rpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
