@@ -11,6 +11,11 @@
 #include <ParseTreeNode.h>
 #include <string>
 
+namespace dlvhex{
+namespace merging{
+namespace tools{
+namespace rpcompiler{
+
 typedef struct TerminalTokenStruct{
 	int filenr;			/* input file number */
 	int linenr;			/* source linenr */
@@ -28,5 +33,12 @@ public:
 	BisonParser(std::string i);
 	void parse();
 };
+
+}
+}
+}
+}
+
+using namespace dlvhex::merging::tools::rpcompiler;
 
 #endif

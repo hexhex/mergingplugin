@@ -85,7 +85,7 @@
 # (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# March 10, 2010, 22:33
+# March 20, 2010, 16:22
 
 
 # ================================================== answer-sets ==================================================
@@ -205,7 +205,7 @@ function reduceDotFile {
 		}
 
 		# print a subgraph recursivly in a unique and comparable format
-		function output(nodes, node, level, i, s, children, condition, suboutput, retval, indent, j, tmpval, tmparray){
+		function output(nodes, node, level, i, s, children, condition, suboutput, retval, indent, j, tmpval, tmparray, tmparray2){
 			retval = ""
 			indent = ""
 			for (i=1; i <= level; i++){
@@ -233,7 +233,21 @@ function reduceDotFile {
 				}
 			}
 
-			# sort subnodes by label
+			# sort subnodes by condition and visit them in this order
+			delete tmparray;
+			for (i=1; i <= s; i++){
+				tmparray[children[i]] = condition[i];
+			}
+			asorti(tmparray, tmparray2);
+			i=0;
+			for (tmpval in tmparray2){
+				++i;
+				children[i] = tmparray2[tmpval];
+				condition[i] = tmparray[tmparray2[tmpval]];
+			}
+			delete tmparray;
+
+			# generate output for subnode
 			for (i=1; i <= s; i++){
 				suboutput[i] = output(nodes, children[i], level + 1);
 				tmpval = split(suboutput[i], tmparray, "\n");

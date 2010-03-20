@@ -4,6 +4,8 @@
 #include <sstream>
 #include <stdlib.h>
 
+using namespace dlvhex::merging::tools::rpcompiler;
+
 CodeGenerator::CodeGenerator(ParseTreeNode *parsetree) : parsetreeroot(parsetree), codegenerated(false), errorcount(0), warningcount(0){
 }
 

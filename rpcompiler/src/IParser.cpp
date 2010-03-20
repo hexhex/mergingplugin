@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+using namespace dlvhex::merging::tools::rpcompiler;
+
 // Private methods
 
 std::string IParser::readFile(FILE* file){

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-using namespace dlvhex::merging;
+using namespace dlvhex::merging::plugin;
 
 std::string OpUnion::getName(){
 	return "union";

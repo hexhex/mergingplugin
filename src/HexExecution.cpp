@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 
-using namespace dlvhex::merging;
+using namespace dlvhex::merging::plugin;
 
 // -------------------- Util (local functions!) --------------------
 

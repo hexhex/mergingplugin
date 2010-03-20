@@ -10,8 +10,8 @@
 ../invalidbeliefbase2.rp invalidbeliefbase2.err
 ../invalidrp1.rp invalidrp1.err
 ../invalidrp2.rp invalidrp2.err
-../subrp1.rp subrp1.as --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libtestoperators.so
-../subrp2.rp subrp2.as --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libtestoperators.so
+../subrp1.rp subrp1.as --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libdlvhextestoperators.so
+../subrp2.rp subrp2.as --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libdlvhextestoperators.so
 ../negation1.rp negation1.as --filter=a,b,p,q
 ../negation2.rp negation2.as
-../externalsource1.rp externalsource1.as --filter=a,b,c,x,y --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libtestoperators.so
+../externalsource1.rp externalsource1.as --filter=a,b,c,x,y --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libdlvhextestoperators.so

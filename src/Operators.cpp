@@ -14,7 +14,7 @@
 
 #include "dlvhex/globals.h"
 
-using namespace dlvhex::merging;
+using namespace dlvhex::merging::plugin;
 
 void OperatorAtom::registerBuiltInOperators(){
 

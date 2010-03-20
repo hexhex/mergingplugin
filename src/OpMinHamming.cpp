@@ -13,6 +13,7 @@
 
 using namespace dlvhex;
 using namespace dlvhex::merging;
+using namespace dlvhex::merging::plugin;
 
 std::string OpMinHamming::getName(){
 	return "minhamming";

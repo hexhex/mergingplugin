@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+using namespace dlvhex::merging::tools::rpcompiler;
+
 ParseTreeNodeIterator::ParseTreeNodeIterator(ParseTreeNode* n) : node(n), cindex(0){
 	typespecific = false;
 }

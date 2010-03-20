@@ -8,6 +8,11 @@
 #include <iostream>
 #include <vector>
 
+namespace dlvhex{
+namespace merging{
+namespace tools{
+namespace rpcompiler{
+
 /**
 * This is the base class used to construct the parse tree. Each instances represents one node of the tree
 */
@@ -113,88 +118,92 @@ typedef LeafTreeNode<std::string> StringTreeNode;
  */
 typedef LeafTreeNode<int> IntTreeNode;
 
+}
+}
+}
+}
+
 #endif
 
 
-/*! \fn ParseTreeNode::ParseTreeNode(NodeType type, int childrenCount, ...)
+/*! \fn dlvhex::merging::tools::rpcompiler::ParseTreeNode::ParseTreeNode(NodeType type, int childrenCount, ...)
  *  \brief The constructor of the class.
  *  \param type Type of this parse tree node.
  *  \param childrenCount Number of children passed as variable parameters
  *  \param ... Child nodes
  */
 
-/*! \fn ParseTreeNode::~ParseTreeNode()
+/*! \fn dlvhex::merging::tools::rpcompiler::ParseTreeNode::~ParseTreeNode()
  *  \brief Destructor: frees memory allocated by this node and all child nodes (recursive deletion)
  */
 
-/*! \fn void ParseTreeNode::print(std::ostream &os)
+/*! \fn void dlvhex::merging::tools::rpcompiler::ParseTreeNode::print(std::ostream &os)
  *  \brief Prints this parse tree (or subtree) into the given output stream.
  *  \param os Output stream to write to 
  */
 
-/*! \fn std::ostream& ParseTreeNode::operator<<(std::ostream &os)
+/*! \fn std::ostream& dlvhex::merging::tools::rpcompiler::ParseTreeNode::operator<<(std::ostream &os)
  *  \brief Prints this parse tree (or subtree) into the given output stream.
  *  \param os Output stream to write to 
  *  \return std::ostream& Copy of reference os
  */
 
-/*! \fn void ParseTreeNode::addChild(ParseTreeNode *newchild)
+/*! \fn void dlvhex::merging::tools::rpcompiler::ParseTreeNode::addChild(ParseTreeNode *newchild)
  *  \brief Adds a further child to this tree node.
  *  \param newchild A pointer to the new tree node. Note: You must not add a node to two (or more) different parent nodes, since this causes troubles when the destructor is called.
  */
 
-/*! \fn int ParseTreeNode::getChlidrenCount()
+/*! \fn int dlvhex::merging::tools::rpcompiler::ParseTreeNode::getChlidrenCount()
  *  \brief Returns the number of children.
  *  \param int Number of children
  */
 
-/*! \fn ParseTreeNode* ParseTreeNode::getChlid(int index)
+/*! \fn ParseTreeNode* dlvhex::merging::tools::rpcompiler::ParseTreeNode::getChlid(int index)
  *  \brief Returns a pointer to a child of this node.
  *  \param int Index of the child to retrieve (0-based)
  *  \return ParseTreeNode* Pointer to the requested child
  */
 
-/*! \fn ParseTreeNode* ParseTreeNode:		virtual void print(std::ostream &os);
-:flatten(NodeType flattenedType)
+/*! \fn ParseTreeNode* dlvhex::merging::tools::rpcompiler::ParseTreeNode::flatten(NodeType flattenedType)
  *  \brief This method is used to flatten a subtree of the following type: ListNode(type, ContentNode, ListNode(type, ContentNode, ListNode(type, ContentNode, NULL))). "ListNode" is a node of a certain type with exactly(!) 2 children: one "content node" (of any type) and one ListNode of the same type as the node itself. In this way, recursive node structures represent lists of content nodes, where the recursion is terminated by a NULL entry instead of a further list node.
  *  \param NodeType The type of the output node.
  *  \return ParseTreeNode* A node of the given type with all the content nodes of this subtree as children. So the number of children in the output node is variable, whereas it is fixed (2) in the recursive input.
  */
 
-/*! \fn ParseTreeNodeIterator ParseTreeNode::begin()
+/*! \fn ParseTreeNodeIterator dlvhex::merging::tools::rpcompiler::ParseTreeNode::begin()
  *  \brief Returns an iterator for all child nodes of this parse tree node.
  *  \param ParseTreeNodeIterator& Iterator through all child nodes */
 
-/*! \fn ParseTreeNodeIterator ParseTreeNode::end()
+/*! \fn ParseTreeNodeIterator dlvhex::merging::tools::rpcompiler::ParseTreeNode::end()
  *  \brief Returns an iterator representing the end marker.
  *  \param ParseTreeNodeIterator& End marker */
 
-/*! \fn ParseTreeNodeIterator ParseTreeNode::begin(NodeType type)
+/*! \fn ParseTreeNodeIterator dlvhex::merging::tools::rpcompiler::ParseTreeNode::begin(NodeType type)
  *  \brief Returns an iterator for child nodes of a certain type of this parse tree node.
  *  \param type
  *  \param ParseTreeNodeIterator& Iterator through all child nodes */
 
-/*! \fn ParseTreeNode* ParseTreeNode::clone()
+/*! \fn ParseTreeNode* dlvhex::merging::tools::rpcompiler::ParseTreeNode::clone()
  *  \brief Returns a pointer to a (recursive) copy of this parse sub tree.
  *  \return ParseTreeNode* Pointer to a copy of the parse sub tree which's root is the this node.
  */
 
-/*! \fn NodeType ParseTreeNode::getType()
+/*! \fn NodeType dlvhex::merging::tools::rpcompiler::ParseTreeNode::getType()
  *  \brief Returns the type of this parse tree node.
  *  \return NodeType Parse tree node type
  */
 
-/*! \fn LeafTreeNode::LeafTreeNode(T value)
+/*! \fn dlvhex::merging::tools::rpcompiler::LeafTreeNode::LeafTreeNode(T value)
  *  \brief Constructor of a leaf node.
  *  \param value The value to initialize the leaf node with
  */
 
-/*! \fn void LeafTreeNode::setValue(T value)
+/*! \fn void dlvhex::merging::tools::rpcompiler::LeafTreeNode::setValue(T value)
  *  \brief Changes the value of this leaf node
  *  \param value The new value of the leaf node
  */
 
-/*! \fn T LeafTreeNode::getValue()
+/*! \fn T dlvhex::merging::tools::rpcompiler::LeafTreeNode::getValue()
  *  \brief Returns the value of this leaf node
  *  \return T The value of this leaf node
  */

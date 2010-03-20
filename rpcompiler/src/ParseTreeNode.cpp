@@ -4,6 +4,8 @@
 #include <iostream>
 #include <stdarg.h>
 
+using namespace dlvhex::merging::tools::rpcompiler;
+
 // ------------------------------ Constructor / Destructor ------------------------------
 
 ParseTreeNode::ParseTreeNode(NodeType type, int childrenCount, ...){

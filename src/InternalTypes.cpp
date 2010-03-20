@@ -3,6 +3,7 @@
 
 using namespace dlvhex;
 using namespace merging;
+using namespace dlvhex::merging::plugin;
 
 HexCall::HexCall(CallType ct, std::string prog, std::string args) : type(ct), program(prog), arguments(args){
 }

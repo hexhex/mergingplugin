@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+using namespace dlvhex::merging::tools::rpcompiler;
+
 /*
 	Grammer in compact EBNF-like notation (* means 0 to arbitrary many times):
 

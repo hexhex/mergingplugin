@@ -16,7 +16,11 @@
 #include <dirent.h>
 #include <pwd.h>
 
-using namespace dlvhex::merging;
+using namespace dlvhex::merging::plugin;
+
+namespace dlvhex{
+namespace merging{
+namespace test{
 
 class TestOp1 : public IOperator{
 	std::string getName(){
@@ -54,6 +58,12 @@ class TestOp2 : public IOperator{
 		return result;
 	}
 };
+
+}
+}
+}
+
+using namespace dlvhex::merging::test;
 
 TestOp1 testOp1Inst;
 TestOp2 testOp2Inst;

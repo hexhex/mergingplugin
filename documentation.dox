@@ -1,0 +1,35 @@
+// -*- C++ -*-
+
+/// the dlvhex namespace
+namespace dlvhex {
+  /// namespace for the decision diagrams plugin
+  namespace merging {
+	/// contains the external atoms defined in this dlvhex plugin
+	namespace plugin{}
+	namespace tools{
+		/// contains the compiler for translations of revision plans into HEX programs
+		namespace rpcompiler{}
+	}
+  }
+}
+
+/**
+
+@mainpage Documentation decisiondiagramsplugin
+
+@author Christoph Redl <e0525250@mail.student.tuwien.ac.at>
+
+This is the documentation for the dlvhex decisiondiagrams
+Plugin.
+
+
+@defgroup PluginOverview Overview merging Plugin
+
+This is a brief overview of the merging plugin
+
+
+@defgroup rpcompiler The rpcompiler
+
+Translates revision plans into semantically equivalent HEX programs
+
+*/

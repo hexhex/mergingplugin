@@ -8,6 +8,10 @@
 
 DLVHEX_NAMESPACE_USE
 
+namespace dlvhex{
+namespace merging{
+namespace plugin{
+
 class ArbProcess : public DLVProcess{
 private:
 	std::string executionstring;
@@ -60,6 +64,10 @@ public:
 		proc.open(commandline());
 	}
 };
+
+}
+}
+}
 
 #endif
 

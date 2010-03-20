@@ -15,6 +15,11 @@
 
 using namespace boost::spirit::classic;
 
+namespace dlvhex{
+namespace merging{
+namespace tools{
+namespace rpcompiler{
+
 class SpiritParser : public IParser{
 private:
 	struct rp_grammar;
@@ -56,5 +61,10 @@ public:
 	SpiritParser(std::string i);
 	void parse();
 };
+
+}
+}
+}
+}
 
 #endif

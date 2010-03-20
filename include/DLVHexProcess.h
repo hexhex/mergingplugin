@@ -21,6 +21,11 @@
 
 DLVHEX_NAMESPACE_USE
 
+namespace dlvhex{
+namespace merging{
+namespace plugin{
+
+
 //	We need a mixture of RawPrintVisitor and DLVPrintVisitor. For usual atoms, DLVPrintVisitor is exactly what we need since DLV's and dlvhex' syntax is equivalent.
 //	But for external atoms we need the RawPrintVisitor. However, the RawPrintVisitor uses a rather strange syntax (set braces) for AtomSets.
 //	Thus we need some methods of both visitors. Multiple inheritance would be nice here, but it cannot be used since the Raw- and DLVPrintVisitor do not inherit
@@ -198,5 +203,9 @@ public:
 		}
 	}
 };
+
+}
+}
+}
 
 #endif

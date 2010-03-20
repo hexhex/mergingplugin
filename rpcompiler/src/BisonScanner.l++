@@ -18,6 +18,8 @@ SLASH		"/"
 	#include <ParseTreeNode.h>
 	#include "BisonParserImpl.h"	// Contains definitinos for terminal symbols (tokens)
 
+	using namespace dlvhex::merging::tools::rpcompiler;
+
 	#include <vector>
 	#include <string>
 

@@ -1,6 +1,6 @@
 AC_PREREQ(2.64)
 
-AC_INIT([dlvhex-mergingplugin],[0.3.0],[e0525250@mail.student.tuwien.ac.at])
+AC_INIT([dlvhex-mergingplugin],[0.9.0],[e0525250@mail.student.tuwien.ac.at])
 
 AC_CONFIG_SRCDIR([src/MergingPlugin.cpp])
 AC_CONFIG_MACRO_DIR([m4])
@@ -44,6 +44,20 @@ AC_C_CONST
 # we build a module library
 AC_DISABLE_STATIC # we don't need a static library
 LT_INIT
+
+
+# doxygen stuff
+#
+# these are the defaults, can be overridden by --enable-doxygen-...
+DX_HTML_FEATURE([ON])
+DX_CHM_FEATURE([OFF])
+DX_CHI_FEATURE([OFF])
+DX_MAN_FEATURE([OFF])
+DX_RTF_FEATURE([OFF])
+DX_XML_FEATURE([OFF])
+DX_PDF_FEATURE([OFF])
+DX_PS_FEATURE([ON])
+DX_INIT_DOXYGEN([dlvhex-mergingplugin], [doxygen.cfg], [doc/sdk])
 
 #
 # check for other libraries here
