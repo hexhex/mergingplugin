@@ -22,14 +22,459 @@ namespace dlvhex {
 This is the documentation for the dlvhex decisiondiagrams
 Plugin.
 
+The plugin concists of a shared object library that provides external atoms for dlvhex (see \link PluginOverview \endlink) as well as a <i>revision plan compiler</i> that translates revision plans into semantically equivalent HEX programs (see \link rpcompiler \endlink)
+
 
 @defgroup PluginOverview Overview merging Plugin
 
 This is a brief overview of the merging plugin
 
+	<h1>External Atoms</h1>
+
+	The merging plugin provides the following external atoms.
+
+
+		<h2>Execution of Nested Programs</h2>
+
+
+			<h3>\&hex</h3>
+
+				<i>\&hex</i> is a unary predicate with two input parameters that is intended to execute nested \hex programs.
+			
+					\f[$\mathit{\&hex}[\mathit{Prog}, \mathit{Args}](A)$\f]
+
+				An evaluation will execute the hex program in variable $\mathit{Prog}$ with the \dlvhex arguments given in <i>Args</i>. The result is an integer value (<i>handle</i>)
+				that <i>represents</i> the program's result symbolically. That means, the numeric value is irrelevant, but it can be used to access the result later on (similar to
+				pointers in programming languages).
+				
+				Note that <i>Prog</i> is expected to contain the program to execute directly as string literal and <i>not</i> the filename of the program.
+				
+				<pre>
+handle(H) :- \&hex["a. b. c :- a.", ""](H).
+				</pre>
+
+				In case the program to embed contains double quotation marks (&quot;), they must be represented with the escape sequence <i>\\&rsquo;</i>. The escape sequence for the backslash
+				character (<i>\\</i>) is <i>\\\\</i>.
+				
+				<b>Example</b>
+					\label{ex:Calling2}
+	Assume we want to embed the program:
+					<pre>
+p(constant, "string literal containing a backslash\ backslash").
+					</pre>
+
+
+	Then the host program looks like this:
+					<pre>
+handle(H) :- \&hex["p(constant, \'string literal containing a backslash\\').", ""](H).
+					</pre>
+
+				
+			<h3>\&hexfile</h3>
+
+				<i>\&hexfile</i> is again a unary predicate with two input parameters that is intended to execute nested \hex programs which are stored within <i>files</i> in the file system.
+			
+					\f[$\mathit{\&hexfile}[\mathit{File}, \mathit{Args}](A)$\f]
+				
+				An evaluation will execture the program in the file named <i>File</i> with the dlvhex arguments given in <i>Args</i>. The result is a handle to the program's result.
+
+
+		<h2>Investigating the Result</h2>
+
+		
+			<h3>\&answersets</h3>
+
+				<i>\&answersets</i> is a unary predicate with one input parameter.
+				
+					\f[$\mathit{\&answersets}[H](\mathit{AS})$\f]
+				
+				<i>H</i> is expected to be a handle to a program's result (see \ref{sec:ExternalAtoms:Execution}). Then the atom will deliver handles <i>AS</i> to each answer-set in this result.
+
+				<b>Example</b>
+					The program
+					<pre>
+handle(H, AS) :- \&hex["a. b. c :- a.", ""](H), \&answersets[H](AS).
+					</pre>
+					will have one answer-set, namely <i>{ handle(0,0) }</i>, where the first <i>0</i> is a handle to the embedded progrm's result and the second <i>0</i> a handle to the first answer-set
+					of this program.
+				
+				Note that answer-set handles are only unique <i>relative</i> to a certain program answer. Thus, if multiple embedded programs are executed, both the handle to the program's result
+				as well as the handle to an answer-set is required to uniquly identify an answer-set.
+
+				
+			<h3>\&predicates</h3>
+
+				<i>\&predicates</i> is a binary predicate with two input parameters.
+				
+					\f[$\mathit{\&predicates}[H, \mathit{AS}](\mathit{Pred}, \mathit{Arity})$\f]
+					
+				For a given handle to a program's result $H$ and a given handle to an answer-set $\mathit{AS}$, it returns tuples $(\mathit{Pred}, \mathit{Arity})$ of all predicates together with
+				their arities that occur within this answer-set.
+
+				<b>Example</b>
+					The program
+					<pre>
+preds(Pred, Arity) :- \&hex["a. p(x,y).", ""](H), \&answersets[H](AS), \&predicates[A, AS](Pred, Arity).
+					</pre>
+					will have one answer-set, namely <i>{ preds(a,0), preds(p,2) }</i>.
+				
+				
+			<h3>\&arguments</h3>
+
+				<i>\&arguments</i> is a ternary predicate with three input parameters.
+			
+					\f[$\mathit{\&arguments}[H, \mathit{AS}, \mathit{Pred}](\mathit{I}, \mathit{ArgIndex}, \mathit{Value})$\f]
+				
+				For a given predicate $\mathit{Pred}$ within a certain answer-set (identified by <i>H</i> and <i/>AS</i>), it will return all the information about this predicate that occurs
+				within this answer-set.
+			
+				Each triple that is returned tells the <i>Value</i> of the parameter with index <i>ArgIndex</i> in the <i>I</i>-th occurrence of the predicate. <i>I</i>
+				is just a running index that enables the user to distinct different occurrences of the same predicate (since a predicate can occur multiple times with different parameters). All
+				triples with the same value for $I$ describe one occurrence of the predicate. The special index <i>s</i> returns the sign of the predicate: <i>0</i> for positive and <i>1</i> for (strongly)
+				negated.
+				
+				<b>Example</b>
+					The program
+					<pre>
+val(Pred, I, ArgIndex, Value) :- \&hex["p(a,b). -p(x,y). q(f).", ""](H),
+                                 \&answersets[H](AS),
+                                 \&predicates[A, AS](Pred, Arity),
+                                 \&arguments[A, AS, Pred](I, ArgIndex, Value).
+					</pre>
+
+					will have one answer-set, namely
+					\htmlonly
+						<i>{ val(<font color="red">p,0</font>,<font color="blue">s</font>,<font color="green">0</font>), val(<font color="red">p,0</font>,<font color="cyan">0,a</font>), val(<font color="red">p,0</font>,<font color="magenta">1,b</font>),
+						<u>val(p,1,s,1), val(p,1,0,x), val(p,1,1,y), val(q,0,s,0), val(q,0,0,f) }</u>
+				
+					This expresses that in the <font color="red"><i>0</i>-th occurrence of <i>p</i></font>, the <font color="blue"><i>s</i>ign</font> is <font color="green"><i>positive</i> (<i>0</i>)</font>, the <font color="cyan"><i>0</i>-th parameter is <i>a</i></font> and the <font color="magenta"><i>1</i>-st parameter is <i>b</i></font>.
+				
+					Similar for the <u><i>1</i>-st occurrence of <i>p</i></u>, where the <u>sign is negative</u>. <i>q</i> has just one paramter which is <i>f</i> in the <i>0</i>-th occurrence.
+					\endhtmlonly
+					\latexonly
+					$$\{ \mathit{val}(\textcolor{red}{p,0},\textcolor{blue}{s},\textcolor{green}{0}), \mathit{val}(\textcolor{red}{p,0},\textcolor{cyan}{0,a}), \mathit{val}(\textcolor{red}{p,0},\textcolor{magenta}{1,b}),$$
+					$$\underline{\mathit{val}(p,1,s,1)}, \mathit{val}(p,1,0,x), \mathit{val}(p,1,1,y), \mathit{val}(q,0,s,0), \mathit{val}(q,0,0,f) \}$$
+				
+				This expresses that in the~\textcolor{red}{$0$-th occurrence of~$p$}, the~\textcolor{blue}{$s$ign} is \textcolor{green}{\emph{positive}~($0$)}, the \textcolor{cyan}{$0$-th parameter is $a$} and the \textcolor{magenta}{$1$-st parameter is $b$}.
+				
+				Similar for the \underline{$1$-st occurrence of $p$}, where the \underline{sign is negative}.~$q$ has just one paramter which is $f$ in the $0$-th occurrence.
+					\endlatexonly
+
+			
+		<h2>Operator Application</h2>
+		
+			The mergingplugin further supports the use of \emph{operators}. Operators get $n$ answers (i.e. sets of answer-sets) as input and compute a further set of answer-sets as
+			output. Additionally they may get key-value pairs (over strings) as input.
+			
+			The predicate <i>\&operator</i> is unary with three input parameters. It's output is a handle to the operator's result.
+				\f[$\mathit{\&operator}[\mathit{OpName}, \mathit{Answers}, \mathit{KeyValuePairs}](H)$\f]
+			<i>OpName</i> is a string containing the name of the operator to apply. <i>Answers</i> is a binary predicate, that contains index-handle pairs. They tell the operator
+			<i>which</i> answer (identified by it's handle) to pass on <i>what</i> parameter position. <i>KeyValuePairs</i> is a further binary predicate with key-value pairs.
+			
+			<b>Example</b>
+				The program
+				<pre>
+input(0, H)              :- \&hex["a.", ``"](H).
+input(1, H)              :- \&hex["b.", ``"](H).
+keyvaluepairs(key1, v1).
+keyvaluepairs(key2, v2).
+output(H)                :- \&operator["union", input, keyvaluepairs](H).
+preds(Pred)              :- output(H), \&answersets[H](AS), \&predicates[H, AS](Pred, Arity).
+				</pre>
+				executes two embedded programs, one with answer:
+					<i>{ {a} }</i>
+				and the other one with:
+					<i>{ {b} }</i>
+				Assume that operator ``union" is defined with the usual mathematical semantics. Additionally, it includes all values of the key-value pairs in the final answer.
+				Then the evaluation of the <i>\&operator</i> predicate will pass $\{a\}$ on the $0$-th
+				parameter position and <i>{b}</i> on the first one to this operator. It further passes the key-value pairs (<i>key1</i>, <i>v1</i>) and (<i>key2</i>, <i>v2</i>).
+				
+				The operator will compute the result <i>{ a, b, v1, v2 }</i>, which is investigated with the $\&predicates$ evaluation. The final result of the program is
+				therefore
+					<i>{ input(0,0), input(1,1), keyvaluepairs(key1,v1), keyvaluepairs(key2,v2),
+					output(3), preds(a), preds(b), preds(v1), preds(v2) }</i>
+
+
+	<h1>Operator Implementation</h1>
+
+	
+		<h2>Operator Libraries</h2>
+	
+		Operators are organized as <i>operator libararies</i>, where each library can contain arbitrary many operators. An operator library must be compiled as shared object library
+		that is installed either in the system or the user plugin directory of dlvhex.
+		Note: Additional plugin directories that are passed to dlvhex using the command line argument &quot;--plugindir&quot; (or &quot;-p&quot;) will <i>not</i> be searched for operator libraries.
+		However, the mergingplugin provides an own command line parameter for specifying additional operator locations.
+		
+		Entry point of an operator library is a method with the following signature:
+		<div align="center">
+			<i>std::vector&lt; IOperator*&gt; OPERATORIMPORTFUNCTION()</i>
+		</div>
+		This method must return a vector with pointers to instances of all the operator implementations in this library (see below). the mergingplugin will call this method on
+		startup and load all operators that are returned by this function.
+		
+
+		<h2>Operator Classes</h2>
+
+		Operators are C++ classes (within operator libraries) that implement the interface <i>IOperator</i>, which is installed in the following subdirectory of the include
+		directory:
+		
+		<div align="center">
+			&quot;dlvhex/mergingplugin/IOperator.h&quot;
+		</div>
+	  	
+		The interface defines two abstract methods, namely:
+		<ul>
+			<ul> <b>std::string getName()</b> <br/>
+					The operator is expected to return it's desired name. Later, the same name is expected as parameter for the $\mathit{\&operator}$ predicate to call this operator.
+					
+					In case that multiple operators with the same name are defined, the mergingplugin will print a warning on startup and ignore all but the first one.
+			<ul> <b>HexAnswer apply(int arity, std::vector\textless HexAnswer*\textgreater \& answers, OperatorArguments\& parameters) throw (OperatorException)</b> <br/>
+					This method is called when the operator is actually applied. It's input is the number of answers that are passed to the operator (arity) as well as the answers
+					themselves (answers). The answers are passed as vector of <i>HexAnswer</i>, which is defined as vector of <i>AtomSet</i> (since a HEX answer is a
+					set of answer-sets.
+					
+					Finally, <i>OperatorArguments</i> is the set of key-value pairs. It is defined as <i>std::pair&lt; string, string&gt;</i>.
+					
+					The method is expected to return the operator's result as set of answer-sets (i.e. <i>HexAnswer</i>). In case of an error, an <i>OperatorException</i>
+					can be thrown which will result in a <i>PluginError</i> and thus a termination of dlvhex.
+		</ul>
+
+		
+	<h1>Command Line Arguments</h1>
+	
+		The mergingplugin recognizes the following command line arguments
+
+		
+		<h2><i>--operatorpath</i> or <i>--op</i></h2>
+		
+			Using the syntax
+			<div align="center">
+				<i>--operatorpath=path1,path2,...</i> or <i>--op=path1,path2,...</i>
+			</div>
+			additional paths where operators are loaded from can be specified. A path can point to a directory or a shared object library. In case of a directory, operator libs
+			that are <i>directly</i> within this directory will be loaded (<i>non-recursive</i>!).
+
+			
+		<h2><i>--inputrewriter</i> or <i>--irw</i></h2>
+
+			The syntax
+			<div align="center">
+				<i>--inputrewriter=program</i> or <i>--irw=program</i>
+			</div>
+			specifies an <i>input rewriter</i>. This can be an arbitrary tool that reads from standard input and writes to standard output. The complete dlvhex input will be
+			directed through this program before reasoning starts.
+
 
 @defgroup rpcompiler The rpcompiler
 
 Translates revision plans into semantically equivalent HEX programs
+
+	<h1>Revision Plan Compiler</h1>
+	
+		The revision plan compiler is installed as part of the mergingplugin. It can be called in command line by entering:
+		<div align="center">
+			<i>rpcompiler</i>
+		</div>
+		with appropriate parameters.
+
+		This tool translates a belief revision scenario into a dlvhex program. The revision scenario is defined in one or more input files or is read from standard input.
+		
+
+		<h2>Options</h2>
+
+			The command line options are:
+			<ul>
+				<li> <i>-parsetree</i> <br/>
+						Generates a parse tree rather than dlvhex code (mostly for debug tasks).
+				<li> <i>-help</i> <br/>
+						Prints an online help message.
+				<li> <i>-spirit</i> or <i>-bison</i> <br/>
+						Forces the compiler to use a <i>boost spirit</i> resp. <i>bison</i> generated parser. Default is spirit.
+			</ul>
+
+			If no filenames are passed, the compiler will read from standard input. If at least filename is passed, standard input will <i>not</i> be processed by default.
+			However, if <i>--</i> passed as additional parameter, standard input will be read additionally to the input files.
+
+
+		<h2>Revision Plan Files</h2>
+		
+			The revision scenario is defined in revision plan files of the following form:
+			
+			<pre>
+[common signature]
+predicate: pred1/arity1;
+...
+predicate: predN/arityN;
+
+[belief base]
+name: nameOfBeliefBase1;
+mapping: "head1 :- body1."
+...
+mapping: "headM :- bodyM."
+
+...
+
+[belief base]
+name: nameOfBeliefBaseK;
+mapping: "head1 :- body1."
+...
+mapping: "headJ :- bodyJ."
+
+[revision plan]
+{
+	operator: someOperatorsName;
+	key1: value1;
+	...
+	keyN: valueN;
+	source: {
+		operator: subPlanOperator;
+		...
+		source: {nameOfBeliefBase1};
+		source: {nameOfBeliefBase2};
+	};
+	source: {
+		...
+	};
+}
+			</pre>
+
+			Essentially the file consists of 3 sections.
+			
+			<h2>Common Signature</h2>
+			
+				In statements of form
+				<div align="center">
+					<i>predicate: pred1/arity1;</i>
+				</div>
+				all relevant predicates that occur in the belief bases are defined. Those predicates will be output by dlvhex after the revision plan was processed.
+
+			<h2>Belief Bases</h2>
+			
+				Belief bases can be any data source: relational databases, XML files, etc.. The only requirement is that they are accessable from dlvhex through an
+				appropriate external atom. Belief bases are defined by blocks of form:
+				<pre>
+[belief base]
+name: nameOfBeliefBase1;
+mapping: "head1 :- body1.";
+...
+mapping: "headM :- bodyM.";
+				</pre>
+				where the <i>name</i> defines a legal name for this belief base, followed by an arbitrary number of <i>mappings</i>. Mappings can essentially be arbitrary \dlvhex
+				code fragments. However, in reasonable applications they access the underlying (prorietary) belief base and map their content onto the common signature (see above).
+				
+				Alternatively they can also be defined by
+				<pre>
+[belief base]
+name: nameOfBeliefBase1;
+source: "externalfile.hex";
+				</pre>
+				where &quot;externalfile.hex&quot; is an external file containing (computation source access rules and) mapping rules. Note that <i>mapping</i> and <i>source</i>
+				cannot be used simultanously.
+				
+			<h2>Revision Plan</h2>
+			
+				The revision plan is a hierarchical structure that combines the belief bases such that only one final result survives at the end of the day. A revision plan section is of
+				form:
+				<pre>
+operator: XYZ.
+key1: value1;
+...
+keyN: valueN;
+source: ...;
+source: ...;
+				</pre>
+				Such a section defines the operator to apply, the key-value pairs that shall be passed to the operator and the sub revision plans (<i>source</i>). A sub revision plan
+				(after a <i>source</i> statement) can either be a belief base (denoted as <i>{bbName};</i>) or a <i>composed revision plan</i> (i.e. the result of a prior operator application).
+
+			<h2>Syntax</h2>
+			
+				The following table summarizes the complete syntax of revision task files.
+				\htmlonly
+				<table>
+					<tr><td colspan="3"><b>Lexer</b></td></tr>
+					<tr><td>Literal</td><td>=&gt;</td><td>    <u>-</u>?&Sigma;p(<u>(</u>(&Sigma;c|&Sigma;v)(<u>,<&u>&Sigma;c|&Sigma;v)*<u>)</u>)?           </td></tr>
+					<tr><td>PredicateName</td><td>=&gt;</td><td> [<u>a</u>-<u>z</u>] ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*              </td></tr>
+					<tr><td>KBName</td><td>=&gt;</td><td>     ([<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]) ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*          </td></tr>
+					<tr><td>OPName</td><td>=&gt;</td><td>       ([<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]) ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*        </td></tr>
+					<tr><td>Variable</td><td>=&gt;</td><td>          [<u>A</u>-<u>Z</u>] ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*     </td></tr>
+					<tr><td>Number</td><td>=&gt;</td><td>   ([<u>1</u>-<u>9</u>] [<u>0</u>-<u>9</u>]*) <u>0</u>            </td></tr>
+
+					<tr><td colspan="3"><b>General ASP Grammer</b></td></tr>
+					<tr><td>Fact</td><td>=&gt;</td><td>        RuleHead <u>.</u>       </td></tr>
+					<tr><td>Constraint</td><td>=&gt;</td><td>        <u>:</u> <u>-</u> RuleBody <u>.</u>       </td></tr>
+					<tr><td>Query</td><td>=&gt;</td><td>     <u>not</u>? Literal (<u>,</u> <u>not</u>? Literal)*          </td></tr>
+					<tr><td>RuleHead</td><td>=&gt;</td><td>   Literal (<u>v</u> Literal)*            </td></tr>
+					<tr><td>RuleBody</td><td>=&gt;</td><td>      Query         </td></tr>
+
+					<tr><td colspan="§><b>Revision Plan Specific Grammer</b></td></trd>
+					<tr><td>Program</td><td>=&gt;</td><td>  CommonSigDef Mappings RevisionPlan             </td></tr>
+					<tr><td>CommonSigDef</td><td>=&gt;</td><td>    <u>[common signature]</u> PredicateDefinition*           </td></tr>
+					<tr><td>Mappings</td><td>=&gt;</td><td>     KnowledgeBase*          </td></tr>
+					<tr><td>RevisionPlan</td><td>=&gt;</td><td>     <u>[revision plan]</u> RevisionPlanNode         </td></tr>
+					<tr><td>RevisionPlanNode</td><td>=&gt;</td><td>     <u>{</u> <u>operator</u> <u>:</u> OPName <u>;</u> (key <u>:</u> value)* (<u>source</u> <u>:</u> RevisionPlanNode <u>;</u>)* <u>}</u> | KBName          </td></tr>
+					<tr><td>PredicateDefinition</td><td>=&gt;</td><td>     <u>predicate</u> <u>:</u> PredicateName <u>/</u> Number <u>;</u>          </td></tr>
+					<tr><td>PredicateName</td><td>=&gt;</td><td>     <u>[knowledge base]</u> <u>name</u> <u>:</u> KBName <u>;</u> (MappingRule*)|ExternalSource          </td></tr>
+					<tr><td>MappingRule</td><td>=&gt;</td><td>     <u>mapping></u> <u>:</u> <u>&quot;</u> Rule <u>&quot;</u> <u>;</u>          </td></tr>
+					<tr><td>ExternalSource</td><td>=&gt;</td><td>     <u>source</u> <u>:</u> Filename <u>;</u>          </td></tr>
+					<tr><td>stringliteral</td><td>=&gt;</td><td>     <u>&quot;</u>{<u>&quot;</u>}c <u>&quot;</u> (where Sc is the complement of set S)          </td></tr>
+					<tr><td>Filename</td><td>=&gt;</td><td>     stringliteral          </td></tr>
+					<tr><td>key</td><td>=&gt;</td><td>     &Sigma;c|stringliteral          </td></tr>
+					<tr><td>value</td><td>=&gt;</td><td>     &Sigma;c|stringliteral          </td></tr>
+				</table>
+				\endhtmlonly
+
+				\latexonly
+				\begin{tabularx}{\textwidth}{p{0in}llX}
+					\hline
+					& \multicolumn{3}{l}{Lexer} \\
+					\hline
+
+					&	$Literal$													&	$\Rightarrow$	&	$\underline{-}? \ \Sigma_{p} \  (\underline{(}(\Sigma_{c}|\Sigma_{v}) (\underline{,} \  \Sigma_{c}|\Sigma_{v})^{*}\underline{)})?$ \\
+					&	$\mathit{PredicateName}$									&	$\Rightarrow$	&	$[\underline{a}-\underline{z}] \  ([\underline{a}-\underline{z}] | [\underline{A}-\underline{Z}] | [\underline{0}-\underline{9}])^{*}$ \\
+					&	$\mathit{KBName}$											&	$\Rightarrow$	&	$([\underline{a}-\underline{z}] | [\underline{A}-\underline{Z}]) \  ([\underline{a}-\underline{z}] | [\underline{A}-\underline{Z}] | [\underline{0}-\underline{9}])^{*}$ \\
+					&	$\mathit{OPName}$											&	$\Rightarrow$	&	$([\underline{a}-\underline{z}] | [\underline{A}-\underline{Z}]) \  ([\underline{a}-\underline{z}] | [\underline{A}-\underline{Z}] | [\underline{0}-\underline{9}])^{*}$ \\
+					&	$\mathit{Variable}$											&	$\Rightarrow$	&	$([\underline{A}-\underline{Z}]) \  ([\underline{a}-\underline{z}] | [\underline{A}-\underline{Z}] | [\underline{0}-\underline{9}])^{*}$ \\
+					&	$\mathit{Number}$											&	$\Rightarrow$	&	$([\underline{1}-\underline{9}] [\underline{0}-\underline{9}]^{*}) \  | \  \underline{0}$ \\
+					\hline
+					& \multicolumn{3}{l}{General ASP Grammer} \\
+					\hline
+
+					&	$\mathit{Fact}$												&	$\Rightarrow$	&	$\mathit{RuleHead} \  \underline{.}$ \\
+					&	$\mathit{Constraint}$										&	$\Rightarrow$	&	$\underline{:} \  \underline{-} \   \mathit{\mathit{RuleBody}} \  \underline{.}$ \\
+					&	$\mathit{Query}$											&	$\Rightarrow$	&	$\underline{\mathit{not}}? \  \mathit{Literal} \   (\underline{,} \  \underline{\mathit{not}}? \  \mathit{Literal})^{*}$ \\
+					&	$\mathit{RuleHead}$											&	$\Rightarrow$	&	$\mathit{Literal} \   (\underline{\vee} \   \mathit{Literal})^{*}$ \\
+					&	$\mathit{RuleBody}$											&	$\Rightarrow$	&	$\mathit{Query}$ \\
+					&	$\mathit{Rule}$												&	$\Rightarrow$	&	$\mathit{RuleHead} \  \underline{:} \  \underline{-} \   \mathit{RuleBody} \  \underline{.} | \mathit{Fact} | \mathit{Constraint}$ \\
+					
+					\hline
+					& \multicolumn{3}{l}{Revision Plan Specific Grammer} \\
+					\hline
+					
+					&	$\mathit{Program}$										&	$\Rightarrow$	&	$\mathit{CommonSigDef}$ \\
+					&															&					&	$\mathit{Mappings}$ \\
+					&															&					&	$\mathit{RevisionPlan}$ \\
+					&	$\mathit{CommonSigDef}$									&	$\Rightarrow$	&	$\underline{[\mathit{common\ signature}]}$ \\
+					&															&					&	$\mathit{PredicateDefinition}^{*}$ \\
+					&	$\mathit{Mappings}$										&	$\Rightarrow$	&	$\mathit{KnowledgeBase}^{*}$ \\
+					&	$\mathit{RevisionPlan}$									&	$\Rightarrow$	&	$\underline{[\mathit{revision\ plan}]} \  \mathit{RevisionPlanNode}$ \\
+					&	$\mathit{RevisionPlanNode}$								&	$\Rightarrow$	&	$\underline{\{}$ \\
+					&															&					&	$\  \underline{\mathit{operator}} \ \underline{:} \  \mathit{OPName} \  \underline{;}$ \\
+					&															&					&	$\  (\mathit{key} \ \underline{:} \  \mathit{value} \  \underline{;})^{*}$ \\
+					&															&					&	$\  (\underline{\mathit{source}} \ \underline{:} \  \mathit{RevisionPlanNode} \  \underline{;})^{*}$ \\
+					&															&					&	$\underline{\}} \  | \  KBName$ \\
+					&	$\mathit{PredicateDefinition}$							&	$\Rightarrow$	&	$\underline{\mathit{predicate}} \ \underline{:} \  \mathit{PredicateName}  \  \underline{/} \  \mathit{Number} \  \underline{;}$ \\
+					&	$\mathit{KnowledgeBase}$								&	$\Rightarrow$	&	$\underline{[\mathit{knowledge\ base}]}$ \\
+					&															&					&	$\underline{\mathit{name}} \ \underline{:} \  \mathit{KBName} \  \underline{;}$ \\
+					&															&					&	$(\mathit{MappingRule}^{*}) | \mathit{ExternalSource}$ \\
+					&	$\mathit{MappingRule}$									&	$\Rightarrow$	&	$\underline{\mathit{mapping}} \ \underline{:} \  \underline{``} \mathit{Rule} \underline{"} \underline{;}$ \\
+					&	$\mathit{ExternalSource}$								&	$\Rightarrow$	&	$\underline{\mathit{source}} \ \underline{:} \  \mathit{Filename} \underline{;}$ \\
+					&	$\mathit{stringliteral}$								&	$\Rightarrow$	&	\underline{``} ${{\{"\}}^c}^{*}$ \underline{"} \\
+					&															&					&	(where $S^c$ is the complement of set $S$)\\
+					&	$\mathit{Filename}$										&	$\Rightarrow$	&	$\mathit{stringliteral}$ \\
+					&	$\mathit{key}$											&	$\Rightarrow$	&	$\Sigma_{c} | \mathit{stringliteral}$ \\
+					&	$\mathit{value}$										&	$\Rightarrow$	&	$\Sigma_{c} | \mathit{stringliteral}$ \\
+					\hline
+				\end{tabularx}
+				\endlatexonly
 
 */
