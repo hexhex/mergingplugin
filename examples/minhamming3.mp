@@ -11,7 +11,7 @@ mapping: "a. -b.";
 name: bb2;
 mapping: "-a. b.";
 
-[revision plan]
+[merging plan]
 {
 	operator: minhamming;
 	constraint: ":- a, not b.";

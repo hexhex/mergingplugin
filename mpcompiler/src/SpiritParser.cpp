@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-using namespace dlvhex::merging::tools::rpcompiler;
+using namespace dlvhex::merging::tools::mpcompiler;
 
 /*
 	Grammer in compact EBNF-like notation (* means 0 to arbitrary many times):
@@ -56,7 +56,7 @@ struct SpiritParser::rp_grammar : public grammar<rp_grammar>{
 			// Terminal tokens (scanner)
 			SECTIONCS =			str_p("[common signature]");
 			SECTIONBB =			str_p("[belief base]");
-			SECTIONRP =			str_p("[revision plan]");
+			SECTIONRP =			str_p("[merging plan]");
 			OCBRACKET =			str_p("{");
 			CCBRACKET =			str_p("}");
 			SEMICOLON =			str_p(";");

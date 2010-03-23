@@ -13,7 +13,7 @@ source: "externalsource1.hex";
 name:bb2;
 source: "externalsource2.hex";
 
-[revision plan]
+[merging plan]
 {
 	operator: testop2;
 	{

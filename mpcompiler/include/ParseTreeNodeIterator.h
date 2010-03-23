@@ -8,7 +8,7 @@
 namespace dlvhex{
 namespace merging{
 namespace tools{
-namespace rpcompiler{
+namespace mpcompiler{
 
 class ParseTreeNodeIterator : public std::iterator<std::bidirectional_iterator_tag, ParseTreeNode*>{
 	private:

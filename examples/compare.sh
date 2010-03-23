@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 #
 # This file contains procedures for comparing the following file types
-#   + revision plans
+#   + merging plans
 #   + hex programs
 #   + answer-sets
 #   + dot graphs
@@ -15,7 +15,7 @@
 #
 # The script expects two mandatory filenames as parameters. It will
 # automatically detect the file type by checking the filename extension:
-#     rp	--> revision plan
+#     mp	--> merging plan
 #     hex	--> file contains a hex program
 #     as	--> file contains answer-sets
 #     dot	--> file contains a dot graph
@@ -31,7 +31,7 @@
 #       err = err
 #       err = any failed computation (with arbitrary output!)
 #       err != any successful computation (with arbitrary output!)
-#     Thus, for instance, err = rp if any of the tools involved in revision
+#     Thus, for instance, err = rp if any of the tools involved in merging
 #     plan evaluation returns an error.
 #
 # -- Basic cases --
@@ -46,7 +46,7 @@
 #    named according to this schema.
 #
 # -- Derived cases --
-#     + rp/rp    -> Run the revision plan compiler on the revision plans, then
+#     + mp/mp    -> Run the merging plan compiler on the merging plans, then
 #                   execute the resulting hex programs using dlvhex. Finally
 #		    compare their sets of answer-sets.
 #     + hex/hex  -> Execute both hex programs and compare their sets of
@@ -55,18 +55,18 @@
 # -- Extended cases --
 #  If two different file types are passed, the "smaller one" is converted into
 #  the greater one by calling the appropriate programs.
-#    (with rp < hex < as < dot)
+#    (with mp < hex < as < dot)
 #  Conversion is done as follows:
-#     {rp --> [rpcompiler] --> hex --> [dlvhex] --> [graphconverter] --> dot}
+#     {mp --> [mpcompiler] --> hex --> [dlvhex] --> [graphconverter] --> dot}
 #  Therefore:
-#     + hex/rp   -> Convert the revision plan into a hex program (using the
-#                   revision plan compiler), then execute both programs and
+#     + hex/mp   -> Convert the merging plan into a hex program (using the
+#                   merging plan compiler), then execute both programs and
 #                   compare their sets of answer-sets.
-#     + as/rp    -> Run the revision plan compiler on the revision plan and
+#     + as/mp    -> Run the merging plan compiler on the merging plan and
 #                   execute the resulting hex program. Then compare the result
 #                   with the set of answer-sets.
-#     + dot/rp   -> Convert the revision plan into a hex program (using the
-#                   revision plan compiler), then execute the program and
+#     + dot/mp   -> Convert the merging plan into a hex program (using the
+#                   merging plan compiler), then execute the program and
 #                   translate the answer into a dot graph that is compared.
 #     + hex/as   -> Run dlvhex on the hex program, then compare the sets of
 #                   answer-sets.
@@ -85,7 +85,7 @@
 # (the same as the third).
 # 
 # Written by Christoph Redl (e0525250@mail.student.tuwien.ac.at)
-# March 20, 2010, 16:22
+# March 23, 2010, 21:18
 
 
 # ================================================== answer-sets ==================================================
@@ -363,11 +363,11 @@ function checkGraphConverter {
 	fi
 }
 
-function checkRPCompiler {
+function checkMPCompiler {
 
-	# Check if rpcompiler is available
-	if ! which $RPCOMPILER >/dev/null; then
-		echo "rpcompiler was not found"
+	# Check if mpcompiler is available
+	if ! which $MPCOMPILER >/dev/null; then
+		echo "mpcompiler was not found"
 		return 1
 	fi
 }
@@ -381,8 +381,8 @@ function compare {
 	if [ "$GRAPHCONVERTER" = "" ]; then
 		GRAPHCONVERTER="graphconverter"
 	fi
-	if [ "$RPCOMPILER" = "" ]; then
-		RPCOMPILER="rpcompiler"
+	if [ "$MPCOMPILER" = "" ]; then
+		MPCOMPILER="mpcompiler"
 	fi
 
 
@@ -431,7 +431,7 @@ function compare {
 			echo "        err = err"
 			echo "        err = any failed computation (with arbitrary output!)"
 			echo "        err != any successful computation (with arbitrary output!)"
-			echo "      Thus, for instance, err = rp if any of the tools involved in revision"
+			echo "      Thus, for instance, err = rp if any of the tools involved in merging"
 			echo "      plan evaluation returns an error."
 			echo " "
 			echo "  -- Basic cases --"
@@ -446,7 +446,7 @@ function compare {
 			echo "     named according to this schema."
 			echo " "
 			echo "  -- Derived cases --"
-			echo "      + rp/rp    -> Run the revision plan compiler on the revision plans, then"
+			echo "      + mp/mp    -> Run the merging plan compiler on the merging plans, then"
 			echo "                    execute the resulting hex programs using dlvhex. Finally"
 			echo " 		    compare their sets of answer-sets."
 			echo "      + hex/hex  -> Execute both hex programs and compare their sets of"
@@ -457,16 +457,16 @@ function compare {
 			echo "   the greater one by calling the appropriate programs."
 			echo "     (with rp < hex < as < dot)"
 			echo "   Conversion is done as follows:"
-			echo "      {rp --> [rpcompiler] --> hex --> [dlvhex] --> [graphconverter] --> dot}"
+			echo "      {mp --> [mpcompiler] --> hex --> [dlvhex] --> [graphconverter] --> dot}"
 			echo "   Therefore:"
-			echo "      + hex/rp   -> Convert the revision plan into a hex program (using the"
-			echo "                    revision plan compiler), then execute both programs and"
+			echo "      + hex/mp   -> Convert the merging plan into a hex program (using the"
+			echo "                    merging plan compiler), then execute both programs and"
 			echo "                    compare their sets of answer-sets."
-			echo "      + as/rp    -> Run the revision plan compiler on the revision plan and"
+			echo "      + as/mp    -> Run the merging plan compiler on the merging plan and"
 			echo "                    execute the resulting hex program. Then compare the result"
 			echo "                    with the set of answer-sets."
-			echo "      + dot/rp   -> Convert the revision plan into a hex program (using the"
-			echo "                    revision plan compiler), then execute the program and"
+			echo "      + dot/mp   -> Convert the merging plan into a hex program (using the"
+			echo "                    merging plan compiler), then execute the program and"
 			echo "                    translate the answer into a dot graph that is compared."
 			echo "      + hex/as   -> Run dlvhex on the hex program, then compare the sets of"
 			echo "                    answer-sets."
@@ -505,9 +505,9 @@ function compare {
 			;;
 	esac
 
-	# some input types need the rpcompiler
-	if [ "$extension1" = "rp" ] || [ "$extension2" = "rp" ]; then
-		if ! checkRPCompiler; then
+	# some input types need the mpcompiler
+	if [ "$extension1" = "mp" ] || [ "$extension2" = "mp" ]; then
+		if ! checkMPCompiler; then
 			return 1
 		fi
 	fi
@@ -545,7 +545,7 @@ function compare {
 				nonerrfile=$1
 			fi
 			case "$nonerrextension1" in
-				"rp")   $RPCOMPILER < $nonerrfile | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
+				"mp")   $MPCOMPILER < $nonerrfile | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
 					let rv=rv+$?
 					;;
 				"hex")  $DLVHEX --silent $DLVHEXPARAMETERS $nonerrfile > $TMPFILE_AS1
@@ -565,45 +565,45 @@ function compare {
 		if [ "$extension1" != "$extension2" ]
 		then
 			case "$extension1/$extension2" in
-				"rp/hex")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+				"mp/hex")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
-						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS1
+						$MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS1
 						let rv=rv+$?
 						$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
 						let rv=rv+$?
 						extension="as"
 						;;
-				"hex/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+				"hex/mp")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
 						let rv=rv+$?
-						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS2
+						$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS2
 						let rv=rv+$?
 						extension="as"
 						;;
-				"rp/as")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+				"mp/as")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
-						$RPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1
+						$MPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1
 						let rv=rv+$?
 						cp $2 $TMPFILE_AS2
 						extension="as"
 						;;
-				"as/rp")	cp $1 $TMPFILE_AS1
-						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
+				"as/mp")	cp $1 $TMPFILE_AS1
+						$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
 						let rv=rv+$?
 						extension="as"
 						;;
-				"rp/dot")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+				"mp/dot")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
-						$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT1
+						$MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT1
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
 						extension="dot"
 						;;
-				"dot/rp")	filter=$($RPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
+				"dot/mp")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						cp $1 $TMPFILE_DOT1
-						$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT2
+						$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT2
 						let rv=rv+$?
 						extension="dot"
 						;;
@@ -651,10 +651,10 @@ function compare {
 		else
 			# derived cases
 			case "$extension1" in
-				"rp")
-					$RPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
+				"mp")
+					$MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
 					let rv=rv+$?
-					$RPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
+					$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
 					let rv=rv+$?
 					extension="as"
 					;;

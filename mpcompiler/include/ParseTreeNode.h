@@ -11,7 +11,7 @@
 namespace dlvhex{
 namespace merging{
 namespace tools{
-namespace rpcompiler{
+namespace mpcompiler{
 
 /**
 * This is the base class used to construct the parse tree. Each instances represents one node of the tree

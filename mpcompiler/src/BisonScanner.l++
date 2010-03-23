@@ -1,6 +1,6 @@
 SECTIONCS	"[common\ signature]"
 SECTIONBB	"[belief\ base]"
-SECTIONRP	"[revision\ plan]"
+SECTIONRP	"[merging\ plan]"
 SEMICOLON	";"
 ORBRACKET	"("
 CRBRACKET	")"
@@ -18,7 +18,7 @@ SLASH		"/"
 	#include <ParseTreeNode.h>
 	#include "BisonParserImpl.h"	// Contains definitinos for terminal symbols (tokens)
 
-	using namespace dlvhex::merging::tools::rpcompiler;
+	using namespace dlvhex::merging::tools::mpcompiler;
 
 	#include <vector>
 	#include <string>

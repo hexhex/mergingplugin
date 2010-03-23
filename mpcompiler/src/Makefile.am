@@ -1,26 +1,26 @@
 AUTOMAKE_OPTIONS = gnu
 
-bin_PROGRAMS = rpcompiler
-rpcompiler_CXXFLAGS = $(AM_CFLAGS)
-rpcompiler_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h ParseTreeNode.cpp ParseTreeNodeIterator.cpp SpiritParser.cpp IParser.cpp CodeGenerator.cpp CompilerMain.cpp
+bin_PROGRAMS = mpcompiler
+mpcompiler_CXXFLAGS = $(AM_CFLAGS)
+mpcompiler_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h ParseTreeNode.cpp ParseTreeNodeIterator.cpp SpiritParser.cpp IParser.cpp CodeGenerator.cpp CompilerMain.cpp
 
-noinst_LTLIBRARIES = librpcompiler.la
-librpcompiler_la_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h SpiritParser.cpp IParser.cpp ParseTreeNode.cpp ParseTreeNodeIterator.cpp CodeGenerator.cpp
-librpcompiler_la_CXXFLAGS = $(AM_CFLAGS)
+noinst_LTLIBRARIES = libmpcompiler.la
+libmpcompiler_la_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h SpiritParser.cpp IParser.cpp ParseTreeNode.cpp ParseTreeNodeIterator.cpp CodeGenerator.cpp
+libmpcompiler_la_CXXFLAGS = $(AM_CFLAGS)
 BUILT_SOURCES = BisonParserImpl.h
 
 AM_YFLAGS = -d
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/rpcompiler/include
+	-I$(top_srcdir)/mpcompiler/include
 
-librpcompiler_la_LDFLAGS = -avoid-version -module
+libmpcompiler_la_LDFLAGS = -avoid-version -module
 
-librpcompiler-static.la: $(rpcompiler_la_OBJECTS)
-	$(CXXLINK) --mode=link $(INSTALL) -s librpcompiler-static.la $(DESTDIR)$(plugindir)/librpcompiler-static.la
+librpcompiler-static.la: $(mpcompiler_la_OBJECTS)
+	$(CXXLINK) --mode=link $(INSTALL) -s libmpcompiler-static.la $(DESTDIR)$(plugindir)/libmpcompiler-static.la
 
-install-static: rpcompiler librpcompiler-static.la
-	$(LIBTOOL) --mode=install $(INSTALL) -s rpcompiler $(DESTDIR)$(plugindir)/rpcompiler
-	$(LIBTOOL) --mode=install $(INSTALL) -s librpcompiler-static.la $(DESTDIR)$(plugindir)/librpcompiler-static.la
+install-static: mpcompiler libmpcompiler-static.la
+	$(LIBTOOL) --mode=install $(INSTALL) -s mpcompiler $(DESTDIR)$(plugindir)/mpcompiler
+	$(LIBTOOL) --mode=install $(INSTALL) -s libmpcompiler-static.la $(DESTDIR)$(plugindir)/libmpcompiler-static.la
 
 uninstall-static:
-	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(plugindir)/rpcompiler
+	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(plugindir)/mpcompiler

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdarg.h>
 
-using namespace dlvhex::merging::tools::rpcompiler;
+using namespace dlvhex::merging::tools::mpcompiler;
 
 // ------------------------------ Constructor / Destructor ------------------------------
 

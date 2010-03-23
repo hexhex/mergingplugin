@@ -18,7 +18,7 @@ using namespace boost::spirit::classic;
 namespace dlvhex{
 namespace merging{
 namespace tools{
-namespace rpcompiler{
+namespace mpcompiler{
 
 class SpiritParser : public IParser{
 private:

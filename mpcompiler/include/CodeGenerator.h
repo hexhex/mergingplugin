@@ -13,7 +13,7 @@
 namespace dlvhex{
 	namespace merging{
 		namespace tools{
-			namespace rpcompiler{
+			namespace mpcompiler{
 				class CodeGenerator{
 					private:
 						ParseTreeNode *parsetreeroot;

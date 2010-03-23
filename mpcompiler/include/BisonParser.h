@@ -14,7 +14,7 @@
 namespace dlvhex{
 namespace merging{
 namespace tools{
-namespace rpcompiler{
+namespace mpcompiler{
 
 typedef struct TerminalTokenStruct{
 	int filenr;			/* input file number */
@@ -39,6 +39,6 @@ public:
 }
 }
 
-using namespace dlvhex::merging::tools::rpcompiler;
+using namespace dlvhex::merging::tools::mpcompiler;
 
 #endif

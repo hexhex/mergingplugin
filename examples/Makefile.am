@@ -19,7 +19,7 @@ EXTRA_DIST = \
   minhamming.rp
 
 TESTS = tests/run-mergingplugin-tests.sh
-TESTS_ENVIRONMENT = DLVHEX=dlvhex RPCOMPILER=$(top_srcdir)/rpcompiler/src/rpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
+TESTS_ENVIRONMENT = DLVHEX=dlvhex MPCOMPILER=$(top_srcdir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
 
 SUBDIRS = \
 	  testoperators

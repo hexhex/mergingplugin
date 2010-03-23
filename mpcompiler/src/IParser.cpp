@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-using namespace dlvhex::merging::tools::rpcompiler;
+using namespace dlvhex::merging::tools::mpcompiler;
 
 // Private methods
 

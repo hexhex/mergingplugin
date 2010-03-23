@@ -7,7 +7,7 @@ SUBDIRS = \
           include/ \
           src/ \
           examples/ \
-	  rpcompiler/
+	  mpcompiler/
 
 EXTRA_DIST = doxygen.am doxygen.cfg documentation.dox
 

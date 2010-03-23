@@ -131,10 +131,10 @@ AC_CONFIG_FILES([
            examples/Makefile
            examples/testoperators/Makefile
            examples/testoperators/src/Makefile
-           rpcompiler/Makefile 
-           rpcompiler/include/Makefile 
-           rpcompiler/src/Makefile
-           rpcompiler/examples/Makefile
+           mpcompiler/Makefile 
+           mpcompiler/include/Makefile 
+           mpcompiler/src/Makefile
+           mpcompiler/examples/Makefile
 ])
 
 AC_OUTPUT

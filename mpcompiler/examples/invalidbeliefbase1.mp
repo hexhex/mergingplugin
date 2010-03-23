@@ -4,9 +4,9 @@ predicate:y/0;
 
 [belief base]
 name:bb1;
-mapping: "x. y.";
+mapping: "x. y. --> quotation is not closed;
 
-[revision plan]
+[merging plan]
 {
 	bb1
-
+}

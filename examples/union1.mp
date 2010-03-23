@@ -2,7 +2,6 @@
 predicate: a/0;
 predicate: b/0;
 predicate: c/0;
-predicate: d/0;
 
 [belief base]
 name: kb1;
@@ -13,11 +12,11 @@ mapping: "
 [belief base]
 name: kb2;
 mapping: "
-	b v d.
+	b.
 	c :- b.
 ";
 
-[revision plan]
+[merging plan]
 {
 	operator: union;
 	{

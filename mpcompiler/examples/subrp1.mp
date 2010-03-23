@@ -6,7 +6,7 @@ predicate:foo/0;
 name:bb1;
 mapping: "x. y.";
 
-[revision plan]
+[merging plan]
 {
 	operator: testop1;
 	{

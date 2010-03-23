@@ -7,8 +7,8 @@ namespace dlvhex {
 	/// contains the external atoms defined in this dlvhex plugin
 	namespace plugin{}
 	namespace tools{
-		/// contains the compiler for translations of revision plans into HEX programs
-		namespace rpcompiler{}
+		/// contains the compiler for translations of merging plans into HEX programs
+		namespace mpcompiler{}
 	}
   }
 }
@@ -22,7 +22,7 @@ namespace dlvhex {
 This is the documentation for the dlvhex decisiondiagrams
 Plugin.
 
-The plugin concists of a shared object library that provides external atoms for dlvhex (see \link PluginOverview \endlink) as well as a <i>revision plan compiler</i> that translates revision plans into semantically equivalent HEX programs (see \link rpcompiler \endlink)
+The plugin concists of a shared object library that provides external atoms for dlvhex (see \link PluginOverview \endlink) as well as a <i>merging plan compiler</i> that translates merging plans into semantically equivalent HEX programs (see \link rpcompiler \endlink)
 
 
 @defgroup PluginOverview Overview merging Plugin
@@ -267,17 +267,17 @@ preds(Pred)              :- output(H), \&answersets[H](AS), \&predicates[H, AS](
 
 @defgroup rpcompiler The rpcompiler
 
-Translates revision plans into semantically equivalent HEX programs
+Translates merging plans into semantically equivalent HEX programs
 
-	<h1>Revision Plan Compiler</h1>
+	<h1>Merging Plan Compiler</h1>
 	
-		The revision plan compiler is installed as part of the mergingplugin. It can be called in command line by entering:
+		The merging plan compiler is installed as part of the mergingplugin. It can be called in command line by entering:
 		<div align="center">
 			<i>rpcompiler</i>
 		</div>
 		with appropriate parameters.
 
-		This tool translates a belief revision scenario into a dlvhex program. The revision scenario is defined in one or more input files or is read from standard input.
+		This tool translates a belief merging scenario into a dlvhex program. The merging scenario is defined in one or more input files or is read from standard input.
 		
 
 		<h2>Options</h2>
@@ -296,9 +296,9 @@ Translates revision plans into semantically equivalent HEX programs
 			However, if <i>--</i> passed as additional parameter, standard input will be read additionally to the input files.
 
 
-		<h2>Revision Plan Files</h2>
+		<h2>Merging Plan Files</h2>
 		
-			The revision scenario is defined in revision plan files of the following form:
+			The merging scenario is defined in merging plan files of the following form:
 			
 			<pre>
 [common signature]
@@ -320,7 +320,7 @@ mapping: "head1 :- body1."
 ...
 mapping: "headJ :- bodyJ."
 
-[revision plan]
+[merging plan]
 {
 	operator: someOperatorsName;
 	key1: value1;
@@ -346,7 +346,7 @@ mapping: "headJ :- bodyJ."
 				<div align="center">
 					<i>predicate: pred1/arity1;</i>
 				</div>
-				all relevant predicates that occur in the belief bases are defined. Those predicates will be output by dlvhex after the revision plan was processed.
+				all relevant predicates that occur in the belief bases are defined. Those predicates will be output by dlvhex after the merging plan was processed.
 
 			<h2>Belief Bases</h2>
 			
@@ -371,9 +371,9 @@ source: "externalfile.hex";
 				where &quot;externalfile.hex&quot; is an external file containing (computation source access rules and) mapping rules. Note that <i>mapping</i> and <i>source</i>
 				cannot be used simultanously.
 				
-			<h2>Revision Plan</h2>
+			<h2>Merging Plan</h2>
 			
-				The revision plan is a hierarchical structure that combines the belief bases such that only one final result survives at the end of the day. A revision plan section is of
+				The merging plan is a hierarchical structure that combines the belief bases such that only one final result survives at the end of the day. A merging plan section is of
 				form:
 				<pre>
 operator: XYZ.
@@ -383,12 +383,12 @@ keyN: valueN;
 source: ...;
 source: ...;
 				</pre>
-				Such a section defines the operator to apply, the key-value pairs that shall be passed to the operator and the sub revision plans (<i>source</i>). A sub revision plan
-				(after a <i>source</i> statement) can either be a belief base (denoted as <i>{bbName};</i>) or a <i>composed revision plan</i> (i.e. the result of a prior operator application).
+				Such a section defines the operator to apply, the key-value pairs that shall be passed to the operator and the sub merging plans (<i>source</i>). A sub merging plan
+				(after a <i>source</i> statement) can either be a belief base (denoted as <i>{bbName};</i>) or a <i>composed merging plan</i> (i.e. the result of a prior operator application).
 
 			<h2>Syntax</h2>
 			
-				The following table summarizes the complete syntax of revision task files.
+				The following table summarizes the complete syntax of merging task files.
 				\htmlonly
 				<table>
 					<tr><td colspan="3"><b>Lexer</b></td></tr>
@@ -406,12 +406,12 @@ source: ...;
 					<tr><td>RuleHead</td><td>=&gt;</td><td>   Literal (<u>v</u> Literal)*            </td></tr>
 					<tr><td>RuleBody</td><td>=&gt;</td><td>      Query         </td></tr>
 
-					<tr><td colspan="§><b>Revision Plan Specific Grammer</b></td></trd>
-					<tr><td>Program</td><td>=&gt;</td><td>  CommonSigDef Mappings RevisionPlan             </td></tr>
+					<tr><td colspan="§><b>Merging Plan Specific Grammer</b></td></trd>
+					<tr><td>Program</td><td>=&gt;</td><td>  CommonSigDef Mappings MergingPlan             </td></tr>
 					<tr><td>CommonSigDef</td><td>=&gt;</td><td>    <u>[common signature]</u> PredicateDefinition*           </td></tr>
 					<tr><td>Mappings</td><td>=&gt;</td><td>     KnowledgeBase*          </td></tr>
-					<tr><td>RevisionPlan</td><td>=&gt;</td><td>     <u>[revision plan]</u> RevisionPlanNode         </td></tr>
-					<tr><td>RevisionPlanNode</td><td>=&gt;</td><td>     <u>{</u> <u>operator</u> <u>:</u> OPName <u>;</u> (key <u>:</u> value)* (<u>source</u> <u>:</u> RevisionPlanNode <u>;</u>)* <u>}</u> | KBName          </td></tr>
+					<tr><td>MergingPlan</td><td>=&gt;</td><td>     <u>[merging plan]</u> MergingPlanNode         </td></tr>
+					<tr><td>MergingPlanNode</td><td>=&gt;</td><td>     <u>{</u> <u>operator</u> <u>:</u> OPName <u>;</u> (key <u>:</u> value)* (<u>source</u> <u>:</u> MergingPlanNode <u>;</u>)* <u>}</u> | KBName          </td></tr>
 					<tr><td>PredicateDefinition</td><td>=&gt;</td><td>     <u>predicate</u> <u>:</u> PredicateName <u>/</u> Number <u>;</u>          </td></tr>
 					<tr><td>PredicateName</td><td>=&gt;</td><td>     <u>[knowledge base]</u> <u>name</u> <u>:</u> KBName <u>;</u> (MappingRule*)|ExternalSource          </td></tr>
 					<tr><td>MappingRule</td><td>=&gt;</td><td>     <u>mapping></u> <u>:</u> <u>&quot;</u> Rule <u>&quot;</u> <u>;</u>          </td></tr>
@@ -447,20 +447,20 @@ source: ...;
 					&	$\mathit{Rule}$												&	$\Rightarrow$	&	$\mathit{RuleHead} \  \underline{:} \  \underline{-} \   \mathit{RuleBody} \  \underline{.} | \mathit{Fact} | \mathit{Constraint}$ \\
 					
 					\hline
-					& \multicolumn{3}{l}{Revision Plan Specific Grammer} \\
+					& \multicolumn{3}{l}{Merging Plan Specific Grammer} \\
 					\hline
 					
 					&	$\mathit{Program}$										&	$\Rightarrow$	&	$\mathit{CommonSigDef}$ \\
 					&															&					&	$\mathit{Mappings}$ \\
-					&															&					&	$\mathit{RevisionPlan}$ \\
+					&															&					&	$\mathit{MergingPlan}$ \\
 					&	$\mathit{CommonSigDef}$									&	$\Rightarrow$	&	$\underline{[\mathit{common\ signature}]}$ \\
 					&															&					&	$\mathit{PredicateDefinition}^{*}$ \\
 					&	$\mathit{Mappings}$										&	$\Rightarrow$	&	$\mathit{KnowledgeBase}^{*}$ \\
-					&	$\mathit{RevisionPlan}$									&	$\Rightarrow$	&	$\underline{[\mathit{revision\ plan}]} \  \mathit{RevisionPlanNode}$ \\
-					&	$\mathit{RevisionPlanNode}$								&	$\Rightarrow$	&	$\underline{\{}$ \\
+					&	$\mathit{MergingPlan}$									&	$\Rightarrow$	&	$\underline{[\mathit{merging\ plan}]} \  \mathit{MergingPlanNode}$ \\
+					&	$\mathit{MergingPlanNode}$								&	$\Rightarrow$	&	$\underline{\{}$ \\
 					&															&					&	$\  \underline{\mathit{operator}} \ \underline{:} \  \mathit{OPName} \  \underline{;}$ \\
 					&															&					&	$\  (\mathit{key} \ \underline{:} \  \mathit{value} \  \underline{;})^{*}$ \\
-					&															&					&	$\  (\underline{\mathit{source}} \ \underline{:} \  \mathit{RevisionPlanNode} \  \underline{;})^{*}$ \\
+					&															&					&	$\  (\underline{\mathit{source}} \ \underline{:} \  \mathit{MergingPlanNode} \  \underline{;})^{*}$ \\
 					&															&					&	$\underline{\}} \  | \  KBName$ \\
 					&	$\mathit{PredicateDefinition}$							&	$\Rightarrow$	&	$\underline{\mathit{predicate}} \ \underline{:} \  \mathit{PredicateName}  \  \underline{/} \  \mathit{Number} \  \underline{;}$ \\
 					&	$\mathit{KnowledgeBase}$								&	$\Rightarrow$	&	$\underline{[\mathit{knowledge\ base}]}$ \\

@@ -18,7 +18,7 @@ mapping: "-a. -p(x).";
 name: bb3;
 mapping: "-a.";
 
-[revision plan]
+[merging plan]
 {
 	operator: minhamming;
 	constraint: "";

@@ -8,19 +8,20 @@ predicate: p/1;
 
 [belief base]
 name: bb1;
-mapping: "a. p(x).";
+mapping: "a. b.";
 
 [belief base]
 name: bb2;
-mapping: "-a. -p(x).";
+mapping: "b. c.";
 
 [belief base]
 name: bb3;
-mapping: "-a. -p(x).";
+mapping: "a. c.";
 
-[revision plan]
+[merging plan]
 {
 	operator: minhamming;
+	constraint: ":- a, b, c.";
 	{bb1};
 	{bb2};
 	{bb3};

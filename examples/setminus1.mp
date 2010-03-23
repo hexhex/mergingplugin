@@ -7,18 +7,19 @@ predicate: c/0;
 name: kb1;
 mapping: "
 	a.
+	b.
+	c.
 ";
 
 [belief base]
 name: kb2;
 mapping: "
 	b.
-	c :- b.
 ";
 
-[revision plan]
+[merging plan]
 {
-	operator: union;
+	operator: setminus;
 	{
 		kb1
 	};

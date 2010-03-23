@@ -1,12 +1,12 @@
 [common signature]
 predicate:x/0;
-pred _ this is a syntax error _ icate:y/0;
+predicate:y/0;
 
 [belief base]
-name:bb1;
+name: invalid belief base name!;
 mapping: "x. y.";
 
-[revision plan]
+[merging plan]
 {
 	bb1
 }

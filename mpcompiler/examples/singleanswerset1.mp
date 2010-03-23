@@ -3,10 +3,10 @@ predicate:x/0;
 predicate:y/0;
 
 [belief base]
-name: invalid belief base name!;
+name:bb1;
 mapping: "x. y.";
 
-[revision plan]
+[merging plan]
 {
 	bb1
 }

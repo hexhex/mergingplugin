@@ -13,7 +13,7 @@ mapping: "
 	-q(x,y).
 ";
 
-[revision plan]
+[merging plan]
 {
 	operator: union;
 	{

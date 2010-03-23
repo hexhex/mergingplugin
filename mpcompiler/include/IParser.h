@@ -14,7 +14,7 @@
 namespace dlvhex{
 namespace merging{
 namespace tools{
-namespace rpcompiler{
+namespace mpcompiler{
 
 class IParser{
 protected:

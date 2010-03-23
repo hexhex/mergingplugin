@@ -6,7 +6,7 @@ predicate:y/0;
 name:bb1;
 mapping: "x. y. z.";
 
-[revision plan]
+[merging plan]
 {
 	bb1
 }

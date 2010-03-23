@@ -1,31 +1,29 @@
 [common signature]
 predicate: a/0;
 predicate: b/0;
-predicate: p/2;
-predicate: q/2;
+predicate: c/0;
 
 [belief base]
 name: kb1;
 mapping: "
-	a.
-	-b.
-	p(x,y).
-	-q(x,y).
+	b.
 ";
 
 [belief base]
 name: kb2;
 mapping: "
 	b.
+	c :- b.
+	a :- c.
 ";
 
-[revision plan]
+[merging plan]
 {
-	operator: union;
-	{
-		kb1
-	};
+	operator: setminus;
 	{
 		kb2
+	};
+	{
+		kb1
 	};
 }

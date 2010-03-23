@@ -2,7 +2,7 @@
  * @author Christoph Redl
  * @date   February 21, 2010
  *
- * @brief  This compiler translates revision plan files into semantically equivalent hex programs. The revision plan compiler
+ * @brief  This compiler translates merging plan files into semantically equivalent hex programs. The merging plan compiler
  *		(rpcompiler) can be used as stand-alone application or as input rewriter by mergingplugin for dlvhex.
  *         Note that the generated hex programs depend on the external atoms defined in the mergingplugin.
  */
@@ -124,10 +124,10 @@ std::vector<std::string> parseArgs(int argc, char *argv[], bool *showparsetree, 
  * Displays a help message.
  */
 void showHelp(){
-	std::cout <<	"Revision Plan Compiler" << std::endl <<
-			"-----------------------" << std::endl << std::endl <<
+	std::cout <<	"Merging Plan Compiler" << std::endl <<
+			"----------------------" << std::endl << std::endl <<
 
-			"This tool translates a belief revision scenario into a dlvhex program." <<
+			"This tool translates a belief merging scenario into a dlvhex program." <<
 			"The scenario is defined in one or more input files or is read from standard input." << std::endl << std::endl <<
 
 			"The compiler recognizes the following command line arguments:"  << std::endl <<
