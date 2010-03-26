@@ -11,6 +11,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace dlvhex;
 using namespace dlvhex::merging;
 using namespace dlvhex::merging::plugin;
@@ -67,7 +69,7 @@ void bindAtoms(AtomPtr atom_bb, AtomPtr atom_final, dlvhex::Program& program, dl
 }
 
 // Adds an input source to the program and facts
-HexAnswer OpMinHamming::addSource(HexAnswer* source, std::set<std::string>& usedatoms, dlvhex::Program& program, dlvhex::AtomSet& facts){
+HexAnswer OpMinHamming::addSource(HexAnswer* source, std::set<std::string>& usedatoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts){
 
 	// some atoms that make sure that exactly one of the answer-sets will be selected
 	dlvhex::RuleHead_t head_asSelection;
@@ -86,31 +88,34 @@ HexAnswer OpMinHamming::addSource(HexAnswer* source, std::set<std::string>& used
 		AtomSet currentAS;
 		// for all atoms of this answer-set
 		for (AtomSet::const_iterator atIt = asIt->begin(); atIt != asIt->end(); atIt++){
-			AtomPtr atom_orig = AtomPtr(new Atom(*atIt));
-			AtomPtr atom_new = AtomPtr(new Atom(*atIt));
-			// find a unique name for the atom
-			atom_new->setPredicate(dlvhex::Term(findUniqueAtomName(atom_new->getPredicate().getUnquotedString(), usedatoms)));
-			usedatoms.insert(atom_new->getPredicate().getUnquotedString());	// name was consumed
-			// add the renamed atom the the new source
-			currentAS.insert(atom_new);
+			// check if this atom is relevant or ignored
+			if (ignoredPredicates.find(atIt->getPredicate().getUnquotedString()) == ignoredPredicates.end()){
+				AtomPtr atom_orig = AtomPtr(new Atom(*atIt));
+				AtomPtr atom_new = AtomPtr(new Atom(*atIt));
+				// find a unique name for the atom
+				atom_new->setPredicate(dlvhex::Term(findUniqueAtomName(atom_new->getPredicate().getUnquotedString(), usedatoms)));
+				usedatoms.insert(atom_new->getPredicate().getUnquotedString());	// name was consumed
+				// add the renamed atom the the new source
+				currentAS.insert(atom_new);
 
-			// if the current answer-set is selected, then the contained atoms can be derived
-			RuleHead_t head_deriveAtom;
-			head_deriveAtom.insert(atom_new);
-			RuleBody_t body_deriveAtom;
-			Literal* lit_asSelection = new Literal(atom_asSelection);
-			body_deriveAtom.insert(lit_asSelection);
-			Rule* rule_deriveAtom = new Rule(head_deriveAtom, body_deriveAtom);
-			Registry::Instance()->storeObject(rule_deriveAtom);
-			Registry::Instance()->storeObject(lit_asSelection);
-			program.addRule(rule_deriveAtom);
+				// if the current answer-set is selected, then the contained atoms can be derived
+				RuleHead_t head_deriveAtom;
+				head_deriveAtom.insert(atom_new);
+				RuleBody_t body_deriveAtom;
+				Literal* lit_asSelection = new Literal(atom_asSelection);
+				body_deriveAtom.insert(lit_asSelection);
+				Rule* rule_deriveAtom = new Rule(head_deriveAtom, body_deriveAtom);
+				Registry::Instance()->storeObject(rule_deriveAtom);
+				Registry::Instance()->storeObject(lit_asSelection);
+				program.addRule(rule_deriveAtom);
 
-			// add weak constraints that binds the new atom to the original one
-			// if possible, the renamed attribute should be equal to the original one
-			// i.e.:
-			//	:~ a123, not a.
-			//	:~ -a123, not -a.
-			bindAtoms(atom_new, atom_orig, program, facts);
+				// add weak constraints that binds the new atom to the original one
+				// if possible, the renamed attribute should be equal to the original one
+				// i.e.:
+				//	:~ a123, not a.
+				//	:~ -a123, not -a.
+				bindAtoms(atom_new, atom_orig, program, facts);
+			}
 		}
 		// answer-set completed: add it to the source
 		newsource.push_back(currentAS);
@@ -207,6 +212,29 @@ HexAnswer OpMinHamming::apply(int arity, std::vector<HexAnswer*>& arguments, Ope
 
 	dlvhex::Program program;
 	dlvhex::AtomSet facts;
+	std::set<std::string> ignoredPredicates;
+
+	// process additional parameters
+	for (OperatorArguments::iterator argIt = parameters.begin(); argIt != parameters.end(); argIt++){
+		// add side constraints
+		if (argIt->first == std::string("constraint")){
+			std::string constraint = argIt->second;
+			// parse it
+			try{
+				HexParserDriver hpd;
+				std::stringstream ss(constraint);
+				hpd.parse(ss, program, facts);
+			}catch(SyntaxError){
+				throw OperatorException(std::string("Could not parse constraint due to a syntax error: \"") + argIt->second + std::string("\""));
+			}
+		}
+		// extract predicates to ignore
+		else if (argIt->first == std::string("ignore")){
+			std::vector<std::string> preds; //split(argIt->second, ',');
+			boost::split(preds, argIt->second, boost::is_any_of(","));
+			ignoredPredicates.insert(preds.begin(), preds.end());
+		}
+	}
 
 	// construct a logic program that computes the answer as follows:
 	//	- rename all atoms such that they are unique for each belief base, i.e. no atom occurs in multiple sources
@@ -220,8 +248,11 @@ HexAnswer OpMinHamming::apply(int arity, std::vector<HexAnswer*>& arguments, Ope
 		for (std::vector<AtomSet>::iterator asIt = (*argIt)->begin(); asIt != (*argIt)->end(); asIt++){
 			// extract atoms and arities
 			for (AtomSet::const_iterator atIt = asIt->begin(); atIt != asIt->end(); atIt++){
-				usedAtoms.insert(atIt->getPredicate().getUnquotedString());
-				writeAtomSelectionRule(&(*atIt), program, facts);
+				// check if this atom is relevant
+				if (ignoredPredicates.find(atIt->getPredicate().getUnquotedString()) == ignoredPredicates.end()){
+					usedAtoms.insert(atIt->getPredicate().getUnquotedString());
+					writeAtomSelectionRule(&(*atIt), program, facts);
+				}
 			}
 		}
 	}
@@ -229,7 +260,7 @@ HexAnswer OpMinHamming::apply(int arity, std::vector<HexAnswer*>& arguments, Ope
 	// add the information from all sources
 	std::vector<HexAnswer> sources;
 	for (std::vector<HexAnswer*>::iterator argIt = arguments.begin(); argIt != arguments.end(); argIt++){
-		HexAnswer currentSource = addSource(*argIt, usedAtoms, program, facts);
+		HexAnswer currentSource = addSource(*argIt, usedAtoms, ignoredPredicates, program, facts);
 
 		// source completed
 		//	the names used in this source must not be used in others (all atoms of all atom sets were used)
@@ -241,30 +272,21 @@ HexAnswer OpMinHamming::apply(int arity, std::vector<HexAnswer*>& arguments, Ope
 		sources.push_back(currentSource);
 	}
 
-	// add side constraints
-	for (OperatorArguments::iterator argIt = parameters.begin(); argIt != parameters.end(); argIt++){
-		if (argIt->first == std::string("constraint")){
-			std::string constraint = argIt->second;
-			// parse it
-			try{
-				HexParserDriver hpd;
-				std::stringstream ss(constraint);
-				hpd.parse(ss, program, facts);
-			}catch(SyntaxError){
-				throw OperatorException(std::string("Could not parse constraint due to a syntax error: \"") + argIt->second + std::string("\""));
-			}
-		}
-	}
-
 	// build the resulting program and execute it
 	DLVProcess proc;
 	BaseASPSolver* solver = proc.createSolver();
 	std::vector<AtomSet> result;
 	solver->solve(program, facts, result);
 
-//DLVPrintVisitor pv(std::cout);
-//std::cout << "!Prog!";
-//pv.PrintVisitor::visit(&program);
+/*
+DLVPrintVisitor pv(std::cout);
+std::cout << "!Prog!";
+pv.PrintVisitor::visit(&program);
+std::cout << "!AS!";
+for (std::vector<AtomSet>::iterator it = result.begin(); it != result.end(); it++){
+	pv.PrintVisitor::visit(&(*it));
+}
+*/
 
 	// finally, keep only the answer-sets with minimal costs
 	optimize(result, usedAtoms);

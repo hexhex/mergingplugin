@@ -2,6 +2,7 @@
 #include <ParseTreeNodeIterator.h>
 
 #include <sstream>
+#include <set>
 #include <stdlib.h>
 
 using namespace dlvhex::merging::tools::mpcompiler;
@@ -146,6 +147,7 @@ std::string CodeGenerator::translateRevisionPlan(ParseTreeNode *parsetree, std::
 
 // Translation of composed revision plan sections
 std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetree, std::ostream &os, std::ostream &err){
+	static std::set<std::string> usedOperatorApplicationIDs;
 
 	// Prepare variables for the operator's name and a unique identifier for this operator application (consisting of the names of the operator's arguments)
 	std::string operatorname = std::string("");
@@ -162,6 +164,7 @@ std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetr
 
 	// Determine unique operator application identifier. This identifier is unique for this operator application, not just for the operator(!).
 	// This requires that all sub revision plans are generated before, since the unique identifier is constructed by concatenating the identifiers of all sub operator applications.
+	std::string operatorapplicationidsugg = std::string("");
 	std::vector<std::string> answerargidentifiers;
 	if (parsetree->begin(ParseTreeNode::revisionsources) != parsetree->end()){
 		for (ParseTreeNodeIterator it = parsetree->begin(ParseTreeNode::revisionsources)->begin(); it != parsetree->begin(ParseTreeNode::revisionsources)->end(); ++it){
@@ -169,8 +172,17 @@ std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetr
 			std::string subrvid = translateRevisionPlan(&(*it), os, err);
 			answerargidentifiers.push_back(subrvid);
 			// Unique operator application identifier consists of all identifiers of the sub-revision plans (separated by "_")
-			operatorapplicationid = operatorapplicationid + subrvid;
+			operatorapplicationidsugg = operatorapplicationidsugg + subrvid;
 		}
+	}
+	// if this does not make the identifier unique yet (in case that the same sub-merging plan is contained twice), add a running number
+	int ri = 0;
+	operatorapplicationid = operatorapplicationidsugg;
+	while (usedOperatorApplicationIDs.find(operatorapplicationid) != usedOperatorApplicationIDs.end()){
+		ri++;
+		std::stringstream ss;
+		ss << operatorapplicationidsugg << ri;
+		operatorapplicationid = ss.str();
 	}
 
 	// ------------------------------ Operator arguments ------------------------------
@@ -304,12 +316,12 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 			// Write code to transfer information from virtual answer set to real answer set of this hex program
 			if (currentArity > 0){
 				os << "%    " << currentPred << " with arity " << currentArity << std::endl;
-				os << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << ", &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 0)." << std::endl;
-				os << "-" << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << ", &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 1)." << std::endl;
+				os << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << ", &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 0)." << std::endl;
+				os << "-" << currentPred << (currentArity > 0 ? "(" + currentArgListDest.str() + ")" : "") << " :- finalresult(AnswerNr), selectedas(AnswerSetNr)" << (currentArity > 0 ? ", " + currentArgListSource.str() : "") << ", &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 1)." << std::endl;
 			}else{
 				os << "%    " << currentPred << " with arity " << currentArity << std::endl;
-				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 0)." << std::endl;
-				os << "-" << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](I, s, 1)." << std::endl;
+				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 0)." << std::endl;
+				os << "-" << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 1)." << std::endl;
 			}
 		}
 	}
