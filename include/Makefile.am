@@ -9,7 +9,8 @@ noinst_HEADERS = DLVHexProcess.h \
 		 InternalTypes.h \
 		 OpUnion.h \
 		 OpSetminus.h \
-		 OpMinHamming.h
+		 OpMinHamming.h \
+		 OpMajoritySelection.h
 
 pkginclude_HEADERS = \
  	PublicTypes.h \

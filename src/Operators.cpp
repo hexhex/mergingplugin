@@ -31,6 +31,7 @@ void OperatorAtom::registerBuiltInOperators(){
 	operators[_union.getName()] = &_union;
 	operators[_setminus.getName()] = &_setminus;
 	operators[_minhamming.getName()] = &_minhamming;
+	operators[_majorityselection.getName()] = &_majorityselection;
 }
 
 OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
