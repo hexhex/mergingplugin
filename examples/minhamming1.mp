@@ -22,6 +22,8 @@ mapping: "-a.";
 {
 	operator: minhamming;
 	constraint: "";
+	aggregate: "sum";
+	weights: "1,1,1";
 	{bb1};
 	{bb2};
 	{bb3};
