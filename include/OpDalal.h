@@ -14,9 +14,9 @@ namespace dlvhex{
 	namespace merging{
 		namespace plugin{
 			/**
-			 * This class implements the minimum hamming distance operator. It merges the answer-sets pairwise by computing the union.
+			 * This class implements Dalal's operator (using Dalal's distance measure).
 			 * Usage:
-			 * &operator["minhamming", A, K](A)
+			 * &operator["dalal", A, K](A)
 			 *	A(H1), ..., A(Hn)	... handles to n answers
 			 *	K(constraint, c)	... c=arbitrary constraints of kind ":-list-of-literals."
 			 *	K(ignore, c)		... c=arbitrary list of predicate names of kind "pred1,pred2,...,predn" that shall be ignored, i.e.
@@ -38,7 +38,7 @@ namespace dlvhex{
 			 *	K(maxint, i)		... defines the maximum integer that may occurrs in the computation of the aggregate function
 			 *	A			... answer to the operator result
 			 */
-			class OpMinHamming : public IOperator{
+			class OpDalal : public IOperator{
 			private:
 				HexAnswer addSource(HexAnswer* source, int weight, std::string costAtom, std::set<std::string>& atoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts);
 				void optimize(HexAnswer& result, std::set<std::string>& usedAtoms);

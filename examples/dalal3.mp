@@ -13,7 +13,7 @@ mapping: "-a. b.";
 
 [merging plan]
 {
-	operator: minhamming;
+	operator: dalal;
 	constraint: ":- a, not b.";
 	{bb1};
 	{bb2};

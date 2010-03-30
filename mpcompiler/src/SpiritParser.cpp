@@ -48,6 +48,7 @@ struct SpiritParser::rp_grammar : public grammar<rp_grammar>{
 		rule<ScannerT, parser_context<>, parser_tag<TBeliefBaseSection> > BeliefBaseSection;
 		rule<ScannerT, parser_context<>, parser_tag<TRevisionPlanSection> > RevisionPlanSection;
 		rule<ScannerT, parser_context<>, parser_tag<TComposedRevisionPlan> > ComposedRevisionPlan;
+		rule<ScannerT, parser_context<>, parser_tag<TComment> > Comment;
 		rule<ScannerT, parser_context<>, parser_tag<TSection> > Section;
 		rule<ScannerT, parser_context<>, parser_tag<TProgram> > Program;
 
@@ -63,21 +64,22 @@ struct SpiritParser::rp_grammar : public grammar<rp_grammar>{
 			COLON =				str_p(":");
 			SLASH =				str_p("/");
 			NUMBER =			token_node_d[ int_p ];
-			IDENTIFIER =			token_node_d[ (ch_p('"') >> *(~ch_p('"')) >> ch_p('"')) | (+(range_p('a','z') | range_p('A','Z') | range_p('0','9'))) ];
+			IDENTIFIER =			token_node_d[ (ch_p('"') >> *(~ch_p('"')) >> ch_p('"')) | (+(range_p('a','z') | range_p('A','Z') | range_p('0','9') | ch_p('_') | ch_p('-'))) ];
 
 			// Grammer
-			Source =			ComposedRevisionPlan >> SEMICOLON;
-			KeyValuePair =			IDENTIFIER >> COLON >> IDENTIFIER >> SEMICOLON;
-			Predicate =			IDENTIFIER >> COLON >> IDENTIFIER >> SLASH >> NUMBER >> SEMICOLON;
-			CommonSignatureSection =	*Predicate;
-			BeliefBaseSection =		*KeyValuePair;
-			RevisionPlanSection =		ComposedRevisionPlan;
-			ComposedRevisionPlan =		(OCBRACKET >> *KeyValuePair >> *Source >> CCBRACKET) |
-							(OCBRACKET >> IDENTIFIER >> CCBRACKET);
-			Section =			(SECTIONCS >> CommonSignatureSection) |
-							(SECTIONBB >> BeliefBaseSection) |
-							(SECTIONRP >> RevisionPlanSection);
-			Program =			*Section >> !end_p;
+			Source =			(discard_node_d[Comment]) >> ComposedRevisionPlan >> SEMICOLON;
+			KeyValuePair =			(discard_node_d[Comment]) >> IDENTIFIER >> COLON >> IDENTIFIER >> SEMICOLON;
+			Predicate =			(discard_node_d[Comment]) >> IDENTIFIER >> COLON >> IDENTIFIER >> SLASH >> NUMBER >> SEMICOLON;
+			CommonSignatureSection =	(discard_node_d[Comment]) >> *Predicate;
+			BeliefBaseSection =		(discard_node_d[Comment]) >> *KeyValuePair;
+			RevisionPlanSection =		(discard_node_d[Comment]) >> ComposedRevisionPlan;
+			ComposedRevisionPlan =		((discard_node_d[Comment]) >> OCBRACKET >> *KeyValuePair >> *Source >> CCBRACKET) |
+							((discard_node_d[Comment]) >> OCBRACKET >> IDENTIFIER >> CCBRACKET);
+			Section =			((discard_node_d[Comment]) >> SECTIONCS >> CommonSignatureSection) |
+							((discard_node_d[Comment]) >> SECTIONBB >> BeliefBaseSection) |
+							((discard_node_d[Comment]) >> SECTIONRP >> RevisionPlanSection);
+			Program =			*Section >> (discard_node_d[Comment]) >> !end_p;
+			Comment =			*(token_node_d[ch_p('%') >> *(anychar_p - eol_p)]);
 	        }
 	        rule<ScannerT, parser_context<>,  parser_tag<TRootNode> > start() const{ 
 			return Program;

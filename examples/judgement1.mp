@@ -17,7 +17,7 @@ mapping: "-v. b. -d.";
 
 [merging plan]
 {
-	operator: minhamming;
+	operator: dalal;
 	constraint: ":- v, b, not d.";
 	constraint: ":- v, not b, d.";
 	constraint: ":- not v, b, d.";

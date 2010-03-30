@@ -1,4 +1,4 @@
-#include <OpMinHamming.h>
+#include <OpDalal.h>
 
 #include <dlvhex/AggregateAtom.h>
 #include <dlvhex/DLVProcess.h>
@@ -20,8 +20,8 @@ using namespace dlvhex;
 using namespace dlvhex::merging;
 using namespace dlvhex::merging::plugin;
 
-std::string OpMinHamming::getName(){
-	return "minhamming";
+std::string OpDalal::getName(){
+	return "dalal";
 }
 
 // finds an atom name that was not used yet
@@ -182,7 +182,7 @@ void buildAggregateFunction(std::string aggregation, std::string costAtom, int a
 }
 
 // Adds an input source to the program and facts
-HexAnswer OpMinHamming::addSource(HexAnswer* source, int weight, std::string costAtom, std::set<std::string>& usedatoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts){
+HexAnswer OpDalal::addSource(HexAnswer* source, int weight, std::string costAtom, std::set<std::string>& usedatoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts){
 
 	// some atoms that make sure that exactly one of the answer-sets will be selected
 	dlvhex::RuleHead_t head_asSelection;
@@ -266,7 +266,7 @@ HexAnswer OpMinHamming::addSource(HexAnswer* source, int weight, std::string cos
 // replace weak constraints by normal rules that derive their penalty in the head. This method sums up the penalties and computes the optimal answer-sets.
 // The atoms that were used in the source program need to be passed because the function needs to distinct between usual atoms and special "cost atoms" that
 // are introduced as part of the replacement of weak constraints by normal ones.
-void OpMinHamming::optimize(HexAnswer& result, std::set<std::string>& usedAtoms){
+void OpDalal::optimize(HexAnswer& result, std::set<std::string>& usedAtoms){
 	// answer cleaning: only keep those answer-sets that have to pay the minimum penalty for weak constraint violation
 	// unfortuanately we need to compute the costs ourselves since the DLVresultParserDriver is not able to parse DLV's cost output
 	std::map<AtomSet*, int> weights;
@@ -379,7 +379,7 @@ void parseParameters(int arity, OperatorArguments& parameters, std::vector<int>&
 	}
 }
 
-HexAnswer OpMinHamming::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
+HexAnswer OpDalal::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
 
 	// default values
 	std::string aggregation = "sum";

@@ -20,7 +20,7 @@ mapping: "-v. b. -d.";
 	operator: majorityselection;
 	majorityOf: "d";
 	{
-		operator: minhamming;
+		operator: dalal;
 		constraint: ":- v, b, not d.";
 		constraint: ":- v, not b, d.";
 		constraint: ":- not v, b, d.";

@@ -8,20 +8,22 @@ predicate: p/1;
 
 [belief base]
 name: bb1;
-mapping: "a. b.";
+mapping: "a. p(x).";
 
 [belief base]
 name: bb2;
-mapping: "b. c.";
+mapping: "-a. -p(x).";
 
 [belief base]
 name: bb3;
-mapping: "a. c.";
+mapping: "-a.";
 
 [merging plan]
 {
-	operator: minhamming;
-	constraint: ":- a, b, c.";
+	operator: dalal;
+	constraint: "";
+	aggregate: "sum";
+	weights: "1,1,1";
 	{bb1};
 	{bb2};
 	{bb3};

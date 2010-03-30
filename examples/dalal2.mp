@@ -8,18 +8,20 @@ predicate: p/1;
 
 [belief base]
 name: bb1;
-mapping: "p(a). a.";
+mapping: "a. p(x).";
 
 [belief base]
 name: bb2;
-mapping: "p(b). b.";
+mapping: "-a. -p(x).";
+
+[belief base]
+name: bb3;
+mapping: "-a. -p(x).";
 
 [merging plan]
 {
-	operator: minhamming;
-	constraint: ":- p(X), p(Y), X != Y.";
-	constraint: ":- a, b.";
-	ignore: "a,b";
+	operator: dalal;
 	{bb1};
 	{bb2};
+	{bb3};
 }
