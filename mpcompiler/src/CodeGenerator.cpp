@@ -68,7 +68,7 @@ void CodeGenerator::generateCode(std::ostream &os, std::ostream &err){
 		}
 	}
 	os << "% dlvhex call:" << std::endl;
-	os << "%   dlvhex -filter=" << filter << " [name of hex file]" << std::endl;
+	os << "%   dlvhex --filter=" << filter << " [name of hex file]" << std::endl;
 
 	// Code was generated
 	codegenerated = true;
@@ -81,8 +81,11 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 	std::string inputrewriter;
 	bool useInputRewriter = false;
 	std::string filename;
+	std::string args;
+	std::string dlvargs;
 	bool externalprogram = false;
 	bool mappingrules = false;
+	bool usedlv = false;
 
 	// A belief base section has the sub-element "beliefbase" with key-value pairs as it's 0th child
 	for (ParseTreeNodeIterator it = parsetree->getChild(0)->getChild(0)->begin(ParseTreeNode::kvpair); it != parsetree->getChild(0)->getChild(0)->end(); ++it){
@@ -103,7 +106,34 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 		}
 		if (key == (std::string("source"))){
 			externalprogram = true;
-			filename = value;
+			filename = filename + std::string(filename.length() > 0 ? " " : "") + value;
+		}
+		if (key == (std::string("args"))){
+			args = args + " " + value;
+		}
+		if (key == (std::string("dlvargs"))){
+			externalprogram = true;
+			dlvargs = dlvargs + " " + value;
+		}
+		if (key == (std::string("dlvsource"))){
+			externalprogram = true;
+			filename = filename + std::string(filename.length() > 0 ? " " : "") + value;
+			usedlv = true;
+		}
+		if (key == (std::string("dlvmapping"))){
+			mappingrules = true;
+			mappings = mappings + "     " + value + "\n";
+			usedlv = true;
+		}
+	}
+	if (usedlv){
+		if (externalprogram){
+			args += " --dlv=\\'" + dlvargs + " " + filename + "\\'";
+			filename = "";
+			externalprogram = false;
+		}else{
+			args += " --dlv=\\'" + dlvargs + " --\\'";
+			filename = "";
 		}
 	}
 
@@ -117,11 +147,11 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 		if (externalprogram){
 			os << "sources(" << name << ", AnswerNr) :- &hexfile[\"";
 			os << filename;
-			os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+			os << "\", \"" << args << (useInputRewriter ? std::string(" --inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
 		}else{
 			os << "sources(" << name << ", AnswerNr) :- &hex[\"" << std::endl;
 			os << mappings;
-			os << "\", \"" << (useInputRewriter ? std::string("--inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+			os << "\", \"" << args << (useInputRewriter ? std::string(" --inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
 		}
 	}
 }

@@ -1,0 +1,6 @@
+in(1, system, 1).
+in(2, system, 1).
+in(3, system, 1).
+
+out(1, system, 0).
+out(2, system, 1).

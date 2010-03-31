@@ -1,0 +1,58 @@
+% input
+in(1, system, 1).
+in(2, system, 1).
+in(3, system, 1).
+
+% components
+or(faOr).
+xor(haXor1).
+and(haAnd1).
+xor(haXor2).
+and(haAnd2).
+halfadder(ha1, haAnd1, haXor1).
+halfadder(ha2, haAnd2, haXor2).
+fulladder(fa1, ha1, ha2, faOr).
+
+% system
+in(1, fa1, V) :- in(1, system, V).
+in(2, fa1, V) :- in(2, system, V).
+in(3, fa1, V) :- in(3, system, V).
+out(1, system, V) :- out(1, fa1, V).
+out(2, system, V) :- out(2,  fa1, V).
+
+
+% constraints
+:- out(N, C, V1), out(N, C, V2), V1 != V2.
+:- in(N, C, V1), in(N, C, V2), V1 != V2.
+
+% or
+out(1, O, 1) :- or(O), not ab(O), in(1, O, 1).
+out(1, O, 1) :- or(O), not ab(O), in(2, O, 1).
+out(1, O, 0) :- or(O), not ab(O), in(1, O, 0), in(2, O, 0).
+
+% and
+out(1, A, 0) :- and(A), not ab(A), in(1, A, 0).
+out(1, A, 0) :- and(A), not ab(A), in(2, A, 0).
+out(1, A, 1) :- and(A), not ab(A), in(1, A, 1), in(2, A, 1).
+
+% xor
+out(1, X, 1) :- xor(X), not ab(X), in(1, X, V1), in(2, X, V2), V1 != V2.
+out(1, X, 0) :- xor(X), not ab(X), in(1, X, V), in(2, X, V).
+
+% halfadder
+in(1, HAnd, V) :- halfadder(H, HAnd, HXor), not ab(H), in(1, H, V).
+in(2, HAnd, V) :- halfadder(H, HAnd, HXor), not ab(H), in(2, H, V).
+in(1, HXor, V) :- halfadder(H, HAnd, HXor), not ab(H), in(1, H, V).
+in(2, HXor, V) :- halfadder(H, HAnd, HXor), not ab(H), in(2, H, V).
+out(1, H, V) :- halfadder(H, HAnd, HXor), not ab(H), out(1, HAnd, V).
+out(2,  H, V) :- halfadder(H, HAnd, HXor), not ab(H), out(1, HXor, V).
+
+% fulladder
+in(1, HA1, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), in(1, F, V).
+in(2, HA1, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), in(2, F, V).
+in(1, HA2, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), out(2,  HA1, V).
+in(2, HA2, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), in(3, F, V).
+in(1, FOr, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), out(1, HA1, V).
+in(2, FOr, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), out(1, HA2, V).
+out(1, F, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), out(2,  HA2, V).
+out(2,  F, V) :- fulladder(F, HA1, HA2, FOr), not ab(F), out(1, FOr, V).

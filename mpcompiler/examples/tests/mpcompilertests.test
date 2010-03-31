@@ -16,3 +16,4 @@
 ../negation2.mp negation2.as
 ../negation3.mp negation3.as --filter=b,p
 ../externalsource1.mp externalsource1.as --filter=a,b,c,x,y --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libdlvhextestoperators.so
+../externalsource2.mp externalsource2.as --filter=a,b,c,x,y --plugindir=../../src/ --operatorpath=../../examples/testoperators/src/.libs/libdlvhextestoperators.so

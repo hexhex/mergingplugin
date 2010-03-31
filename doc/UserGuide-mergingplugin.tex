@@ -451,9 +451,11 @@ name: nameOfBeliefBase1;
 mapping: "head1 :- body1.";
 ...
 mapping: "headM :- bodyM.";
+args: "";
 				\end{exampleprogram}
 				where the \inlinecode{name} defines a legal name for this belief base, followed by an arbitrary number of \emph{mappings}. Mappings can essentially be arbitrary \dlvhex
 				code fragments. However, in reasonable applications they access the underlying (prorietary) belief base and map their content onto the common signature (see above).
+				\inlinecode{args} defines the command line arguments that shall be passed to the reasoner.
 				
 				Alternatively they can also be defined by
 				\begin{exampleprogram}
@@ -463,7 +465,22 @@ source: "externalfile.hex";
 				\end{exampleprogram}
 				where ``externalfile.hex" is an external file containing (computation source access rules and) mapping rules. Note that $\mathit{mapping}$ and $\mathit{source}$
 				cannot be used simultanously.
-				
+
+				If an external source shall be evaluated using \dlv rather than \dlvhex, the definitions \inlinecode{dlvmapping} or \inlinecode{dlvsource} can be used, i.e.:
+				\begin{exampleprogram}
+[belief base]
+name: nameOfDLVBeliefBase1;
+mapping: "head1 :- body1.";
+...
+mapping: "headM :- bodyM.";
+				\end{exampleprogram}
+resp.
+				\begin{exampleprogram}
+[belief base]
+name: nameOfDLVBeliefBase1;
+dlvsource: "externalfile.dl";
+				\end{exampleprogram}
+
 			\subsubsection{Merging Plan}
 			
 				The merging plan is a hierarchical structure that combines the belief bases such that only one final result survives at the end of the day. A merging plan section is of

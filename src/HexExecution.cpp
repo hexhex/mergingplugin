@@ -35,7 +35,8 @@ std::vector<std::string> splitArguments(std::string argsstring){
 			case ' ':
 			case '\0':
 				if (!stringlit){
-					if (i == argstart){ argstart++;
+					if (i == argstart){
+						argstart++;
 					}else{
 						args.push_back(argsstring.substr(argstart, i - argstart));
 						argstart = i + 1;
@@ -148,7 +149,7 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		//DLVProcess proc;
 
 		// split command line arguments
-		std::vector<std::string> cmdargsSplit = splitArguments(cmdargs);
+		std::vector<std::string> cmdargsSplit = splitArguments(unquote(cmdargs));
 		for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
 
 		std::vector<AtomSet> as;
@@ -218,10 +219,17 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 		// Not in cache: Execute program and cache result
 
+		// split filenames
+		std::vector<std::string> filenamesSplit = splitArguments(programpath);
+
 		// solve hex program
-		DLVHexProcess proc(programpath);
+		DLVHexProcess proc(filenamesSplit);
 		Program prog;
 		AtomSet facts;
+
+		// split command line arguments
+		std::vector<std::string> cmdargsSplit = splitArguments(unquote(cmdargs));
+		for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
 
 		std::vector<AtomSet> as;
 		BaseASPSolver* solver = proc.createSolver();

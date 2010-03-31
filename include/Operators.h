@@ -29,6 +29,7 @@ namespace dlvhex {
 			class OperatorAtom : public PluginAtom
 			{
 			private:
+				bool silent, debug;
 				HexAnswerCache &resultsetCache;
 				std::map<std::string, IOperator*> operators;
 
@@ -44,7 +45,9 @@ namespace dlvhex {
 				OperatorAtom(HexAnswerCache &rsCache);
 				virtual ~OperatorAtom();
 				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
-				void addOperators(std::string lib, bool silent, bool debug);
+				void setMode(bool silentMode, bool debugMode);
+				void addOperators(std::string lib);
+				IOperator* getOperator(std::string opname);
 			};
 		}
 	}

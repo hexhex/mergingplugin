@@ -100,7 +100,7 @@ public:
 	}
 };
 */
-
+#include <iostream>
 // Just forces the DLVresultParserDriver to parse in first-order mode
 class HexResultParserDriver : public DLVresultParserDriver{
 public:
@@ -109,14 +109,18 @@ public:
 
 class DLVHexProcess : public DLVProcess{
 private:
-	std::string filename;
+	std::vector<std::string> filename;
 	bool fromfile;
 
 public:
 	DLVHexProcess() : DLVProcess(), fromfile(false){
 	}
 
-	DLVHexProcess(std::string fn) : DLVProcess(), filename(fn), fromfile(true){
+	DLVHexProcess(std::vector<std::string> fn) : DLVProcess(), filename(fn), fromfile(true){
+	}
+
+	DLVHexProcess(std::vector<std::string> fn, std::vector<std::string> o) : DLVProcess(), filename(fn), fromfile(true){
+		argv = o;
 	}
 
 	virtual std::string
@@ -134,7 +138,11 @@ public:
 		tmp.push_back("--silent");
 		tmp.push_back("--firstorder");
 		tmp.insert(tmp.end(), argv.begin(), argv.end());
-		tmp.push_back(fromfile ? filename : "--"); // request stdin as last parameter!
+		if (fromfile){
+			tmp.insert(tmp.end(), filename.begin(), filename.end());
+		}else{
+			tmp.push_back("--"); // request stdin as last parameter!
+		}
 		return tmp;
 	}
 

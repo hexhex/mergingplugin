@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <iostream>
+#include <DLVHexProcess.h>
 #include <HexExecution.h>
 #include <Operators.h>
 #include <ArbProcess.h>
@@ -16,7 +17,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-
+std::stringstream filter;
 
 namespace dlvhex {
 	namespace merging {
@@ -51,7 +52,9 @@ namespace dlvhex {
 					while(getline(pi, line)) {
 						routput << line << std::endl;
 					}
+//std::cout << ">>" << routput.str() << "<<";
 					o << routput.str();
+
 
 					// On errors throw a PluginError
 					int errcode;
@@ -59,6 +62,52 @@ namespace dlvhex {
 						throw PluginError(std::string("Error from rewriter \"") + command + std::string("\""));
 					}
 
+				}
+			};
+
+			class DLV : public Rewriter
+			{
+			public:
+				DLV(std::string c) : Rewriter(std::string("dlv -silent ") + c)
+				{
+				}
+
+				std::string diagToAs(std::string s){
+					// replace all blanks with ,
+					for (int i = 0; i < s.length(); i++) if (s[i] == ' ') s[i] = ',';
+					return s;
+				}
+
+				virtual void
+				convert(std::istream& i, std::ostream& o)
+				{
+					std::stringstream dlvoutput;
+					Rewriter::convert(i, dlvoutput);
+
+					// strip off dlv's meta output concerning cost and diagnosis (since this is not valid dlvhex output format)
+					std::string dlv = dlvoutput.str();
+					while (dlv.length() > 0){
+						if (dlv[0] == '{'){
+							// print everything until '}'
+							std::cout << dlv.substr(0, dlv.find_first_of("}") + 1) << std::endl;;
+							dlv = dlv.substr(dlv.find_first_of("}") + 1);
+						}else{
+							std::string diag("Diagnosis: ");
+							if (dlv.substr(0, diag.length()) == diag){
+								std::string firstDiag = std::string("{") + diagToAs(dlv.substr(diag.length(), dlv.find_first_of("\n") - diag.length())) + std::string("}");
+								dlv = firstDiag + dlv.substr(dlv.find_first_of("\n") + 1);
+							}
+							// goto first '{' (if contained)
+							if (dlv.find_first_of("{") == std::string::npos){
+								// not contained: finished
+								dlv = "";
+							}else{
+								dlv = dlv.substr(dlv.find_first_of("{"));
+							}
+						}
+					}
+
+					o << ":- not a.";
 				}
 			};
 
@@ -114,6 +163,7 @@ namespace dlvhex {
 					predicates_atom = new PredicatesAtom(resultsetCache);
 					arguments_atom = new ArgumentsAtom(resultsetCache);
 					operator_atom = new OperatorAtom(resultsetCache);
+					operator_atom->setMode(Globals::Instance()->getOption("Silent"), false);
 				}
 
 				virtual ~MergingPlugin(){
@@ -160,12 +210,16 @@ namespace dlvhex {
 				{
 					debugMode = false;
 					silentMode = Globals::Instance()->getOption("Silent") ? true : false;
+					bool opinforequested = false;
+					std::string opinfo;
 
 					if (!doHelp){
 						bool argFound = true;
 						while (argFound){
 							argFound = false;
 							for (std::vector<std::string>::iterator it = argv.begin(); it != argv.end(); it++){
+
+								// merging operators
 								if (	it->substr(0, std::string("--operatorpath=").size()) == std::string("--operatorpath=") ||
 									it->substr(0, std::string("--op=").size()) == std::string("--op=")){
 									// Extract search paths for operator libs
@@ -183,17 +237,49 @@ namespace dlvhex {
 									argFound = true;
 									break;	// iterator is invalid now
 								}
+								if (	it->substr(0, std::string("--opinfo=").size()) == std::string("--opinfo=") ||
+									it->substr(0, std::string("--operatorpath=").size()) == std::string("--operatorpath=")){
+									opinforequested = true;
+									opinfo = it->substr(it->find_first_of('=', 0) + 1);
+
+									// Argument was processed
+									argv.erase(it);
+									argFound = true;
+									break;	// iterator is invalid now
+								}
+
+								// input rewriters
 								if (	it->substr(0, std::string("--inputrewriter=").size()) == std::string("--inputrewriter=") ||
 									it->substr(0, std::string("--irw=").size()) == std::string("--irw=")){
+									if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
 									inputrewriter = new Rewriter(removeQuotes(it->substr(it->find_first_of('=', 0) + 1)));
 									// Argument was processed
 									argv.erase(it);
 									argFound = true;
 									break;
 								}
+
+								// debug mode
 								if (	(*it) == std::string("--operatordebug") ||
 									(*it) == std::string("--od")){
 									debugMode = true;
+
+									// Argument was processed
+									argv.erase(it);
+									argFound = true;
+									break;
+								}
+
+								// wrapper for pure dlv programs
+								if (	it->substr(0, std::string("--dlv").size()) == std::string("--dlv")){
+									std::string dlvargs;
+									if (it->substr(0, std::string("--dlv=").size()) == std::string("--dlv=")){
+										dlvargs = removeQuotes(it->substr(it->find_first_of('=', 0) + 1));
+									}else{
+										dlvargs = "--";
+									}
+									if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
+									inputrewriter = new DLV(dlvargs);
 
 									// Argument was processed
 									argv.erase(it);
@@ -215,20 +301,35 @@ namespace dlvhex {
 						}
 
 						if (operator_atom != NULL){
+							operator_atom->setMode(silentMode, debugMode);
+
 							// Load all operators found in dlvhex' system plugin libraries
 							std::stringstream sysplugindir;
 							sysplugindir << SYS_PLUGIN_DIR;
-							operator_atom->addOperators(sysplugindir.str(), silentMode, debugMode);
+							operator_atom->addOperators(sysplugindir.str());
 
 							// Load all operators found in dlvhex' user plugin libraries
 							std::stringstream userplugindir;
 							const char* homedir = ::getpwuid(::geteuid())->pw_dir;
 							userplugindir << homedir << "/" << USER_PLUGIN_DIR;
-							operator_atom->addOperators(userplugindir.str(), silentMode, debugMode);
+							operator_atom->addOperators(userplugindir.str());
 
 							// Load additional operator directories
 							for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
-								operator_atom->addOperators(*it, silentMode, debugMode);
+								operator_atom->addOperators(*it);
+							}
+
+							if (opinforequested){
+								try{
+									IOperator* op = operator_atom->getOperator(opinfo);
+									try{
+										std::cout << op->getInfo();
+									}catch(IOperator::OperatorException){
+										throw PluginError("Operator \"" + opinfo + "\" was found but does not provide additional information");
+									}
+								}catch(IOperator::OperatorException o){
+									throw PluginError(o.getMessage());
+								}
 							}
 						}
 					}else{
@@ -282,6 +383,10 @@ namespace dlvhex {
 							<< "                          is actually executed (however, cat has no effect of" << std::endl
 							<< "                          course, since it just echos the standard input)" << std::endl
 							<< " or        --irw" << std::endl
+							<< " --dlv=argv      Executes the input using dlv rather than dlvhex. argv are the" << std::endl
+							<< "                 arguments that are passed to dlv." << std::endl
+							<< " --operatorinfo  Shows additional information about the specified operator" << std::endl
+							<< " or     --opinfo Example: --opinfo=dalal" << std::endl
 							<< " --operatordebug Adds more details during operator loading and is useful for operator." << std::endl
 							<< "                 debugging. If --silent is passed, this flag is ignored." << std::endl
 							<< "" << std::endl << std::endl;

@@ -8,11 +8,12 @@ predicate:y/0;
 [belief base]
 name:bb1;
 source: "externalsource1.hex";
-args: "--plugindir=../../src/";
+args: "--dlv --plugindir=../../src/";
 
 [belief base]
 name:bb2;
 source: "externalsource2.hex";
+args: "--dlv --plugindir=../../src/";
 
 [merging plan]
 {
