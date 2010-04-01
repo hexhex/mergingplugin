@@ -127,7 +127,7 @@ void writeAtomSelectionRule(const Atom* atom, dlvhex::Program& program){
  * \param ignoredPredicates A reference to the list of atoms that shall be ignored
  * \param program A reference to the program where rules shall be appended to
  */
-void createAtomList(std::vector<HexAnswer*>& arguments, std::set<std::string>& usedAtoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program){
+void createAtomList(std::vector<HexAnswer*>& arguments, std::set<Atom>& usedAtoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program){
 	for (std::vector<HexAnswer*>::iterator argIt = arguments.begin(); argIt != arguments.end(); argIt++){
 		// look into each answer-set
 		for (std::vector<AtomSet>::iterator asIt = (*argIt)->begin(); asIt != (*argIt)->end(); asIt++){
@@ -135,7 +135,9 @@ void createAtomList(std::vector<HexAnswer*>& arguments, std::set<std::string>& u
 			for (AtomSet::const_iterator atIt = asIt->begin(); atIt != asIt->end(); atIt++){
 				// check if this atom is relevant
 				if (ignoredPredicates.find(atIt->getPredicate().getUnquotedString()) == ignoredPredicates.end()){
-					usedAtoms.insert(atIt->getPredicate().getUnquotedString());
+					Atom at(*atIt);
+					if (at.isStronglyNegated()) at.negate();
+					if (usedAtoms.find(at) == usedAtoms.end()) usedAtoms.insert(at);
 					writeAtomSelectionRule(&(*atIt), program);
 				}
 			}
@@ -244,16 +246,53 @@ void buildAggregateFunction(std::string aggregation, std::string optAtom, std::s
  * \param facts Reference to the facts part of the program where rules for this source shall be written to
  * \return HexAnswer The set of answer-sets from this source, renamed such that atoms are unique over all sources
  */
-HexAnswer OpDalal::addSource(HexAnswer* source, int weight, int& maxint, std::string costSumAtom, std::string costAtom, float penalize[4][4], std::set<std::string>& usedatoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts){
+HexAnswer OpDalal::addSource(HexAnswer* source, int weight, int& maxint, std::string costSumAtom, std::string costAtom, float penalize[4][4], std::set<Atom>& sourceAtoms, std::set<std::string>& usedatoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts){
 
 	// some atoms that make sure that exactly one of the answer-sets will be selected
 	dlvhex::RuleHead_t head_asSelection;
 
 	std::vector<AtomSet> newsource;	// will contain the answer-sets with the renamed literals
 
-	// for all answer-sets of this source
-	static int sourceNr = 0;
+	// we need a unique name for each atom
 	int constraintNr = 0;
+	static int sourceNr = 0;
+	std::map<std::string, std::string> localAtoms;
+	for (std::set<Atom>::iterator it = sourceAtoms.begin(); it != sourceAtoms.end(); ++it){
+		if (localAtoms.find(it->getPredicate().getUnquotedString()) == localAtoms.end()){
+			localAtoms[it->getPredicate().getUnquotedString()] = findUniqueAtomName(it->getPredicate().getUnquotedString(), usedatoms);
+			usedatoms.insert(localAtoms[it->getPredicate().getUnquotedString()]);
+		}
+
+		const Atom* atom_orig = &(*it);
+		AtomPtr atom_new = AtomPtr(new Atom(*it));
+		atom_new->setPredicate(Term(localAtoms[it->getPredicate().getUnquotedString()]));
+
+		// add constraints that binds the new atom to the original one
+		// if possible, the renamed attribute should be equal to the original one
+		for (int individual = 0; individual < 4; individual++){
+			for (int agg = 0; agg < 4; agg++){
+				if (penalize[individual][agg] > 0){
+					Tuple params;
+					params.push_back(Term(sourceNr));	// unique name for the belief base
+					params.push_back(Term(constraintNr));	// unique name for this constraint
+					params.push_back(Term((int)(weight * penalize[individual][agg])));
+					maxint += (int)(weight * penalize[individual][agg]);
+					AtomPtr atom_individual = AtomPtr(new Atom(*atom_new));
+					if (individual >= 2) atom_individual->negate();
+					AtomPtr atom_agg = AtomPtr(new Atom(*atom_orig));
+					if (agg >= 2) atom_agg->negate();
+					Literal* lit_individual = new Literal(atom_individual, individual == 1 || individual == 3);
+					Literal* lit_agg = new Literal(atom_agg, agg == 1 || agg == 3);
+					writeCostComputation(AtomPtr(new Atom(costAtom, params)), lit_individual, lit_agg, program);
+					Registry::Instance()->storeObject(lit_individual);
+					Registry::Instance()->storeObject(lit_agg);
+					constraintNr++;
+				}
+			}
+		}
+	}
+
+	// for all answer-sets of this source
 	for (std::vector<AtomSet>::iterator asIt = source->begin(); asIt != source->end(); asIt++){
 
 		// make a unique prop. atom that decides if this answer-set is selected or not
@@ -267,11 +306,9 @@ HexAnswer OpDalal::addSource(HexAnswer* source, int weight, int& maxint, std::st
 		for (AtomSet::const_iterator atIt = asIt->begin(); atIt != asIt->end(); atIt++){
 			// check if this atom is relevant or ignored
 			if (ignoredPredicates.find(atIt->getPredicate().getUnquotedString()) == ignoredPredicates.end()){
-				AtomPtr atom_orig = AtomPtr(new Atom(*atIt));
 				AtomPtr atom_new = AtomPtr(new Atom(*atIt));
-				// find a unique name for the atom
-				atom_new->setPredicate(dlvhex::Term(findUniqueAtomName(atom_new->getPredicate().getUnquotedString(), usedatoms)));
-				usedatoms.insert(atom_new->getPredicate().getUnquotedString());	// name was consumed
+				atom_new->setPredicate(Term(localAtoms[atIt->getPredicate().getUnquotedString()]));
+
 				// add the renamed atom to the new source
 				currentAS.insert(atom_new);
 
@@ -286,34 +323,12 @@ HexAnswer OpDalal::addSource(HexAnswer* source, int weight, int& maxint, std::st
 				Registry::Instance()->storeObject(lit_asSelection);
 				program.addRule(rule_deriveAtom);
 
-				// add constraints that binds the new atom to the original one
-				// if possible, the renamed attribute should be equal to the original one
-				for (int individual = 0; individual < 4; individual++){
-					for (int agg = 0; agg < 4; agg++){
-						if (penalize[individual][agg] > 0){
-							Tuple params;
-							params.push_back(Term(sourceNr));	// unique name for the belief base
-							params.push_back(Term(constraintNr));	// unique name for this constraint
-							params.push_back(Term((int)(weight * penalize[individual][agg])));
-							maxint += (int)(weight * penalize[individual][agg]);
-							AtomPtr atom_individual = AtomPtr(new Atom(*atom_new));
-							if (individual >= 2) atom_individual->negate();
-							AtomPtr atom_agg = AtomPtr(new Atom(*atom_orig));
-							if (agg >= 2) atom_agg->negate();
-							Literal* lit_individual = new Literal(atom_individual, individual == 1 || individual == 3);
-							Literal* lit_agg = new Literal(atom_agg, agg == 1 || agg == 3);
-							writeCostComputation(AtomPtr(new Atom(costAtom, params)), lit_individual, lit_agg, program);
-							Registry::Instance()->storeObject(lit_individual);
-							Registry::Instance()->storeObject(lit_agg);
-							constraintNr++;
-						}
-					}
-				}
 			}
 		}
 		// answer-set completed: add it to the source
 		newsource.push_back(currentAS);
 	}
+
 
 	// costSum(SRC, S) :- #int(S), S=#sum{ Cost,Constraint : cost(SRC, Constraint, Cost) }.
 	//
@@ -449,15 +464,15 @@ void parsePenalize(std::string rule, float penalize[4][4]){
 	}
 	else if (rule == "unfounded"){
 		// not,+
-		// not-,-
-		penalize[1][0] = 1; penalize[3][0] = 1;
+		//// not-,-
+		penalize[1][0] = 1; //penalize[3][2] = 1;
 	}
 	else if (rule == "aberration"){
 		// +,not
 		// -,not-
 		// not,+
-		// not-,-
-		penalize[0][1] = 1; penalize[2][3] = 1; penalize[1][0] = 1; penalize[3][0] = 1;
+		//// not-,-
+		penalize[0][1] = 1; penalize[2][3] = 1; penalize[1][0] = 1; //penalize[3][2] = 1;
 	}else{
 		std::vector<std::string> p; //split(argIt->second, ',');
 		boost::split(p, rule, boost::is_any_of(","));
@@ -603,7 +618,9 @@ HexAnswer OpDalal::apply(bool debug, int arity, std::vector<HexAnswer*>& argumen
 
 	// create a collection of all occurring atoms
 	std::set<std::string> usedAtoms;
-	createAtomList(arguments, usedAtoms, ignoredPredicates, program);
+	std::set<Atom> sourceAtoms;
+	createAtomList(arguments, sourceAtoms, ignoredPredicates, program);
+	for (std::set<Atom>::iterator it = sourceAtoms.begin(); it != sourceAtoms.end(); ++it) usedAtoms.insert(it->getPredicate().getUnquotedString());
 
 	// create a unique optimization atom
 	std::string optAtom = findUniqueAtomName("optimize", usedAtoms);
@@ -625,11 +642,11 @@ HexAnswer OpDalal::apply(bool debug, int arity, std::vector<HexAnswer*>& argumen
 	parseParameters(arity, parameters, optAtom, costSum, weights, maxint, usedAtoms, ignoredPredicates, program, facts, aggregation, penalize);
 
 	// filter the output to prevent double entries due to differences in intermediate atoms
-	std::string filter;
-	for (std::set<std::string>::iterator it = usedAtoms.begin(); it != usedAtoms.end(); ++it){
-		if (ignoredPredicates.find(*it) == ignoredPredicates.end()){
-			filter += (it != usedAtoms.begin() ? "," : "");
-			filter += *it;
+	std::string filter = optAtom;
+	for (std::set<Atom>::iterator it = sourceAtoms.begin(); it != sourceAtoms.end(); ++it){
+		if (ignoredPredicates.find(it->getPredicate().getUnquotedString()) == ignoredPredicates.end()){
+			filter += ","; //(it != usedAtoms.begin() ? "," : "");
+			filter += it->getPredicate().getUnquotedString();
 		}
 	}
 
@@ -644,7 +661,7 @@ HexAnswer OpDalal::apply(bool debug, int arity, std::vector<HexAnswer*>& argumen
 	std::vector<HexAnswer> sources;
 	int sourceIndex = 0;
 	for (std::vector<HexAnswer*>::iterator argIt = arguments.begin(); argIt != arguments.end(); argIt++){
-		HexAnswer currentSource = addSource(*argIt, weights[sourceIndex++], micomp, costSum, costAtom, penalize, usedAtoms, ignoredPredicates, program, facts);
+		HexAnswer currentSource = addSource(*argIt, weights[sourceIndex++], micomp, costSum, costAtom, penalize, sourceAtoms, usedAtoms, ignoredPredicates, program, facts);
 
 		// source completed
 		//	the names used in this source must not be used in others (all atoms of all atom sets were used)
@@ -656,13 +673,18 @@ HexAnswer OpDalal::apply(bool debug, int arity, std::vector<HexAnswer*>& argumen
 		sources.push_back(currentSource);
 	}
 	if (micomp > maxint) maxint = micomp;
-
+/*
+			DLVPrintVisitor pv(std::cout);
+			pv.PrintVisitor::visit(&program);
+			pv.PrintVisitor::visit(&facts);
+*/
 	// build the resulting program and execute it
 	try{
 		DLVProcess proc;
 		std::stringstream maxint_str;
 		maxint_str << "-N=" << maxint;
 		proc.addOption(maxint_str.str());
+//std::cerr << filter;
 		proc.addOption("-filter=" + filter);
 		BaseASPSolver* solver =  new ASPSolver<DLVPrintVisitor, DLVresultParserDriver>(proc);	// make sure that the result is parsed by DLVresultParserDriver even if we run in HO-mode
 		std::vector<AtomSet> result;

@@ -25,7 +25,7 @@ args: "--plugindir=../src/.libs/";
 	constraintfile: "fulladder.dl";
 	constraintfile: "fault.obs";
 	penalize: "ignoring";
-	maxint: "3";
+	penalize: "unfounded";
 	aggregation:"sum";
 	{juror1};
 	{juror2};

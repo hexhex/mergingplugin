@@ -1,2 +1,1 @@
-{ab(haXor2)}
-{ab(haXor1)}
+{ab(haXor2), ab(haXor1)}

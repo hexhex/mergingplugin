@@ -55,9 +55,9 @@ namespace dlvhex{
 			 *				    Supported shortcuts: "ignoring" for penaltizing individual's beliefs that are not in the aggregated decision,
 			 *								i.e. "+,not,1" and "-,not-,1"
 			 *				                         "unfounded" for penaltizing aggregated beliefs that are not in the individual's,
-			 *								i.e. "not,+,1" and "not-,-,1"
+			 *								i.e. "not,+,1"
 			 *				                         "aberration" for penaltizing both ignoring and unfounded beliefs
-			 *								i.e. "not,+,1", "not-,-,1", "not,+,1" and "not-,-,1"
+			 *								i.e. "not,+,1", "not,+,1" and "not-,-,1"
 			 *				    
 			 *				    Built-In aggregate functions are "sum", "max"
 			 *	K(maxint, i)		... Defines the maximum integer that may occurrs in the computation of the aggregate function
@@ -66,7 +66,7 @@ namespace dlvhex{
 			 */
 			class OpDalal : public IOperator{
 			private:
-				HexAnswer addSource(HexAnswer* source, int weight, int& maxint, std::string costAtom, std::string costSum, float penalize[4][4], std::set<std::string>& atoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts);
+				HexAnswer addSource(HexAnswer* source, int weight, int& maxint, std::string costAtom, std::string costSum, float penalize[4][4], std::set<Atom>& sourceAtoms, std::set<std::string>& usedAtoms, std::set<std::string>& ignoredPredicates, dlvhex::Program& program, dlvhex::AtomSet& facts);
 				void optimize(HexAnswer& result, std::string optAtom);
 			public:
 				virtual std::string getName();
