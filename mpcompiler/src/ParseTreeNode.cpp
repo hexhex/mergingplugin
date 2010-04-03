@@ -21,7 +21,6 @@ ParseTreeNode::ParseTreeNode(NodeType type, int childrenCount, ...){
 		}
 		va_end(params);
 	}
-
 }
 
 ParseTreeNode::~ParseTreeNode(){
@@ -102,13 +101,6 @@ void ParseTreeNode::print(std::ostream &os, int depth){
 			children[i]->print(os, depth + 1);
 		}
 	}
-}
-
-// TODO: Does not work
-std::ostream& ParseTreeNode::operator<<(std::ostream &os){
-os << "11111111111111111";
-	print(os, 0);
-	return os;
 }
 
 // ------------------------------ Child handling ------------------------------

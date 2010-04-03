@@ -1,7 +1,7 @@
 #ifndef __HEXEXECUTION_H_
 #define __HEXEXECUTION_H_
 
-#include <InternalTypes.h>
+#include <HexAnswerCache.h>
 #include <dlvhex/PluginInterface.h>
 #include <dlvhex/ASPSolver.h>
 #include <dlvhex/HexParserDriver.h>

@@ -57,7 +57,6 @@ class ParseTreeNode {
 
 		// Output
 		virtual void print(std::ostream &os);
-		std::ostream& operator<<(std::ostream &os);
 
 		// Child handling
 		int addChild(ParseTreeNode *newchild);
@@ -140,12 +139,6 @@ typedef LeafTreeNode<int> IntTreeNode;
 /*! \fn void dlvhex::merging::tools::rpcompiler::ParseTreeNode::print(std::ostream &os)
  *  \brief Prints this parse tree (or subtree) into the given output stream.
  *  \param os Output stream to write to 
- */
-
-/*! \fn std::ostream& dlvhex::merging::tools::rpcompiler::ParseTreeNode::operator<<(std::ostream &os)
- *  \brief Prints this parse tree (or subtree) into the given output stream.
- *  \param os Output stream to write to 
- *  \return std::ostream& Copy of reference os
  */
 
 /*! \fn void dlvhex::merging::tools::rpcompiler::ParseTreeNode::addChild(ParseTreeNode *newchild)

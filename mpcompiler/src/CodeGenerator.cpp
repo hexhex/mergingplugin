@@ -4,6 +4,7 @@
 #include <sstream>
 #include <set>
 #include <stdlib.h>
+#include <assert.h>
 
 using namespace dlvhex::merging::tools::mpcompiler;
 
@@ -76,6 +77,11 @@ void CodeGenerator::generateCode(std::ostream &os, std::ostream &err){
 
 // Translates one belief base definition including the mappings
 void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &os, std::ostream &err){
+	// A belief base section has the sub-element "beliefbase" with key-value pairs as it's 0th child
+	assert(parsetree->getType() == ParseTreeNode::section_beliefbase);
+	assert(parsetree->getChild(0)->getType() == ParseTreeNode::beliefbase);
+	assert(parsetree->getChild(0)->getChild(0)->getType() == ParseTreeNode::kvpairs);
+
 	std::string name;
 	std::string mappings;
 	std::string inputrewriter;
@@ -158,6 +164,8 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 
 // Translates one revision plan section recursively
 std::string CodeGenerator::translateRevisionPlan(ParseTreeNode *parsetree, std::ostream &os, std::ostream &err){
+	// Check for errors during code generation for revision plans: Type of information source must be either a belief base or a composed revision plan
+	assert(parsetree->getType() == ParseTreeNode::revisionplansection || parsetree->getType() == ParseTreeNode::datasource);
 
 	// ----- Distinction: sub-revision plans or primitive belief bases -----
 	// Revision plans
@@ -170,13 +178,13 @@ std::string CodeGenerator::translateRevisionPlan(ParseTreeNode *parsetree, std::
 		return translateRevisionPlan_beliefbase(parsetree, os, err);
 	}
 
-	errorcount++;
-	err << "Error during code generation for revision plan: Type of information source must be either a belief base or a composed revision plan" << std::endl;
-	return std::string("ERROR");
+	assert(0);
 }
 
 // Translation of composed revision plan sections
 std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetree, std::ostream &os, std::ostream &err){
+	assert(parsetree->getType() == ParseTreeNode::revisionplansection);
+
 	static std::set<std::string> usedOperatorApplicationIDs;
 
 	// Prepare variables for the operator's name and a unique identifier for this operator application (consisting of the names of the operator's arguments)
@@ -226,6 +234,8 @@ std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetr
 	bool firstarg = true;
 	if (parsetree->begin(ParseTreeNode::kvpairs) != parsetree->end()){
 		for (ParseTreeNodeIterator it = parsetree->begin(ParseTreeNode::kvpairs)->begin(ParseTreeNode::kvpair); it != parsetree->begin(ParseTreeNode::kvpairs)->end(); ++it){
+			assert(it->getType() == ParseTreeNode::kvpair);
+
 			// For each key-value pair: if the key can be interpretet by this compiler this is done in the following block;
 			// otherwise the key-value pair is passed as parameter to the operator and can be evaluated by the operator at run-time
 			std::string key = ((StringTreeNode*)(it->getChild(0)))->getValue();
@@ -284,6 +294,8 @@ std::string CodeGenerator::translateRevisionPlan_composed(ParseTreeNode *parsetr
 
 // Translation of primitive revision plan sections (belief bases)
 std::string CodeGenerator::translateRevisionPlan_beliefbase(ParseTreeNode *parsetree, std::ostream &os, std::ostream &err){
+	assert(parsetree->getType() == ParseTreeNode::datasource);
+
 	// The unique id is the name of the data source with prefix "_"
 	std::string operatorapplicationid = ((StringTreeNode*)parsetree->getChild(0))->getValue();
 	os << "% Using belief base " << operatorapplicationid << std::endl;
@@ -296,8 +308,9 @@ std::string CodeGenerator::translateRevisionPlan_beliefbase(ParseTreeNode *parse
 
 // Writes code for extracting the final answer sets
 void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostream &os, std::ostream &err){
+	assert(parsetree->getType() == ParseTreeNode::sections);
 
-	// This method writes code which maps the "virtual" answer sets, which are just represented by certain predicates, to the real answer sets of the dlvhex program.
+	// This method writes code which maps the "virtual" answer sets, which are just represented by handles, onto the real answer sets of the dlvhex program.
 	// The real answer sets will in general contain many undesired additional literals which were added during exectuion. Therefore, the result must be filtered with respect to the predicates of the common signature to retrieve a clean output. The appropriate dlvhex call is added to the output as comment in the last line.
 
 	// Write extraction code of final answer sets
@@ -327,6 +340,7 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 	if (parsetree->begin(ParseTreeNode::section_commonsignature) != parsetree->end()){
 		for (ParseTreeNodeIterator it = parsetree->begin(ParseTreeNode::section_commonsignature)->begin(ParseTreeNode::predicate); it != parsetree->begin(ParseTreeNode::section_commonsignature)->end(); ++it){
 			// Retrieve name and arity of the current predicate
+			assert(it->getType() == ParseTreeNode::predicate);
 			std::string currentPred = ((StringTreeNode*)it->getChild(1))->getValue();
 			int currentArity = ((IntTreeNode*)it->getChild(2))->getValue();
 
@@ -354,6 +368,8 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 				os << "-" << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 1)." << std::endl;
 			}
 		}
+	}else{
+		// no common signature
 	}
 }
 

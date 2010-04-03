@@ -1,7 +1,5 @@
 #include <ParseTreeNodeIterator.h>
 
-#include <iostream>
-
 using namespace dlvhex::merging::tools::mpcompiler;
 
 ParseTreeNodeIterator::ParseTreeNodeIterator(ParseTreeNode* n) : node(n), cindex(0){
@@ -60,7 +58,7 @@ ParseTreeNode* ParseTreeNodeIterator::operator->(){
 
 bool ParseTreeNodeIterator::operator==(const ParseTreeNodeIterator& it2){
 	return	node == it2.node && 		// Iterator on the same object
-		cindex == it2.cindex;		// Either both iterators are typespecific
+		cindex == it2.cindex;		// Both iterators point to the same element
 }
 
 bool ParseTreeNodeIterator::operator!=(const ParseTreeNodeIterator& it2){

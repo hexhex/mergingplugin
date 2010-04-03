@@ -1,7 +1,7 @@
 #ifndef __OPERATORS_H_
 #define __OPERATORS_H_
 
-#include <InternalTypes.h>
+#include <HexAnswerCache.h>
 #include <dlvhex/PluginInterface.h>
 #include <stdlib.h>
 #include <vector>

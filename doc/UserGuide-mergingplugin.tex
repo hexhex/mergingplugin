@@ -16,11 +16,11 @@
 \usepackage{tabularx}
 \usepackage{amsthm}
 \usepackage{ifthen}
-\usepackage{tikz}
-\usepackage{tikz-qtree}
 \usepackage{verbatim}
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{color}
+
+\definecolor{gray}{rgb}{0.3,0.3,0.3}
 
 \theoremstyle{definition}
 \newtheorem{example}{Example}
@@ -101,8 +101,8 @@
 \begin{document}
 
 	\title{mergingplugin - User Guide}
-	\date{Febrary 28, 2010}
-	\author{Christoph Redl\footnote{e0525250@mail.student.tuwien.ac.at}}
+	\date{April 03, 2010}
+	\author{Christoph Redl\footnote{christoph.redl@tuwien.ac.at}}
 	\maketitle
 
 	The mergingplugin consists of several external atoms for \dlvhex as well as a merging plan compiler which is intended to translate \emph{merging plans} into semantically equivalent
@@ -339,21 +339,21 @@ p(\mathit{constant}, \mathit{``string\ literal\ containing\ a\ \backslash\ backs
 		The mergingplugin recognizes the following command line arguments
 
 		
-		\subsection{\inlinecode{--operatorpath} or \inlinecode{--op}}
+		\subsection{\inlinecode{operatorpath} or \inlinecode{op}}
 		
 			Using the syntax
 			\begin{center}
-				\inlinecode{--operatorpath=path1,path2,...} or \inlinecode{--op=path1,path2,...}
+				\verb+--operatorpath=path1,path2,...+ or \verb+--op=path1,path2,...+
 			\end{center}
 			additional paths where operators are loaded from can be specified. A path can point to a directory or a shared object library. In case of a directory, operator libs
 			that are \emph{directly} within this directory will be loaded (\emph{non-recursive}!).
 
 			
-		\subsection{\inlinecode{--inputrewriter} or \inlinecode{--irw}}
+		\subsection{\inlinecode{inputrewriter} or \inlinecode{irw}}
 
 			The syntax
 			\begin{center}
-				\inlinecode{--inputrewriter=program} or \inlinecode{--irw=program}
+				\verb+--inputrewriter=program+ or \verb+--irw=program+
 			\end{center}
 			specifies an \emph{input rewriter}. This can be an arbitrary tool that reads from standard input and writes to standard output. The complete \dlvhex input will be
 			directed through this program before reasoning starts.
@@ -364,7 +364,7 @@ p(\mathit{constant}, \mathit{``string\ literal\ containing\ a\ \backslash\ backs
 	
 		The merging plan compiler is installed as part of the mergingplugin. It can be called in command line by entering:
 		\begin{center}
-			\inlinecode{mpcompiler}
+			\verb+mpcompiler+
 		\end{center}
 		with appropriate parameters.
 
@@ -376,11 +376,11 @@ p(\mathit{constant}, \mathit{``string\ literal\ containing\ a\ \backslash\ backs
 
 			The command line options are:
 			\begin{itemize}
-				\item \inlinecode{-parsetree} \\
+				\item \verb+-parsetree+ \\
 						Generates a parse tree rather than dlvhex code (mostly for debug tasks).
-				\item \inlinecode{-help} \\
+				\item \verb+-help+ \\
 						Prints an online help message.
-				\item \inlinecode{-spirit} or \inlinecode{-bison} \\
+				\item \verb+-spirit+ or \verb+-bison+ \\
 						Forces the compiler to use a \emph{boost spirit} resp. \emph{bison} generated parser. Default is spirit.
 			\end{itemize}
 

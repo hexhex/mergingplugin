@@ -6,7 +6,7 @@ noinst_HEADERS = DLVHexProcess.h \
 		 Operators.h \
 		 HexExecution.h \
 		 Operators.h \
-		 InternalTypes.h \
+		 HexAnswerCache.h \
 		 OpUnion.h \
 		 OpSetminus.h \
 		 OpDalal.h \

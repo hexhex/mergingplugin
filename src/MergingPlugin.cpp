@@ -52,7 +52,6 @@ namespace dlvhex {
 					while(getline(pi, line)) {
 						routput << line << std::endl;
 					}
-//std::cout << ">>" << routput.str() << "<<";
 					o << routput.str();
 
 
@@ -213,125 +212,117 @@ namespace dlvhex {
 					bool opinforequested = false;
 					std::string opinfo;
 
-					if (!doHelp){
-						bool argFound = true;
-						while (argFound){
-							argFound = false;
-							for (std::vector<std::string>::iterator it = argv.begin(); it != argv.end(); it++){
+					bool argFound = true;
+					while (argFound){
+						argFound = false;
+						for (std::vector<std::string>::iterator it = argv.begin(); it != argv.end(); it++){
 
-								// merging operators
-								if (	it->substr(0, std::string("--operatorpath=").size()) == std::string("--operatorpath=") ||
-									it->substr(0, std::string("--op=").size()) == std::string("--op=")){
-									// Extract search paths for operator libs
-									searchpaths.clear();
-									std::string rest = it->substr(it->find_first_of('=', 0) + 1);
-									while (rest.find_first_of(',') != std::string::npos){
-										searchpaths.push_back(removeQuotes(it->substr(0, it->find_first_of(','))));
-										rest = rest.substr(it->find_first_of(',') + 1);
-									}
-									if (rest != std::string("")){
-										searchpaths.push_back(rest);
-									}
-									// Argument was processed
-									argv.erase(it);
-									argFound = true;
-									break;	// iterator is invalid now
+							// merging operators
+							if (	it->substr(0, std::string("--operatorpath=").size()) == std::string("--operatorpath=") ||
+								it->substr(0, std::string("--op=").size()) == std::string("--op=")){
+								// Extract search paths for operator libs
+								searchpaths.clear();
+								std::string rest = it->substr(it->find_first_of('=', 0) + 1);
+								while (rest.find_first_of(',') != std::string::npos){
+									searchpaths.push_back(removeQuotes(it->substr(0, it->find_first_of(','))));
+									rest = rest.substr(it->find_first_of(',') + 1);
 								}
-								if (	it->substr(0, std::string("--opinfo=").size()) == std::string("--opinfo=") ||
-									it->substr(0, std::string("--operatorpath=").size()) == std::string("--operatorpath=")){
-									opinforequested = true;
-									opinfo = it->substr(it->find_first_of('=', 0) + 1);
-
-									// Argument was processed
-									argv.erase(it);
-									argFound = true;
-									break;	// iterator is invalid now
+								if (rest != std::string("")){
+									searchpaths.push_back(rest);
 								}
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;	// iterator is invalid now
+							}
+							if (	it->substr(0, std::string("--opinfo=").size()) == std::string("--opinfo=") ||
+								it->substr(0, std::string("--operatorinfo=").size()) == std::string("--operatorinfo=")){
+								opinforequested = true;
+								opinfo = it->substr(it->find_first_of('=', 0) + 1);
 
-								// input rewriters
-								if (	it->substr(0, std::string("--inputrewriter=").size()) == std::string("--inputrewriter=") ||
-									it->substr(0, std::string("--irw=").size()) == std::string("--irw=")){
-									if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
-									inputrewriter = new Rewriter(removeQuotes(it->substr(it->find_first_of('=', 0) + 1)));
-									// Argument was processed
-									argv.erase(it);
-									argFound = true;
-									break;
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;	// iterator is invalid now
+							}
+
+							// input rewriters
+							if (	it->substr(0, std::string("--inputrewriter=").size()) == std::string("--inputrewriter=") ||
+								it->substr(0, std::string("--irw=").size()) == std::string("--irw=")){
+								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
+								inputrewriter = new Rewriter(removeQuotes(it->substr(it->find_first_of('=', 0) + 1)));
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;
+							}
+
+							// debug mode
+							if (	(*it) == std::string("--operatordebug") ||
+								(*it) == std::string("--od")){
+								debugMode = true;
+
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;
+							}
+
+							// wrapper for pure dlv programs
+							if (	it->substr(0, std::string("--dlv").size()) == std::string("--dlv")){
+								std::string dlvargs;
+								if (it->substr(0, std::string("--dlv=").size()) == std::string("--dlv=")){
+									dlvargs = removeQuotes(it->substr(it->find_first_of('=', 0) + 1));
+								}else{
+									dlvargs = "--";
 								}
+								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
+								inputrewriter = new DLV(dlvargs);
 
-								// debug mode
-								if (	(*it) == std::string("--operatordebug") ||
-									(*it) == std::string("--od")){
-									debugMode = true;
-
-									// Argument was processed
-									argv.erase(it);
-									argFound = true;
-									break;
-								}
-
-								// wrapper for pure dlv programs
-								if (	it->substr(0, std::string("--dlv").size()) == std::string("--dlv")){
-									std::string dlvargs;
-									if (it->substr(0, std::string("--dlv=").size()) == std::string("--dlv=")){
-										dlvargs = removeQuotes(it->substr(it->find_first_of('=', 0) + 1));
-									}else{
-										dlvargs = "--";
-									}
-									if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
-									inputrewriter = new DLV(dlvargs);
-
-									// Argument was processed
-									argv.erase(it);
-									argFound = true;
-									break;
-								}
-
-		/*
-								if (	it->substr(0, std::string("--outputrewriter=").size()) == std::string("--outputrewriter=") ||
-									it->substr(0, std::string("--orw=").size()) == std::string("--orw=")){
-									outputrewriter = it->substr(it->find_first_of('=', 0) + 1);
-									// Argument was processed
-									argv.erase(it);
-									argFound = true;
-									break;
-								}
-		*/
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;
 							}
 						}
+					}
 
-						if (operator_atom != NULL){
-							operator_atom->setMode(silentMode, debugMode);
+					if (operator_atom != NULL){
+						operator_atom->setMode(silentMode, debugMode);
 
-							// Load all operators found in dlvhex' system plugin libraries
-							std::stringstream sysplugindir;
-							sysplugindir << SYS_PLUGIN_DIR;
-							operator_atom->addOperators(sysplugindir.str());
+						// Load all operators found in dlvhex' system plugin libraries
+						std::stringstream sysplugindir;
+						sysplugindir << SYS_PLUGIN_DIR;
+						operator_atom->addOperators(sysplugindir.str());
 
-							// Load all operators found in dlvhex' user plugin libraries
-							std::stringstream userplugindir;
-							const char* homedir = ::getpwuid(::geteuid())->pw_dir;
-							userplugindir << homedir << "/" << USER_PLUGIN_DIR;
-							operator_atom->addOperators(userplugindir.str());
+						// Load all operators found in dlvhex' user plugin libraries
+						std::stringstream userplugindir;
+						const char* homedir = ::getpwuid(::geteuid())->pw_dir;
+						userplugindir << homedir << "/" << USER_PLUGIN_DIR;
+						operator_atom->addOperators(userplugindir.str());
 
-							// Load additional operator directories
-							for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
-								operator_atom->addOperators(*it);
-							}
+						// Load additional operator directories
+						for (std::vector<std::string>::iterator it = searchpaths.begin(); it != searchpaths.end(); it++){
+							operator_atom->addOperators(*it);
+						}
 
-							if (opinforequested){
+						if (opinforequested){
+							try{
+								IOperator* op = operator_atom->getOperator(opinfo);
 								try{
-									IOperator* op = operator_atom->getOperator(opinfo);
-									try{
-										std::cout << op->getInfo();
-									}catch(IOperator::OperatorException){
-										throw PluginError("Operator \"" + opinfo + "\" was found but does not provide additional information");
-									}
-								}catch(IOperator::OperatorException o){
-									throw PluginError(o.getMessage());
+									std::cout <<	"Operator Info" << std::endl <<
+											"-------------" << std::endl << std::endl <<
+											op->getInfo() << std::endl  << std::endl;
+								}catch(IOperator::OperatorException){
+									throw PluginError("Operator \"" + opinfo + "\" was found but does not provide additional information");
 								}
+							}catch(IOperator::OperatorException o){
+								throw PluginError(o.getMessage());
 							}
 						}
+					}
+
+					if (!doHelp){
 					}else{
 						out	<< "Merging-plugin" << std::endl
 							<< "--------------" << std::endl

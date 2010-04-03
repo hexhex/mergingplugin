@@ -1,11 +1,21 @@
 #include <OpUnion.h>
 
+#include <sstream>
 #include <iostream>
 
 using namespace dlvhex::merging::plugin;
 
 std::string OpUnion::getName(){
 	return "union";
+}
+
+std::string OpUnion::getInfo(){
+	std::stringstream ss;
+	ss <<	"     union" << std::endl <<
+		"     -----" << std::endl << std::endl <<
+		"Expects exactly two inputs" << std::endl;
+		"Computes the pairwise union of answer-sets of it's arguments.";
+	return ss.str();
 }
 
 HexAnswer OpUnion::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){

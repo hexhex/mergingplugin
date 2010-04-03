@@ -27,8 +27,8 @@ std::string OpDalal::getName(){
 
 std::string OpDalal::getInfo(){
 	std::stringstream ss;
-	ss <<	"dalal" << std::endl <<
-		"-----" << std::endl << std::endl <<
+	ss <<	"     dalal" << std::endl <<
+		"     -----" << std::endl << std::endl <<
 		 " &operator[\"dalal\", A, K](A)" << std::endl <<
 		 "	A(H1), ..., A(Hn)	... Handles to n answers" << std::endl <<
 		 "	K(constraint, c)	... c = arbitrary constraints of kind \":-list-of-literals.\"" << std::endl <<
@@ -158,7 +158,7 @@ void OpDalal::parseParameters(int arity, OperatorArguments& parameters, std::str
 
 		// weight of knowledge bases
 		}else if (argIt->first == std::string("weights")){
-			std::vector<std::string> w; //split(argIt->second, ',');
+			std::vector<std::string> w;
 			boost::split(w, argIt->second, boost::is_any_of(","));
 			weights.clear();
 			if (w.size() != arity) throw IOperator::OperatorException(std::string("Invalid number of weight values: \"") + argIt->second + std::string("\"; must be equal to arity!"));
@@ -183,7 +183,7 @@ void OpDalal::parseParameters(int arity, OperatorArguments& parameters, std::str
 
 		// extract predicates to ignore
 		}else if (argIt->first == std::string("ignore")){
-			std::vector<std::string> preds; //split(argIt->second, ',');
+			std::vector<std::string> preds;
 			boost::split(preds, argIt->second, boost::is_any_of(","));
 			ignoredPredicates.insert(preds.begin(), preds.end());
 		}
@@ -191,7 +191,7 @@ void OpDalal::parseParameters(int arity, OperatorArguments& parameters, std::str
 
 	// built appropriate aggregate function
 	buildAggregateFunction(arity, aggregation, optAtom, costSum, program, facts);
-//void buildAggregateFunction(std::string aggregation, std::string optAtom, std::string costSum, int arity, std::set<std::string>& usedAtoms, dlvhex::Program& program, dlvhex::AtomSet& facts){
+
 	// default value for penalize (if not used defined)
 	if (!penalizeSet){
 		penalize[0][0] = 0; penalize[0][1] = 1; penalize[0][2] = 0; penalize[0][3] = 0;
@@ -215,15 +215,13 @@ void OpDalal::parsePenalize(std::string& rule, float penalize[4][4]){
 	}
 	else if (rule == "unfounded"){
 		// not,+
-		//// not-,-
-		penalize[1][0] = 1; //penalize[3][2] = 1;
+		penalize[1][0] = 1;
 	}
 	else if (rule == "aberration"){
 		// +,not
 		// -,not-
 		// not,+
-		//// not-,-
-		penalize[0][1] = 1; penalize[2][3] = 1; penalize[1][0] = 1; //penalize[3][2] = 1;
+		penalize[0][1] = 1; penalize[2][3] = 1; penalize[1][0] = 1;
 	}else{
 		std::vector<std::string> p; //split(argIt->second, ',');
 		boost::split(p, rule, boost::is_any_of(","));
@@ -231,10 +229,10 @@ void OpDalal::parsePenalize(std::string& rule, float penalize[4][4]){
 		if (p.size() != 3) throw IOperator::OperatorException(std::string("Invalid penalize definition \"") + rule + std::string("\". Must be of kind \"{+,not,-,not-},{+,not,-,not-},int\""));
 		int individual = -1;
 		int agg = -1;
-		if (p[0] == std::string("+")) individual = 0; 	if (p[0] == std::string("not")) individual = 1;	if (p[0] == std::string("-")) individual = 2;	if (p[0] == std::string("not-")) individual = 3;
-		if (p[1] == std::string("+")) agg = 0; 		if (p[1] == std::string("not")) agg = 1;	if (p[1] == std::string("-")) agg = 2;		if (p[1] == std::string("not-")) agg = 3;
+		if (p[0] == "+") individual = 0; 	if (p[0] == "not") individual = 1;	if (p[0] == "-") individual = 2;	if (p[0] == "not-") individual = 3;
+		if (p[1] == "+") agg = 0; 		if (p[1] == "not") agg = 1;		if (p[1] == "-") agg = 2;		if (p[1] == "not-") agg = 3;
 		float factor = atof(p[2].c_str());
-		if (individual < 0 || agg < 0 || (factor == 0 && p[2] != std::string("0"))){
+		if (individual < 0 || agg < 0 || (factor == 0 && p[2] != "0")){
 			throw IOperator::OperatorException(std::string("Invalid penalize definition \"") + rule + std::string("\". Must be of kind \"{+,not,-,not-},{+,not,-,not-},int\""));
 		}else{
 			penalize[individual][agg] = factor;
@@ -292,13 +290,8 @@ void OpDalal::buildAggregateFunction(const int arity, const std::string aggregat
 
 	// parse the aggregation function
 	HexParserDriver hpd;
-	dlvhex::Program cfprogram;
-	dlvhex::AtomSet cffacts;
 	try{
-		hpd.parse(aggregationss, cfprogram, cffacts);
-		// replace predicate name "cost" by costAtom
-		for (Program::iterator rule = cfprogram.begin(); rule != cfprogram.end(); ++rule) program.addRule(*rule);
-		facts.insert(cffacts);
+		hpd.parse(aggregationss, program, facts);
 	}catch(SyntaxError){
 		throw IOperator::OperatorException(std::string("Could not parse aggregation function: \"") + aggregationss.str() + std::string("\""));
 	}
@@ -317,10 +310,12 @@ void OpDalal::writeAtomSelectionRule(const Atom* atom, dlvhex::Program& program)
 
 	// construct literals from this atom
 	Literal* lit_Pos = new Literal(AtomPtr(new Atom(*atom)));
-	if (lit_Pos->getAtom()->isStronglyNegated()) lit_Pos->getAtom()->negate();	// make sure that it is positive
+	if (lit_Pos->getAtom()->isStronglyNegated())
+		lit_Pos->getAtom()->negate();	// make sure that it is positive
 
 	Literal* lit_Neg = new Literal(AtomPtr(new Atom(*atom)));
-	if (!lit_Neg->getAtom()->isStronglyNegated()) lit_Neg->getAtom()->negate();	// make sure that it is negative
+	if (!lit_Neg->getAtom()->isStronglyNegated())
+		lit_Neg->getAtom()->negate();	// make sure that it is negative
 	Registry::Instance()->storeObject(lit_Pos);
 	Registry::Instance()->storeObject(lit_Neg);
 
@@ -409,12 +404,9 @@ void OpDalal::writeCostComputation(const AtomPtr costAtom, Literal* lit_individu
  * \param source Pointer to the source to
  * \param sourceAtoms Vector of ALL atoms in ANY source (not only those that occur in this one); we even need unique names for atoms that never occur in this source for cost model "unfounded"
  * \param usedPredNames Reference to the set of already used predicate names (is expanded by this method)
- * \return std::map<std::string, std::string> A mapping of each name occurring in the source atoms onto a unique name
+ * \param localAtoms A reference to a map where the mapping of each name occurring in the source atoms onto a unique name shall be added
  */
-std::map<std::string, std::string> OpDalal::renameSourceAtoms(const HexAnswer* source, const std::set<Atom>& sourceAtoms, std::set<std::string>& usedPredNames){
-
-	// mapping of global atom names (i.e. such as they were found in the input programs) to unique names
-	std::map<std::string, std::string> localAtoms;
+void OpDalal::renameSourceAtoms(const HexAnswer* source, const std::set<Atom>& sourceAtoms, std::set<std::string>& usedPredNames, std::map<std::string, std::string>& localAtoms){
 
 	for (std::set<Atom>::iterator it = sourceAtoms.begin(); it != sourceAtoms.end(); ++it){
 		// do we have already a name for this atom?
@@ -423,8 +415,6 @@ std::map<std::string, std::string> OpDalal::renameSourceAtoms(const HexAnswer* s
 			localAtoms[it->getPredicate().getUnquotedString()] = findUniqueAtomName(it->getPredicate().getUnquotedString(), usedPredNames);
 		}
 	}
-
-	return localAtoms;
 }
 
 /**
@@ -456,6 +446,7 @@ void OpDalal::writeAnswerSetSelectionRules(const HexAnswer* source, const std::m
 			if (ignoredPredicates.find(atIt->getPredicate().getUnquotedString()) == ignoredPredicates.end()){
 				// relevant: convert atom's name into local one
 				AtomPtr atom_local = AtomPtr(new Atom(*atIt));
+				assert(localAtomMapping.find(atIt->getPredicate().getUnquotedString()) != localAtomMapping.end());
 				atom_local->setPredicate(Term(localAtomMapping.find(atIt->getPredicate().getUnquotedString())->second));
 
 				// if the current answer-set is selected, then the contained atoms can be derived
@@ -649,7 +640,9 @@ void OpDalal::optimize(HexAnswer& result, std::string optAtom){
 	for (int i = result.size() - 1; i >= 0; --i){
 		// further occurrence?
 		bool found = false;
-		for (int j = i - 1; j >= 0; j--) if (result[i] == result[j]) found = true;
+		for (int j = i - 1; j >= 0; j--)
+			if (result[i] == result[j])
+				found = true;
 		if (found){
 			result.erase(result.begin() + i);
 		}
@@ -734,7 +727,8 @@ HexAnswer OpDalal::apply(bool debug, int arity, std::vector<HexAnswer*>& argumen
 	for (std::vector<HexAnswer*>::iterator argIt = arguments.begin(); argIt != arguments.end(); argIt++){
 
 		// make sure we use unique atom names in each source
-		std::map<std::string, std::string> localAtomMapping = renameSourceAtoms(*argIt, sourceAtoms, usedPredNames);
+		std::map<std::string, std::string> localAtomMapping;
+		renameSourceAtoms(*argIt, sourceAtoms, usedPredNames, localAtomMapping);
 
 		// select exactly one answer-set of this source and derive the atoms within
 		writeAnswerSetSelectionRules(*argIt, localAtomMapping, ignoredPredicates, usedPredNames, program);
@@ -742,7 +736,8 @@ HexAnswer OpDalal::apply(bool debug, int arity, std::vector<HexAnswer*>& argumen
 		// compute the costs for this source
 		writeCostComputationRules(*argIt, localAtomMapping, sourceAtoms, ignoredPredicates, usedPredNames, costAtom, costSum, weights[sourceIndex++], penalize, micomp, program);
 	}
-	if (micomp > maxint) maxint = micomp;
+	if (micomp > maxint)
+		maxint = micomp;
 
 /*
 DLVPrintVisitor pv(std::cout);
@@ -765,11 +760,11 @@ pv.PrintVisitor::visit(&facts);
 		// finally, keep only the answer-sets with minimal costs
 		optimize(result, optAtom);
 
-		/*
-		DLVPrintVisitor pv(std::cout);
-		std::cout << filter;
-		for (int i = 0; i < result.size(); i++) pv.PrintVisitor::visit(&result[i]);
-		*/
+/*
+DLVPrintVisitor pv(std::cout);
+std::cout << filter;
+for (int i = 0; i < result.size(); i++) pv.PrintVisitor::visit(&result[i]);
+*/
 
 		// restore original setting of NoPredicate
 		Globals::Instance()->setOption("NoPredicate", noPred);

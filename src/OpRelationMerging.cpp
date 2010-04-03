@@ -19,7 +19,14 @@ std::string OpRelationMerging::getName(){
 	return "relationmerging";
 }
 
-#include <iostream>
+
+std::string OpRelationMerging::getInfo(){
+	std::stringstream ss;
+	ss <<	"     relationmerging" << std::endl <<
+		"     ---------------" << std::endl << std::endl <<
+		"This operator is not thought to be used practically since it is buggy and only used for test purposes!" << std::endl;
+	return ss.str();
+}
 
 // translates sources from
 //	schema(a1,...,an), data(v1,...,vn)

@@ -82,7 +82,7 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 			ss << "Multiple answers were passed as " << answernrpos << "-th argument of operator \"" << opname << "\"";
 			throw PluginError(ss.str());
 		}
-		answers[answernrpos] = &(resultsetCache[answernr].second);
+		answers[answernrpos] = resultsetCache[answernr];
 		answersIndices[answernrpos] = answernr;
 	}
 
@@ -97,43 +97,18 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		parameters.push_back(KeyValuePair(key, value));
 	}
 
-	// Assemble unique identifier for this operator application (consisting of operator name and argument indices, see below)
-	HexCall hc(HexCall::OperatorCall, opname, answersIndices, parameters);
-
-	// Check if answer is in cache
-	int i = 0;
-	for (HexAnswerCache::iterator it = resultsetCache.begin(); it != resultsetCache.end(); it++){
-		if (it->first == hc){
-			// Reuse answer
-			Tuple out;
-			out.push_back(Term(i));
-			answer.addTuple(out);
-			return;
-		}
-		i++;
-	}
-
-	// No: Compute it
-	// call operator, let opanswer be it's result
-	HexAnswer opanswer;
-
 	// If the operator name matches one of the loaded operators, it is executed
 	try{
 		// Search for the oprator
 		IOperator* op = getOperator(opname); // throws an OperatorException of not found
 
-		// Finally call the operator
-		opanswer = op->apply(!silent && debug, answersIndices.size(), answers, parameters);
+		// Assemble unique identifier for this operator application (consisting of operator name and argument indices, see below)
+		HexCall hc(HexCall::OperatorCall, op, debug, silent, answersIndices, parameters);
 
-		// Put operator's answer into cache
-		resultsetCache.push_back(HexAnswerCacheEntry(hc, opanswer));
-
-		// Return answer index
+		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
-		out.push_back(Term(resultsetCache.size() - 1));
+		out.push_back(Term(resultsetCache[hc]));
 		answer.addTuple(out);
-
-		return;
 	}catch(IOperator::OperatorException& oe){
 		throw PluginError(oe.getMessage());
 	}catch(std::runtime_error& e){
@@ -168,7 +143,7 @@ void OperatorAtom::addOperators(std::string lib){
 			// Does this filename end with .so?
 			if (libname.length() >= 3 && libname.substr(libname.length() - 3) == std::string(".so")){
 				// Yes: Load the shared library
-				addOperators(libname);
+				addOperators(lib + (lib.length() > 0 && lib[lib.length() - 1] == '/' ? "" : "/") + libname);
 			}
 		}
 		closedir(dp);
@@ -229,7 +204,8 @@ IOperator* OperatorAtom::getOperator(std::string opname){
 	std::map<std::string, IOperator*>::const_iterator itOp = operators.find(opname);
 	if (itOp != operators.end()){
 		// Found
-		return (*itOp).second;
+		assert(opname == itOp->first);
+		return itOp->second;
 	}else{
 		// Operator with the specified name was not loaded
 		std::stringstream msg;

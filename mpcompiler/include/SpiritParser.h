@@ -55,7 +55,6 @@ private:
 	typedef parse_tree_match_t::const_tree_iterator 	iter_t;
 	typedef parse_tree_match_t::node_t			node_t;
 	ParseTreeNode* createParseTree(node_t const& n, int l);
-	//ParseTreeNode* createParseTree(iter_t const& i, int l);
 
 public:
 	SpiritParser(std::vector<std::string> inputfiles, FILE *stdinfile);

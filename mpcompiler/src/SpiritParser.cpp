@@ -217,149 +217,7 @@ ParseTreeNode* SpiritParser::createParseTree(node_t const& n, int l){
 
 	return result;
 }
-/*
-ParseTreeNode* SpiritParser::createParseTree(iter_t const& i, int l){
 
-	ParseTreeNode* result = NULL;
-	std::string rs;
-	int begin;
-	int end;
-	int j;
-
-	iter_t chi = i->children.begin();
-	switch(i->value.id().to_long()){
-		case TRootNode:
-			result = createParseTree(chi, l + 1);
-			break;
-		case TProgram:
-			// Programs contain sections as sub nodes
-			result = new ParseTreeNode(ParseTreeNode::sections, 0);
-			for (; chi != i->children.end(); ++chi){
-				result->addChild(createParseTree(chi, l + 1));
-			}
-			break;
-		case TSection:
-			// First child is the section keyword, second one is the section itself
-			++chi;
-			result = createParseTree(chi, l + 1);
-			break;
-		case TCommonSignatureSection:
-			result = new ParseTreeNode(ParseTreeNode::section_commonsignature, 0);
-			// All children are predicate definitions
-			for (; chi != i->children.end(); ++chi){
-				result->addChild(createParseTree(chi, l + 1));
-			}
-			break;
-		case TBeliefBaseSection:
-			result = new ParseTreeNode(ParseTreeNode::section_beliefbase, 0);
-			result->addChild(new ParseTreeNode(ParseTreeNode::beliefbase, 0));
-			result->getChild(0)->addChild(new ParseTreeNode(ParseTreeNode::kvpairs, 0));
-			// All children are key-value pairs
-			for (; chi != i->children.end(); ++chi){
-				result->getChild(0)->getChild(0)->addChild(createParseTree(chi, l + 1));
-			}
-			break;
-		case TRevisionPlanSection:
-			result = new ParseTreeNode(ParseTreeNode::section_revisionplan, 0);
-			result->addChild(createParseTree(chi, l + 1));
-			break;
-		case TComposedRevisionPlan:
-			// Distinction: data source or sub-revision plan
-			if (i->children.size() == 3){
-				// Data source
-				result = new ParseTreeNode(ParseTreeNode::datasource, 0);
-				chi++;	// Skip bracket
-				result->addChild(createParseTree(chi, l + 1));
-			}else{
-				// Sub revision plan
-				result = new ParseTreeNode(ParseTreeNode::revisionplansection, 0);
-				result->addChild(new ParseTreeNode(ParseTreeNode::kvpairs, 0));
-				result->addChild(new ParseTreeNode(ParseTreeNode::revisionsources, 0));
-
-				// Children are either key-value pairs or belief sources
-				for (; chi != i->children.end(); ++chi){
-					// Check type of this child and add to the appropriate node
-					if (chi->value.id().to_long() == TKeyValuePair){
-						result->getChild(0)->addChild(createParseTree(chi, l + 1));
-					}else if (chi->value.id().to_long() == TSource){
-						result->getChild(1)->addChild(createParseTree(chi, l + 1));
-					}
-				}
-			}
-			break;
-		case TPredicate:
-			result = new ParseTreeNode(ParseTreeNode::predicate, 0);
-
-			// First child is the keyword "predicate"
-			result->addChild(createParseTree(chi, l + 1));
-			++chi;
-
-			// Second one: colon (:)
-			// nothing to do
-			++chi;
-
-			// Third one: predicate name
-			result->addChild(createParseTree(chi, l + 1));
-			++chi;
-
-			// Fourth one: slash (/)
-			// nothing to do
-			++chi;
-
-			// Fifth one: arity
-			result->addChild(createParseTree(chi, l + 1));
-			++chi;
-
-			// Sixth one: semicolon (;)
-			// nothing to do
-			++chi;
-			break;
-		case TKeyValuePair:
-			result = new ParseTreeNode(ParseTreeNode::kvpair, 0);
-			result->addChild(createParseTree(chi, l + 1));		// Key
-			chi++;
-			chi++;							// Skip colon (:)
-			result->addChild(createParseTree(chi, l + 1));		// Value
-			chi++;							// Skip semicolon (;)
-			break;
-		case TSource:
-			result = createParseTree(chi, l + 1);
-			break;
-		case TIDENTIFIER:
-			rs = std::string(chi->value.begin(), chi->value.end());
-			// Trim (because of the fact that the skip parser does not cut out the whitespaces perfectly)
-			begin = rs.length() - 1;
-			end = 0;
-			j = 0;
-			for (std::string::iterator it = rs.begin(); it != rs.end(); it++, j++){
-				if (j < begin && (*it) != ' ' && (*it) != '\t' && (*it) != '\r' && (*it) != '\n') begin = j;
-				if (j > end && (*it) != ' ' && (*it) != '\t' && (*it) != '\r' && (*it) != '\n') end = j;
-			}
-			if (end >= begin){
-				rs = rs.substr(begin, end - begin + 1);
-			}else{
-				rs = std::string("");
-			}
-
-			// unquote
-			if (rs.length() >= 2){
-				if (rs[0] == '\"' && rs[rs.length() - 1] == '\"'){
-					rs = rs.substr(1, rs.length() - 2);
-				}
-			}
-
-			result = new StringTreeNode(rs);
-
-			break;
-		case TNUMBER:
-			result = new IntTreeNode(atoi(std::string(chi->value.begin(), chi->value.end()).c_str()));
-			break;
-	}
-
-
-	return result;
-}
-*/
 
 // ------------------------------ Public methods ------------------------------
 
@@ -406,6 +264,7 @@ void SpiritParser::parse(){
 
 		wasParsed = true;
 	}else{
+		// parse standard-in
 		tree_parse_info<> info = pt_parse(input.c_str(), grammer, space_p);
 		if (parseTree) delete parseTree;
 		parseTree = createParseTree(info.trees[0], 0);

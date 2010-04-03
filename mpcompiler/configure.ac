@@ -1,5 +1,5 @@
 AC_PREREQ(2.64)
-AC_INIT([RPCompiler],[0.0.1],[e0525250@mail.student.tuwien.ac.at])
+AC_INIT([RPCompiler],[0.9.0],[christoph.redl@tuwien.ac.at])
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_MACRO_DIR([m4])
 

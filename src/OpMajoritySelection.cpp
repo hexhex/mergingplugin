@@ -1,11 +1,25 @@
 #include <OpMajoritySelection.h>
 
-#include <iostream>
+#include <sstream>
 
 using namespace dlvhex::merging::plugin;
 
 std::string OpMajoritySelection::getName(){
 	return "majorityselection";
+}
+
+std::string OpMajoritySelection::getInfo(){
+	std::stringstream ss;
+	ss <<	"     majorityselection" << std::endl <<
+		"     -----------------" << std::endl << std::endl <<
+		"Expects exactly one input with arbitrary many answer-sets." << std::endl <<
+		"The argument \"majorityOf\" is mandatory and defines exactly one propositional atom name." << std::endl <<
+		"The operator will then check if the majority of all answer-sets accept or deny this atom." << std::endl <<
+		"Finally, only those answer-sets that follow this majority" << std::endl <<
+		"will remain; the others are deleted" << std::endl <<
+		"Example: {a,b,c}, {a, -b, -c}, {-b, d} with majorityOf=b will deliver {a, -b, -c}, {-b, d}" << std::endl <<
+		"         since the majority denies b";
+	return ss.str();
 }
 
 HexAnswer OpMajoritySelection::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
@@ -26,10 +40,20 @@ HexAnswer OpMajoritySelection::apply(int arity, std::vector<HexAnswer*>& argumen
 			for (int answerSetNr = 0; answerSetNr < arguments[0]->size(); answerSetNr++){
 				dlvhex::AtomSet as;
 				(*arguments[0])[answerSetNr].matchPredicate(it->second, as);
-				if (as.size() > 0 && !as.begin()->isStronglyNegated()){
-					acc++;
+				if (as.size() > 0){
+					// check if the atom is propositional in this source
+					if (as.begin()->getArity() > 0){
+						throw OperatorException("Predicate \"" + it->second + "\" is not propositional.");
+					}
+					// it's propositional, thus we can safely assume that the answer-set contains exactly one element
+					assert(as.size() == 1);
+					if (!as.begin()->isStronglyNegated()){
+						acc++;
+					}else{
+						deny++;
+					}
 				}else{
-					deny++;
+					// does not occur: neither acc nor deny
 				}
 			}
 			// decision possible?
@@ -60,5 +84,5 @@ HexAnswer OpMajoritySelection::apply(int arity, std::vector<HexAnswer*>& argumen
 			return result;
 		}
 	}
-	throw OperatorException("You need to pass a predicate name among which the majority is selected.");
+	throw OperatorException("You need to pass a predicate name among which the majority is selected. Use the property \"majorityOf\".");
 }

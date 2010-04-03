@@ -79,7 +79,7 @@ std::string findUniqueAtomName(const std::string prefix, std::set<std::string>& 
 				void writeAtomSelectionRule(const std::set<Atom>& usedAtoms, dlvhex::Program& program);
 				void createAtomList(const std::vector<HexAnswer*>& arguments, const std::set<std::string>& ignoredPredicates, std::set<Atom>& usedAtoms);
 				void writeCostComputation(const AtomPtr costAtom, Literal* lit_individual, Literal* lit_agg, dlvhex::Program& program);
-				std::map<std::string, std::string> renameSourceAtoms(const HexAnswer* source, const std::set<Atom>& sourceAtoms, std::set<std::string>& usedPredNames);
+				void renameSourceAtoms(const HexAnswer* source, const std::set<Atom>& sourceAtoms, std::set<std::string>& usedPredNames, std::map<std::string, std::string>& localAtoms);
 				void writeAnswerSetSelectionRules(const HexAnswer* source, const std::map<std::string, std::string>& localAtomMapping, const std::set<std::string>& ignoredPredicates, std::set<std::string>& usedPredNames, dlvhex::Program& program);
 				void writeCostComputationRules(const HexAnswer* source, const std::map<std::string, std::string>& localAtomMapping, const std::set<Atom>& sourceAtoms, const std::set<std::string>& ignoredPredicates, const std::set<std::string>& usedPredNames, const std::string costAtom, const std::string costSumAtom, const int weight, const float penalize[4][4], int& maxint, dlvhex::Program& program);
 				void writeSumRule(const int sourceNr, const std::string costAtom, const std::string costSumAtom, dlvhex::Program& program);

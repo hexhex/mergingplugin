@@ -1,0 +1,394 @@
+#include <HexAnswerCache.h>
+
+#include <HexExecution.h>
+#include <DLVHexProcess.h>
+
+using namespace dlvhex;
+using namespace merging;
+using namespace dlvhex::merging::plugin;
+
+
+// -------------------- Util (local functions!) --------------------
+
+// Splits the command line arguments at blanks (if they are not part of a string literal)
+std::vector<std::string> splitArguments(std::string argsstring){
+	std::vector<std::string> args;
+
+	bool stringlit = false;
+	int argstart = 0;
+	for (int i = 0; i <= argsstring.size(); i++){
+		switch (argsstring[i]){
+			case ' ':
+			case '\0':
+				if (!stringlit){
+					if (i == argstart){
+						argstart++;
+					}else{
+						args.push_back(argsstring.substr(argstart, i - argstart));
+						argstart = i + 1;
+					}
+				}
+				break;
+			case '\"':
+				stringlit = !stringlit;
+				break;
+			default:
+				break;
+		}
+	}
+
+	return args;
+}
+
+// resolves escape sequences as follows:
+//		\\ --> \ 
+//		\' --> "
+std::string unquote(std::string srcprogram){
+	std::string program;
+	bool escaped = false;
+	for (std::string::iterator it = srcprogram.begin(); it != srcprogram.end(); it++){
+		if (escaped){
+			switch (*it){
+				case '\\':
+					program += '\\';
+					break;
+				case '\'':
+					program += '\"';
+					break;
+				default:
+					program += *it;
+					break;
+			}
+			escaped = false;
+		}else{
+			switch (*it){
+				case '\\':
+					escaped = true;
+					break;
+				default:
+					program += *it;
+					break;
+			}
+		}
+	}
+	return program;
+}
+
+
+// computes an 8-bytes salt string for MD5 hashing
+std::string createSalt(){
+	// compute random salt
+	srand(time(NULL));
+	char salt[8];
+	for (int i = 0; i < 8; i++){
+		salt[i] = 'a' + (rand() % 26);
+	}
+	return std::string(salt);
+}
+
+// computes an MD5 string over a certain input text and a given salt
+std::string hash(std::string text){
+	static std::string hashSalt = createSalt();	// create salt for MD5 hashing once
+	return crypt(text.c_str(), (std::string("$1$") + hashSalt).c_str());
+}
+
+
+// ---------- HexCall ----------
+
+HexCall::HexCall(CallType ct, std::string prog, std::string args) : type(ct), program(prog), arguments(args), operatorImpl(NULL){
+	assert(ct == HexProgram || ct == HexFile);
+	// compute hash value for the program (source or path)
+	hashcode = hash(prog);
+}
+
+HexCall::HexCall(CallType ct, IOperator* op, bool deb, bool sil, std::vector<int> as, OperatorArguments kv) : type(ct), program(""), operatorImpl(op), debug(deb), silent(sil), asParams(as), kvParams(kv){
+	assert(ct == OperatorCall);
+}
+
+const bool HexCall::operator==(const HexCall &other) const{
+	if (type != other.type) return false;
+	switch (type){
+		case HexProgram:
+		case HexFile:
+			// Check if the programs (or the program paths) and the command line arguments are equivalent
+			if (getHashCode() != other.getHashCode() || arguments != other.arguments) return false;
+			return true;
+			break;
+
+		case OperatorCall:
+			// Check if operator is the same
+			if (other.operatorImpl != operatorImpl) return false;
+
+			// Check if the answer set arguments are passed in the same order
+			for (int i = 0; i < asParams.size(); i++){
+				if (asParams[i] != other.asParams[i]) return false;
+			}
+
+			// Check if the sets of key-value arguments are equivalent (order does not matter)
+			// One direction
+			for (OperatorArguments::const_iterator it = kvParams.begin(); it != kvParams.end(); it++){
+				bool found = false;
+				for (OperatorArguments::const_iterator it2 = other.kvParams.begin(); it2 != other.kvParams.end(); it2++){
+					if ((*it) == (*it2)){
+						found = true;
+						break;
+					}
+				}
+				if (!found) return false;
+			}
+
+			// Other direction
+			for (OperatorArguments::const_iterator it = other.kvParams.begin(); it != other.kvParams.end(); it++){
+				bool found = false;
+				for (OperatorArguments::const_iterator it2 = kvParams.begin(); it2 != kvParams.end(); it2++){
+					if ((*it) == (*it2)){
+						found = true;
+						break;
+					}
+				}
+				if (!found) return false;
+			}
+			return true;
+			break;
+
+		default:
+			assert(0);
+			break;
+	}
+}
+
+const HexCall::CallType HexCall::getType() const{
+	return type;
+}
+
+const std::string HexCall::getProgram() const{
+	assert(getType() == HexProgram || getType() == HexFile);
+	return program;
+}
+
+const std::string HexCall::getArguments() const{
+	assert(getType() == HexProgram || getType() == HexFile);
+	return arguments;
+}
+
+const std::vector<int> HexCall::getAsParams() const{
+	assert(getType() == OperatorCall);
+	return asParams;
+}
+
+const OperatorArguments HexCall::getKvParams() const{
+	assert(getType() == OperatorCall);
+	return kvParams;
+}
+
+IOperator* HexCall::getOperator() const{
+	assert(getType() == OperatorCall);
+	return operatorImpl;
+}
+
+const std::string HexCall::getHashCode() const{
+	assert(getType() == HexProgram || getType() == HexFile);
+	return hashcode;
+}
+
+const bool HexCall::getDebug() const{
+	assert(getType() == OperatorCall);
+	return debug;
+}
+
+const bool HexCall::getSilent() const{
+	assert(getType() == OperatorCall);
+	return silent;
+}
+
+
+
+// ---------- HexAnswerCache ----------
+
+HexAnswerCache::HexAnswerCache(){
+	maxCacheEntries = -1;
+	elementsInCache = 0;
+}
+
+HexAnswerCache::HexAnswerCache(int limit){
+	maxCacheEntries = limit;
+	elementsInCache = 0;
+}
+
+HexAnswerCache::~HexAnswerCache(){
+	// cleanup
+	for (int i = 0; i < cache.size(); i++)
+		if (cache[i].second) delete cache[i].second;
+}
+
+HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
+	assert(call.getType() == HexCall::HexProgram);
+
+	// parse and assemble hex program (parameter 0)
+	std::stringstream ss(unquote(call.getProgram()));
+	Program prog;
+	AtomSet facts;
+	HexParserDriver hpd;
+	hpd.parse(ss, prog, facts);
+
+	// solve hex program
+	DLVHexProcess proc;
+
+	// split command line arguments
+	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
+	for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
+
+	HexAnswer* result = new HexAnswer();
+	BaseASPSolver* solver = proc.createSolver();
+	solver->solve(prog, facts, *result);
+
+	return result;
+}
+
+HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
+	assert(call.getType() == HexCall::HexFile);
+
+	// split filenames
+	std::vector<std::string> filenamesSplit = splitArguments(call.getProgram());
+
+	// solve hex program
+	DLVHexProcess proc(filenamesSplit);
+	Program prog;
+	AtomSet facts;
+
+	// split command line arguments
+	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
+	for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
+
+	HexAnswer* result = new HexAnswer();
+	BaseASPSolver* solver = proc.createSolver();
+	solver->solve(prog, facts, *result);
+
+	return result;
+}
+
+HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){
+	assert(call.getType() == HexCall::OperatorCall);
+
+	HexAnswer opanswer;
+
+	// make a list of pointers to all answers passed to this operator
+	std::vector<int> answerIndices = call.getAsParams();
+	std::vector<HexAnswer*> answers;
+	for (std::vector<int>::iterator it = answerIndices.begin(); it != answerIndices.end(); ++it){
+		// prevent the used cache entries from being removed
+		locks[*it]++;
+		if (cache[*it].second == NULL) load(*it);
+		answers.push_back(cache[*it].second);
+	}
+	OperatorArguments oa = call.getKvParams();
+
+	// Finally call the operator
+	opanswer = call.getOperator()->apply(!call.getSilent() && call.getDebug(), (int)call.getAsParams().size(), answers, oa);
+
+	for (std::vector<int>::iterator it = answerIndices.begin(); it != answerIndices.end(); ++it){
+		assert(locks[*it] > 0);
+		locks[*it]--;
+	}
+
+	return new HexAnswer(opanswer);
+}
+
+void HexAnswerCache::load(const int index){
+	assert(index >=0 && index < size());
+
+	// this method must only be called for elements that are currently not in the cache
+	assert(cache[index].second == NULL);
+
+	// check type of the cache entry
+	HexAnswer* result;
+	switch(cache[index].first.getType()){
+		case HexCall::HexProgram:
+			result = loadHexProgram(cache[index].first);
+			break;
+		case HexCall::HexFile:
+			result = loadHexFile(cache[index].first);
+			break;
+		case HexCall::OperatorCall:
+			result = loadOperatorCall(cache[index].first);
+			break;
+		default:
+			assert(0);
+			break;
+	}
+
+	// store result in the cache
+	cache[index].second = result;
+	elementsInCache++;
+
+	// make sure that the cache does not contain too many items
+	reduceCache();
+}
+
+// resets the last access time for a certain entry to 0 and increments all others
+void HexAnswerCache::access(const int index){
+	assert(index >=0 && index < size());
+
+	// element was accessed, all others were not
+	accessCounter[index] = 0;
+	for (int i = 0; i < cache.size(); i++)
+		if (i != index) accessCounter[i]++;
+}
+
+// removes entries from the cache (if possible) such that no more than maxCacheEntries are contained
+void HexAnswerCache::reduceCache(){
+	// do we restrict the number of cache entries?
+	if (maxCacheEntries < 0) return;
+
+	// try to reduce the number of cache entries such that no more than maxCacheEntries are there
+	while (elementsInCache > maxCacheEntries){
+		// find element with oldes access timestamp
+		int oldesAccessCounter = -1;
+		for (int i = 0; i < cache.size(); i++){
+			if (locks[i] == 0 && cache[i].second != NULL && (accessCounter[i] > oldesAccessCounter || oldesAccessCounter == -1))
+				oldesAccessCounter = i;
+		}
+		if (oldesAccessCounter == -1)	// no element can be outsourced
+			return;
+		else{
+			// remove oldest element
+			delete cache[oldesAccessCounter].second;
+			cache[oldesAccessCounter].second = NULL;
+			accessCounter[oldesAccessCounter] = 0;
+			elementsInCache--;
+		}
+	}
+}
+
+const int HexAnswerCache::operator[](const HexCall call){
+	int index = 0;
+	for (std::vector<HexAnswerCacheEntry>::iterator it = cache.begin(); it != cache.end(); ++it, index++){
+		if (it->first == call){
+			return index;
+		}
+	}
+	// not in cache yet: add it
+	cache.push_back(std::pair<HexCall, HexAnswer*>(call, NULL));
+	accessCounter.push_back(0);
+	locks.push_back(0);
+	load(index);
+	access(index);
+	return index;
+}
+
+HexAnswer* HexAnswerCache::operator[](const int index){
+	assert(index >=0 && index < size());
+
+	// find the entry for this call
+	// check if the result is in the cache
+	if (cache[index].second == NULL){
+		load(index);
+	}
+	access(index);
+	// now it's in the cache for sure
+	return cache[index].second;
+}
+
+const int HexAnswerCache::size(){
+	return cache.size();
+}
