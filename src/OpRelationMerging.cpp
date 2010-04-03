@@ -24,7 +24,25 @@ std::string OpRelationMerging::getInfo(){
 	std::stringstream ss;
 	ss <<	"     relationmerging" << std::endl <<
 		"     ---------------" << std::endl << std::endl <<
-		"This operator is not thought to be used practically since it is buggy and only used for test purposes!" << std::endl;
+		"This operator is not thought to be used practically since it is buggy and only used for test purposes!" << std::endl <<
+		 "A(H1), ..., A(Hn)	... handles to n answers" << std::endl <<
+		 "			    each answer is expected to contain exactly one answer-set with data entries of kind" << std::endl <<
+		 "			    	data(a1,...,an)" << std::endl <<
+		 "			    where ai are the attribute values as well as a schema definition of kind" << std::endl <<
+		 "			    	schema(n1,...,nn)" << std::endl <<
+		 "			    where ni are the attribute names" << std::endl <<
+		 "K(schema, s)		... A list of kind" << std::endl <<
+		 "			    	s = \"a1,...,an\"" << std::endl <<
+		 "			    defines the arity and the attribute names of the merged schema" << std::endl <<
+		 "K(key, s)		... A list of kind" << std::endl <<
+		 "			    	s = \"k1,...,km\"" << std::endl <<
+		 "K(default, d)		... \"d\" is a string of kind \"a=v\" where \"a\" is some attribute and \"v\" some default value" << std::endl <<
+		 "K(rule, r)		... \"r\" is a rule of kind" << std::endl <<
+		 "			    	attribute(merged, PrimaryKey, Value) :- attribute(1, PrimaryKey, V1), ..., attribute(n, PrimaryKey, Vn)" << std::endl <<
+		 "			    in order to overwrite the built-in rule that states that attribute values are copied into the result iff" << std::endl <<
+		 "			    all sources agree upon it's value" << std::endl <<
+		 "			    that defines the key attributes in the merged schema (they must also be contained in each source)" << std::endl <<
+		 "A			... answer to the operator result";
 	return ss.str();
 }
 
@@ -208,7 +226,6 @@ HexAnswer OpRelationMerging::apply(int arity, std::vector<HexAnswer*>& arguments
 	std::vector<std::vector<std::string> > schema_sources;
 	std::map<std::string, std::string> defvalues;
 
-
 	// extract merged schema
 	std::stringstream mergingrules;
 	for (OperatorArguments::iterator arg = parameters.begin(); arg != parameters.end(); ++arg){
@@ -235,7 +252,6 @@ HexAnswer OpRelationMerging::apply(int arity, std::vector<HexAnswer*>& arguments
 	Program program;
 	AtomSet facts;
 	rewriteSources(arguments, key, key_ordered, schema_sources, facts);
-
 
 	// map result onto atoms over predicate "data"
 	resultExtraction(program, key, key_ordered, schema_merged);
@@ -264,7 +280,8 @@ pv.PrintVisitor::visit(&facts);
 		BaseASPSolver* solver = proc.createSolver();
 		solver->solve(program, facts, result);
 //pv.PrintVisitor::visit(&(*(result.begin()));
-		// add schema
+
+		// add schema of final result
 		Tuple t;
 		for (std::vector<std::string>::iterator it = schema_merged.begin(); it != schema_merged.end(); ++it) t.push_back(Term(*it));
 		result.begin()->insert(AtomPtr(new Atom("schema", t)));
