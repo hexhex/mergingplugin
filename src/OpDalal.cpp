@@ -79,6 +79,18 @@ std::string OpDalal::getInfo(){
 	return ss.str();
 }
 
+std::set<std::string> OpDalal::getRecognizedParameters(){
+	std::set<std::string> list;
+	list.insert("constraint");
+	list.insert("constraintfile");
+	list.insert("ignore");
+	list.insert("weights");
+	list.insert("aggregate");
+	list.insert("penalize");
+	list.insert("maxint");
+	return list;
+}
+
 /**
  * Finds an predicate name that was not used yet and appends it to the list of used predicate names
  * \param prefix The desired prefix of the predicate

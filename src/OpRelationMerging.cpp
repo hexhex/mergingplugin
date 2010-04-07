@@ -46,6 +46,15 @@ std::string OpRelationMerging::getInfo(){
 	return ss.str();
 }
 
+std::set<std::string> OpRelationMerging::getRecognizedParameters(){
+	std::set<std::string> list;
+	list.insert("schema");
+	list.insert("key");
+	list.insert("default");
+	list.insert("rule");
+	return list;
+}
+
 // translates sources from
 //	schema(a1,...,an), data(v1,...,vn)
 // into

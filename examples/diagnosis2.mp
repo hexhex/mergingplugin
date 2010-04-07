@@ -27,7 +27,7 @@ args: "--plugindir=../src/.libs/";
 	penalize: "ignoring";
 	penalize: "unfounded";
 	weights: "1,2,1";
-	aggregation:"sum";
+	aggregate:"sum";
 	{juror1};
 	{juror2};
 	{juror3};

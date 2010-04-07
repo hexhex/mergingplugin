@@ -8,7 +8,6 @@ using namespace dlvhex::merging::plugin;
 std::string OpSetminus::getName(){
 	return "setminus";
 }
-
 std::string OpSetminus::getInfo(){
 	std::stringstream ss;
 	ss <<	"     setminus" << std::endl <<
@@ -17,6 +16,12 @@ std::string OpSetminus::getInfo(){
 		"Computes the pairwise difference of answer-sets of the first argument minus the second one.";
 	return ss.str();
 }
+
+std::set<std::string> OpSetminus::getRecognizedParameters(){
+	std::set<std::string> list;
+	return list;
+}
+
 
 HexAnswer OpSetminus::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
 	if (arity != 2){

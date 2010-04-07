@@ -283,6 +283,20 @@ HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){
 	}
 	OperatorArguments oa = call.getKvParams();
 
+	// check if all passed parameters are actually expected by the operator
+	bool provided = false;
+	try{
+		std::set<std::string> params = call.getOperator()->getRecognizedParameters();
+		provided = true;
+		for (OperatorArguments::iterator it = oa.begin(); it != oa.end(); ++it){
+			if (params.find(it->first) == params.end()) throw IOperator::OperatorException(std::string("Parameter \"") + it->first + std::string("\" is not recognized by this operator."));
+		}
+	}catch(...){
+		if (provided == true){
+			throw;
+		}
+	}
+
 	// Finally call the operator
 	opanswer = call.getOperator()->apply(!call.getSilent() && call.getDebug(), (int)call.getAsParams().size(), answers, oa);
 

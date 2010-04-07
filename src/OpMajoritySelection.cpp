@@ -22,6 +22,12 @@ std::string OpMajoritySelection::getInfo(){
 	return ss.str();
 }
 
+std::set<std::string> OpMajoritySelection::getRecognizedParameters(){
+	std::set<std::string> list;
+	list.insert("majorityOf");
+	return list;
+}
+
 HexAnswer OpMajoritySelection::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
 	if (arity != 1){
 		throw IOperator::OperatorException("Error: The majorityselection operator expects exactly 1 argument.");

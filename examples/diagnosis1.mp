@@ -26,7 +26,7 @@ args: "--plugindir=../src/.libs/";
 	constraintfile: "fault.obs";
 	penalize: "ignoring";
 	maxint: "3";
-	aggregation:"sum";
+	aggregate:"sum";
 	{juror1};
 	{juror2};
 	{juror3};

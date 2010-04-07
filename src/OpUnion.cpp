@@ -18,6 +18,11 @@ std::string OpUnion::getInfo(){
 	return ss.str();
 }
 
+std::set<std::string> OpUnion::getRecognizedParameters(){
+	std::set<std::string> list;
+	return list;
+}
+
 HexAnswer OpUnion::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
 	if (arity != 2){
 		throw IOperator::OperatorException("Error: The union operator expects exactly 2 arguments.");

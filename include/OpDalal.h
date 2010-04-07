@@ -89,6 +89,7 @@ std::string findUniqueAtomName(const std::string prefix, std::set<std::string>& 
 			public:
 				virtual std::string getName();
 				virtual std::string getInfo();
+				virtual std::set<std::string> getRecognizedParameters();
 				virtual HexAnswer apply(bool debug, int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) throw (OperatorException);
 			};
 		}
