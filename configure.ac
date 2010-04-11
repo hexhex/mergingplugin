@@ -1,6 +1,6 @@
 AC_PREREQ(2.64)
 
-AC_INIT([dlvhex-mergingplugin],[0.9.0],[christoph.redl@tuwien.ac.at])
+AC_INIT([dlvhex-mergingplugin],[1.0.0],[christoph.redl@tuwien.ac.at])
 
 AC_CONFIG_SRCDIR([src/MergingPlugin.cpp])
 AC_CONFIG_MACRO_DIR([m4])

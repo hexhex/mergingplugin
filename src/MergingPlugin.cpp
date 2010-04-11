@@ -405,8 +405,8 @@ dlvhex::merging::plugin::MergingPlugin*
 PLUGINIMPORTFUNCTION()
 {
   dlvhex::merging::plugin::theMergingPlugin.setPluginName("dlvhex-mergingplugin");
-  dlvhex::merging::plugin::theMergingPlugin.setVersion(	0,
-							9,
+  dlvhex::merging::plugin::theMergingPlugin.setVersion(	1,
+							0,
 							0);
   return &dlvhex::merging::plugin::theMergingPlugin;
 }
