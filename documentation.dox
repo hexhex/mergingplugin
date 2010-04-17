@@ -264,6 +264,14 @@ preds(Pred)              :- output(H), \&answersets[H](AS), \&predicates[H, AS](
 			specifies an <i>input rewriter</i>. This can be an arbitrary tool that reads from standard input and writes to standard output. The complete dlvhex input will be
 			directed through this program before reasoning starts.
 
+		<h2><i>--operatorinfo</i> or <i>--opinfo</i></h2>
+
+			The syntax
+			<div align="center">
+				<i>--operatorinfo=OPERATOR_NAME</i> or <i>--opinfo=OPERATOR_NAME</i>
+			</div>
+			prints some online help message for a certain operator, if available. Example: <i>--opinfo=union</i>
+	
 
 @defgroup rpcompiler The rpcompiler
 
@@ -273,7 +281,7 @@ Translates merging plans into semantically equivalent HEX programs
 	
 		The merging plan compiler is installed as part of the mergingplugin. It can be called in command line by entering:
 		<div align="center">
-			<i>rpcompiler</i>
+			<i>mpcompiler</i>
 		</div>
 		with appropriate parameters.
 
@@ -282,7 +290,7 @@ Translates merging plans into semantically equivalent HEX programs
 
 		<h2>Options</h2>
 
-			The command line options are:
+			The command-line options are:
 			<ul>
 				<li> <i>-parsetree</i> <br/>
 						Generates a parse tree rather than dlvhex code (mostly for debug tasks).
@@ -350,7 +358,7 @@ mapping: "headJ :- bodyJ."
 
 			<h2>Belief Bases</h2>
 			
-				Belief bases can be any data source: relational databases, XML files, etc.. The only requirement is that they are accessable from dlvhex through an
+				Belief bases can be any data source: relational databases, XML files, etc.. The only requirement is that they are accessible from dlvhex through an
 				appropriate external atom. Belief bases are defined by blocks of form:
 				<pre>
 [belief base]
@@ -359,7 +367,7 @@ mapping: "head1 :- body1.";
 ...
 mapping: "headM :- bodyM.";
 				</pre>
-				where the <i>name</i> defines a legal name for this belief base, followed by an arbitrary number of <i>mappings</i>. Mappings can essentially be arbitrary \dlvhex
+				where the <i>name</i> defines a legal name for this belief base, followed by an arbitrary number of <i>mappings</i>. Mappings can essentially be arbitrary dlvhex
 				code fragments. However, in reasonable applications they access the underlying (prorietary) belief base and map their content onto the common signature (see above).
 				
 				Alternatively they can also be defined by
@@ -369,7 +377,7 @@ name: nameOfBeliefBase1;
 source: "externalfile.hex";
 				</pre>
 				where &quot;externalfile.hex&quot; is an external file containing (computation source access rules and) mapping rules. Note that <i>mapping</i> and <i>source</i>
-				cannot be used simultanously.
+				cannot be used simultaneously.
 				
 			<h2>Merging Plan</h2>
 			
@@ -392,7 +400,7 @@ source: ...;
 				\htmlonly
 				<table>
 					<tr><td colspan="3"><b>Lexer</b></td></tr>
-					<tr><td>Literal</td><td>=&gt;</td><td>    <u>-</u>?&Sigma;p(<u>(</u>(&Sigma;c|&Sigma;v)(<u>,<&u>&Sigma;c|&Sigma;v)*<u>)</u>)?           </td></tr>
+					<tr><td>Literal</td><td>=&gt;</td><td>    <u>-</u>?&Sigma;p(<u>(</u>(&Sigma;c|&Sigma;v)(<u>,</u>&Sigma;c|&Sigma;v)*<u>)</u>)?           </td></tr>
 					<tr><td>PredicateName</td><td>=&gt;</td><td> [<u>a</u>-<u>z</u>] ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*              </td></tr>
 					<tr><td>KBName</td><td>=&gt;</td><td>     ([<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]) ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*          </td></tr>
 					<tr><td>OPName</td><td>=&gt;</td><td>       ([<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]) ( [<u>a</u>-<u>z</u>]|[<u>A</u>-<u>Z</u>]|[<u>0</u>-<u>9</u>])*        </td></tr>
@@ -406,7 +414,7 @@ source: ...;
 					<tr><td>RuleHead</td><td>=&gt;</td><td>   Literal (<u>v</u> Literal)*            </td></tr>
 					<tr><td>RuleBody</td><td>=&gt;</td><td>      Query         </td></tr>
 
-					<tr><td colspan="§><b>Merging Plan Specific Grammer</b></td></trd>
+					<tr><td colspan="3"><b>Merging Plan Specific Grammer</b></td></trd>
 					<tr><td>Program</td><td>=&gt;</td><td>  CommonSigDef Mappings MergingPlan             </td></tr>
 					<tr><td>CommonSigDef</td><td>=&gt;</td><td>    <u>[common signature]</u> PredicateDefinition*           </td></tr>
 					<tr><td>Mappings</td><td>=&gt;</td><td>     KnowledgeBase*          </td></tr>
