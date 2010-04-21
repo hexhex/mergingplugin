@@ -268,5 +268,7 @@ void SpiritParser::parse(){
 		tree_parse_info<> info = pt_parse(input.c_str(), grammer, space_p);
 		if (parseTree) delete parseTree;
 		parseTree = createParseTree(info.trees[0], 0);
+
+		wasParsed = true;
 	}
 }

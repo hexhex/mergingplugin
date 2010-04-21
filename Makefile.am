@@ -4,10 +4,10 @@ ACLOCAL_AMFLAGS = -I m4
 include doxygen.am
 
 SUBDIRS = \
+	  mpcompiler/ \
           include/ \
           src/ \
-          examples/ \
-	  mpcompiler/
+          examples/
 
 EXTRA_DIST = doxygen.am doxygen.cfg documentation.dox
 

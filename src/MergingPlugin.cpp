@@ -9,6 +9,9 @@
 #include <HexExecution.h>
 #include <Operators.h>
 #include <ArbProcess.h>
+#include <SpiritParser.h>
+#include <ParseTreeNode.h>
+#include <CodeGenerator.h>
 
 #include "dlvhex/globals.h"
 
@@ -61,6 +64,59 @@ namespace dlvhex {
 						throw PluginError(std::string("Error from rewriter \"") + command + std::string("\""));
 					}
 
+				}
+			};
+
+			class MPCompiler : public PluginConverter
+			{
+			private:
+				bool dumpmp;
+			public:
+				MPCompiler(bool dump) : dumpmp(dump){}
+
+				virtual void
+				convert(std::istream& i, std::ostream& o)
+				{
+					std::string line;
+					std::stringstream ss;
+					while(getline(i, line)) {
+						ss << line << std::endl;
+					}
+
+					dlvhex::merging::tools::mpcompiler::SpiritParser parserInst(ss.str());
+
+					// Try to parse the input
+					// Note: This call has the side effect that stdin is read up to eof
+					parserInst.parse();
+
+					// If it was successful, generate output code
+					// otherwise display an error message
+					if (parserInst.succeeded()){
+						// Retrieve parse tree
+						dlvhex::merging::tools::mpcompiler::ParseTreeNode* parseTree = parserInst.getParseTree();
+
+						// GenerateCode
+						// On success, write the code to std::cout and "errors" (in this case warnings) to std::cerr
+						dlvhex::merging::tools::mpcompiler::CodeGenerator cginst(parseTree);
+						cginst.generateCode(dumpmp ? std::cout : o, std::cerr);
+
+						if (!cginst.succeeded()){
+							// Code generation failed
+							std::cerr << "Code generation finished with errors:" << std::endl;
+							std::cerr << "   " << cginst.getErrorCount() << " error" << (cginst.getErrorCount() == 0 || cginst.getErrorCount() > 1 ? "s" : "") << ", " << cginst.getWarningCount() << " warning" << (cginst.getWarningCount() == 0 || cginst.getWarningCount() > 1 ? "s" : "") << std::endl;
+							delete parseTree;
+							throw PluginError("Merging plan compilation failed");
+						}
+
+						delete parseTree;
+					}else{
+						std::cerr << "Parsing finished with errors:" << std::endl;
+						std::cerr << "   " << parserInst.getErrorCount() << " error" << (parserInst.getErrorCount() == 0 || parserInst.getErrorCount() > 1 ? "s" : "") << ", " << parserInst.getWarningCount() << " warning" << (parserInst.getWarningCount() == 0 || parserInst.getWarningCount() > 1 ? "s" : "") << std::endl;
+						throw PluginError("Merging plan parsing failed");
+					}
+
+					// send inconsistent program to avoid answer set output
+					if (dumpmp) o << "p :- not p.";
 				}
 			};
 
@@ -134,8 +190,7 @@ namespace dlvhex {
 				std::vector<std::string> searchpaths;
 
 				// Strings containing the paths and/or program names of input and output rewriters
-				Rewriter *inputrewriter;
-				Rewriter *outputrewriter;
+				PluginConverter *inputrewriter;
 
 				std::string removeQuotes(std::string arg){
 					if (arg[0] == '\"' && arg[arg.length() - 1] == '\"'){
@@ -153,7 +208,6 @@ namespace dlvhex {
 					arguments_atom = NULL;
 					operator_atom = NULL;
 					inputrewriter = NULL;
-					outputrewriter = NULL;
 
 					// Create external atoms
 					hex_atom = new HexAtom(resultsetCache);
@@ -173,7 +227,6 @@ namespace dlvhex {
 					if (arguments_atom) delete arguments_atom;
 					if (operator_atom) delete operator_atom;
 					if (inputrewriter) delete inputrewriter;
-					if (outputrewriter) delete outputrewriter;
 				}
 
 				virtual PluginConverter*
@@ -249,8 +302,21 @@ namespace dlvhex {
 							// input rewriters
 							if (	it->substr(0, std::string("--inputrewriter=").size()) == std::string("--inputrewriter=") ||
 								it->substr(0, std::string("--irw=").size()) == std::string("--irw=")){
-								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
+								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv and --merging counts as rewriter)");
 								inputrewriter = new Rewriter(removeQuotes(it->substr(it->find_first_of('=', 0) + 1)));
+								// Argument was processed
+								argv.erase(it);
+								argFound = true;
+								break;
+							}
+
+							// merging plans
+							if (	it->substr(0, std::string("--merging").size()) == std::string("--merging")){
+								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv and --merging counts as rewriter)");							if (it->substr(0, std::string("--mergingdump").size()) == std::string("--mergingdump")){
+									inputrewriter = new MPCompiler(true);
+								}else{
+									inputrewriter = new MPCompiler(false);
+								}
 								// Argument was processed
 								argv.erase(it);
 								argFound = true;
@@ -276,7 +342,7 @@ namespace dlvhex {
 								}else{
 									dlvargs = "--";
 								}
-								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv counts as rewriter)");
+								if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv and --merging counts as rewriter)");
 								inputrewriter = new DLV(dlvargs);
 
 								// Argument was processed
@@ -374,6 +440,9 @@ namespace dlvhex {
 							<< "                          is actually executed (however, cat has no effect of" << std::endl
 							<< "                          course, since it just echos the standard input)" << std::endl
 							<< " or        --irw" << std::endl
+							<< " --merging       Treats the dlvhex input as merging plan" << std::endl
+							<< " --mergingdump   Treats the dlvhex input as merging plan; dumps the translated merging plan" << std::endl
+							<< "                 to standard output" << std::endl
 							<< " --dlv=argv      Executes the input using dlv rather than dlvhex. argv are the" << std::endl
 							<< "                 arguments that are passed to dlv." << std::endl
 							<< " --operatorinfo  Shows additional information about the specified operator" << std::endl

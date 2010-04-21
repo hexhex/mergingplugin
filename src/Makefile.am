@@ -10,13 +10,14 @@ plugin_LTLIBRARIES = libdlvhexmerging.la
 # add all sources of your plugin
 #
 libdlvhexmerging_la_SOURCES = MergingPlugin.cpp DLVHexProcess.cpp HexExecution.cpp Operators.cpp HexAnswerCache.cpp OpUnion.cpp OpSetminus.cpp OpDalal.cpp OpMajoritySelection.cpp OpRelationMerging.cpp
-libdlvhexmerging_la_LIBADD = $(CRYPTLIB)
+libdlvhexmerging_la_LIBADD = $(CRYPTLIB) $(top_srcdir)/mpcompiler/src/libmpcompiler.la
 
 #
 # extend compiler flags by CFLAGS of other needed libraries
 #
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/mpcompiler/include \
 	$(BOOST_CPPFLAGS) \
 	$(DLVHEX_CFLAGS) \
 	$(CRYPTLIB_CFLAGS)
