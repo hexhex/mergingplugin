@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS = gnu
-
 noinst_HEADERS = DLVHexProcess.h \
 		 ArbProcess.h \
 		 HexExecution.h \
@@ -14,5 +12,5 @@ noinst_HEADERS = DLVHexProcess.h \
 		 OpRelationMerging.h
 
 pkginclude_HEADERS = \
- 	PublicTypes.h \
+	PublicTypes.h \
 	IOperator.h

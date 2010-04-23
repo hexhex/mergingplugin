@@ -1,0 +1,5 @@
+2010-04-23  Thomas Krennwallner  <tkren@kr.tuwien.ac.at>
+
+	* src/Makefile.am (AUTOMAKE_OPTIONS): Remove.
+	* include/Makefile.am: Likewise.
+

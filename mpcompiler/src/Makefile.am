@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS = gnu
-
 bin_PROGRAMS = mpcompiler
 mpcompiler_CXXFLAGS = $(AM_CFLAGS)
 mpcompiler_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h ParseTreeNode.cpp ParseTreeNodeIterator.cpp SpiritParser.cpp IParser.cpp CodeGenerator.cpp CompilerMain.cpp

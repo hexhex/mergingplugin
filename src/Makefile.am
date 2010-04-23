@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS = gnu
-
 #
 # replace 'plugin' on the right side by your plugin's name
 #
