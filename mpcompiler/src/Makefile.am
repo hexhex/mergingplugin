@@ -9,7 +9,8 @@ BUILT_SOURCES = BisonParserImpl.h
 
 AM_YFLAGS = -d
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/mpcompiler/include
+	-I$(top_srcdir)/mpcompiler/include \
+  $(BOOST_CPPFLAGS)
 
 libmpcompiler_la_LDFLAGS = -avoid-version -module
 
