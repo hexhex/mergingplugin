@@ -584,7 +584,6 @@ function compare {
 				"mp/as")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						$MPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1
-cp $TMPFILE_AS1 ~/Desktop/out.txt
 						let rv=rv+$?
 						cp $2 $TMPFILE_AS2
 						extension="as"
