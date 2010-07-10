@@ -1,4 +1,3 @@
-
 //
 // this include is necessary
 //
@@ -141,10 +140,11 @@ namespace dlvhex {
 
 					// strip off dlv's meta output concerning cost and diagnosis (since this is not valid dlvhex output format)
 					std::string dlv = dlvoutput.str();
+
 					while (dlv.length() > 0){
 						if (dlv[0] == '{'){
 							// print everything until '}'
-							std::cout << dlv.substr(0, dlv.find_first_of("}") + 1) << std::endl;;
+							std::cout << dlv.substr(0, dlv.find_first_of("}") + 1) << std::endl;
 							dlv = dlv.substr(dlv.find_first_of("}") + 1);
 						}else{
 							std::string diag("Diagnosis: ");
@@ -165,6 +165,7 @@ namespace dlvhex {
 					o << ":- not a.";
 				}
 			};
+
 
 			//
 			// A plugin must derive from PluginInterface
@@ -464,7 +465,6 @@ namespace dlvhex {
 	} // namespace merging
 } // namespace dlvhex
 
-#include "OpUnion.h"
 
 //
 // and let it be loaded by dlvhex!

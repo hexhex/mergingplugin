@@ -7,6 +7,7 @@
 #include <dlvhex/Registry.h>
 #include <dlvhex/HexParserDriver.h>
 
+#include <sstream>
 #include <set>
 
 #include <boost/algorithm/string.hpp>
@@ -105,6 +106,7 @@ void rewriteSource(int source, std::vector<HexAnswer*>& arguments, std::set<std:
 		}
 		facts.insert(AtomPtr(new Atom("individuals", args)));
 	}
+
 }
 
 // translates sources from
@@ -144,6 +146,7 @@ void rewriteSources(std::vector<HexAnswer*>& arguments, std::set<std::string>& k
 // into single atoms of kind
 //	data(v1,...,vn)
 void resultExtraction(Program& program, std::set<std::string>& key, std::vector<std::string>& key_ordered, std::vector<std::string>& schema_merged){
+
 	AtomSet facts; // empty
 
 	std::stringstream assembling;
@@ -227,6 +230,7 @@ void writeDefaultMappings(Program& program, int arity, std::vector<std::string>&
 	}
 }
 
+
 HexAnswer OpRelationMerging::apply(int arity, std::vector<HexAnswer*>& arguments, OperatorArguments& parameters) throw (OperatorException){
 
 	std::set<std::string> key;
@@ -274,21 +278,12 @@ HexAnswer OpRelationMerging::apply(int arity, std::vector<HexAnswer*>& arguments
 	// write default mappings
 	writeDefaultMappings(program, arity, key_ordered, schema_merged, defvalues);
 
-
-/*
-DLVPrintVisitor pv(std::cout);
-std::cout << "!Prog!";
-pv.PrintVisitor::visit(&program);
-pv.PrintVisitor::visit(&facts);
-*/
-
 	// execute subprogram
 	try{
 		HexAnswer result;
-		DLVProcess proc;
-		BaseASPSolver* solver = proc.createSolver();
-		solver->solve(program, facts, result);
-//pv.PrintVisitor::visit(&(*(result.begin()));
+		ASPSolverManager& solver = ASPSolverManager::Instance();
+		ASPSolverManager::DLVTypeSoftware::Options opt;
+		solver.solve<ASPSolverManager::DLVSoftware>(program, facts, result, opt);
 
 		// add schema of final result
 		Tuple t;

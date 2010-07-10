@@ -48,6 +48,7 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 	}
 }
 
+
 OperatorAtom::~OperatorAtom()
 {
 }
@@ -200,6 +201,7 @@ void OperatorAtom::addOperators(std::string lib){
 }
 
 IOperator* OperatorAtom::getOperator(std::string opname){
+
 	// Search for the oprator
 	std::map<std::string, IOperator*>::const_iterator itOp = operators.find(opname);
 	if (itOp != operators.end()){

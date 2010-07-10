@@ -2,6 +2,7 @@
 
 #include <HexExecution.h>
 #include <DLVHexProcess.h>
+#include <DlvhexSolver.h>
 
 using namespace dlvhex;
 using namespace merging;
@@ -232,15 +233,16 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	hpd.parse(ss, prog, facts);
 
 	// solve hex program
-	DLVHexProcess proc;
-
 	// split command line arguments
+	DlvhexSolver::Options options;
 	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
-	for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
+	for (int i = 0; i < cmdargsSplit.size(); i++){
+		options.arguments.push_back(cmdargsSplit[i]);
+	}
 
 	HexAnswer* result = new HexAnswer();
-	BaseASPSolver* solver = proc.createSolver();
-	solver->solve(prog, facts, *result);
+	ASPSolverManager& solver = ASPSolverManager::Instance();
+	solver.solve<DlvhexSolver>(prog, facts, *result, options);
 
 	return result;
 }
@@ -248,21 +250,22 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	assert(call.getType() == HexCall::HexFile);
 
-	// split filenames
-	std::vector<std::string> filenamesSplit = splitArguments(call.getProgram());
+	DlvhexSolver::Options options;
 
-	// solve hex program
-	DLVHexProcess proc(filenamesSplit);
-	Program prog;
-	AtomSet facts;
+	// split filenames
+	std::string filename = call.getProgram();
 
 	// split command line arguments
 	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
-	for (int i = 0; i < cmdargsSplit.size(); i++) proc.addOption(cmdargsSplit[i]);
+	for (int i = 0; i < cmdargsSplit.size(); i++){
+		options.arguments.push_back(cmdargsSplit[i]);
+	}
+
+	// solve hex program
 
 	HexAnswer* result = new HexAnswer();
-	BaseASPSolver* solver = proc.createSolver();
-	solver->solve(prog, facts, *result);
+	ASPSolverManager& solver = ASPSolverManager::Instance();
+	solver.solveFile<DlvhexSolver>(filename, *result, options);
 
 	return result;
 }

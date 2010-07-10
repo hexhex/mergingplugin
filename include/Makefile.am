@@ -1,4 +1,5 @@
 noinst_HEADERS = DLVHexProcess.h \
+		 DlvhexSolver.h \
 		 ArbProcess.h \
 		 HexExecution.h \
 		 Operators.h \

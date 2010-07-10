@@ -30,7 +30,8 @@ namespace dlvhex {
 			{
 			private:
 				bool silent, debug;
-				HexAnswerCache &resultsetCache;
+				HexAnswerCache& resultsetCache;
+
 				std::map<std::string, IOperator*> operators;
 
 				OpUnion _union;
@@ -41,7 +42,6 @@ namespace dlvhex {
 
 				void registerBuiltInOperators();
 			public:
-
 				OperatorAtom(HexAnswerCache &rsCache);
 				virtual ~OperatorAtom();
 				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);

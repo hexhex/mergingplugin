@@ -759,15 +759,14 @@ pv.PrintVisitor::visit(&facts);
 
 	// build the resulting program and execute it
 	try{
-		DLVProcess proc;
+		ASPSolverManager& solver = ASPSolverManager::Instance();
+		ASPSolverManager::DLVTypeSoftware::Options opt;
 		std::stringstream maxint_str;
 		maxint_str << "-N=" << maxint;
-		proc.addOption(maxint_str.str());
-//std::cerr << filter;
-		proc.addOption("-filter=" + filter);
-		BaseASPSolver* solver =  new ASPSolver<DLVPrintVisitor, DLVresultParserDriver>(proc);	// make sure that the result is parsed by DLVresultParserDriver even if we run in HO-mode
+		opt.arguments.push_back(maxint_str.str());
+		opt.arguments.push_back(std::string("-filter=") + filter);
 		std::vector<AtomSet> result;
-		solver->solve(program, facts, result);
+		solver.solve<ASPSolverManager::DLVSoftware>(program, facts, result, opt);
 
 		// finally, keep only the answer-sets with minimal costs
 		optimize(result, optAtom);
