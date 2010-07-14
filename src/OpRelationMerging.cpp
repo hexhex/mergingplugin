@@ -282,8 +282,9 @@ HexAnswer OpRelationMerging::apply(int arity, std::vector<HexAnswer*>& arguments
 	try{
 		HexAnswer result;
 		ASPSolverManager& solver = ASPSolverManager::Instance();
-		ASPSolverManager::DLVTypeSoftware::Options opt;
-		solver.solve<ASPSolverManager::DLVSoftware>(program, facts, result, opt);
+    typedef ASPSolverManager::SoftwareConfiguration<ASPSolver::DLVSoftware> DLVConfiguration;
+    DLVConfiguration dlv;
+		solver.solve(dlv, program, facts, result);
 
 		// add schema of final result
 		Tuple t;

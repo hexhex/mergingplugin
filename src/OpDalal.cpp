@@ -2,6 +2,7 @@
 
 #include <dlvhex/AggregateAtom.h>
 #include <dlvhex/DLVProcess.h>
+#include <dlvhex/ASPSolverManager.h>
 #include <dlvhex/ASPSolver.h>
 #include <dlvhex/Registry.h>
 #include <dlvhex/HexParserDriver.h>
@@ -760,13 +761,14 @@ pv.PrintVisitor::visit(&facts);
 	// build the resulting program and execute it
 	try{
 		ASPSolverManager& solver = ASPSolverManager::Instance();
-		ASPSolverManager::DLVTypeSoftware::Options opt;
+    typedef ASPSolverManager::SoftwareConfiguration<ASPSolver::DLVSoftware> DLVConfiguration;
+    DLVConfiguration dlv;
 		std::stringstream maxint_str;
 		maxint_str << "-N=" << maxint;
-		opt.arguments.push_back(maxint_str.str());
-		opt.arguments.push_back(std::string("-filter=") + filter);
+		dlv.options.arguments.push_back(maxint_str.str());
+		dlv.options.arguments.push_back(std::string("-filter=") + filter);
 		std::vector<AtomSet> result;
-		solver.solve<ASPSolverManager::DLVSoftware>(program, facts, result, opt);
+		solver.solve(dlv, program, facts, result);
 
 		// finally, keep only the answer-sets with minimal costs
 		optimize(result, optAtom);
@@ -778,7 +780,8 @@ for (int i = 0; i < result.size(); i++) pv.PrintVisitor::visit(&result[i]);
 */
 
 		// restore original setting of NoPredicate
-		Globals::Instance()->setOption("NoPredicate", noPred);
+    // @todo this "NoPredicate" is no longer in use, higher order is configured in *Software::Options
+		Globals::Instance()->setOption("NoPredicte", noPred);
 
 		return result;
 	}catch(...){

@@ -225,6 +225,9 @@ HexAnswerCache::~HexAnswerCache(){
 HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	assert(call.getType() == HexCall::HexProgram);
 
+  typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
+  DlvhexConfiguration dlvhex;
+
 	// parse and assemble hex program (parameter 0)
 	std::stringstream ss(unquote(call.getProgram()));
 	Program prog;
@@ -233,16 +236,16 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	hpd.parse(ss, prog, facts);
 
 	// solve hex program
+
 	// split command line arguments
-	DlvhexSolver::Options options;
 	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
 	for (int i = 0; i < cmdargsSplit.size(); i++){
-		options.arguments.push_back(cmdargsSplit[i]);
+		dlvhex.options.arguments.push_back(cmdargsSplit[i]);
 	}
 
 	HexAnswer* result = new HexAnswer();
 	ASPSolverManager& solver = ASPSolverManager::Instance();
-	solver.solve<DlvhexSolver>(prog, facts, *result, options);
+	solver.solve(dlvhex, prog, facts, *result);
 
 	return result;
 }
@@ -250,7 +253,8 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	assert(call.getType() == HexCall::HexFile);
 
-	DlvhexSolver::Options options;
+  typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
+  DlvhexConfiguration dlvhex;
 
 	// split filenames
 	std::string filename = call.getProgram();
@@ -258,14 +262,13 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	// split command line arguments
 	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
 	for (int i = 0; i < cmdargsSplit.size(); i++){
-		options.arguments.push_back(cmdargsSplit[i]);
+		dlvhex.options.arguments.push_back(cmdargsSplit[i]);
 	}
 
 	// solve hex program
-
 	HexAnswer* result = new HexAnswer();
 	ASPSolverManager& solver = ASPSolverManager::Instance();
-	solver.solveFile<DlvhexSolver>(filename, *result, options);
+	solver.solveFile(dlvhex, filename, *result);
 
 	return result;
 }

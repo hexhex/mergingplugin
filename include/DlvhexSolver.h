@@ -1,8 +1,9 @@
 #ifndef __DlvhexSolver_h_
 #define __DlvhexSolver_h_
 
-#include <dlvhex/ASPSolver.h>
+#include <dlvhex/ASPSolverManager.h>
 
+#include "dlvhex/Process.h"
 #include "dlvhex/Program.h"
 #include "dlvhex/AtomSet.h"
 #include "dlvhex/DLVresultParserDriver.h"
@@ -78,9 +79,13 @@ struct DlvhexSolver : public ASPSolverManager::SoftwareBase {
 	};
 
 	// inherit base delegate
-	struct Delegate : public ASPSolverManager::DelegateBase<Options> {
+	struct Delegate : public ASPSolverManager::DelegateInterface {
+    typedef DlvhexSolver::Options Options;
+
 		Delegate(const Options& options);
 		virtual ~Delegate();
+
+    Options options;
 		Process* proc;
 
 		void useASTInput(const Program& idb, const AtomSet& edb);

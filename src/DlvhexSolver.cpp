@@ -14,7 +14,7 @@ DlvhexSolver::Options::~Options(){
 	this->GenericOptions::~GenericOptions();
 }
 
-DlvhexSolver::Delegate::Delegate(const Options& opt) : ASPSolverManager::DelegateBase<Options>::DelegateBase(opt) {
+DlvhexSolver::Delegate::Delegate(const Options& opt): options(opt) {
 	proc = new DLVHexProcess();
 
 	for (int i = 0; i < options.arguments.size(); i++)
