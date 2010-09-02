@@ -31,6 +31,7 @@ void OperatorAtom::registerBuiltInOperators(){
 	operators[_union.getName()] = &_union;
 	operators[_setminus.getName()] = &_setminus;
 	operators[_dalal.getName()] = &_dalal;
+	operators[_dbo.getName()] = &_dbo;
 	operators[_majorityselection.getName()] = &_majorityselection;
 	operators[_relationmerging.getName()] = &_relationmerging;
 }

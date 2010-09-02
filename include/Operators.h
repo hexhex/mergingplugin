@@ -10,6 +10,7 @@
 #include "OpUnion.h"
 #include "OpSetminus.h"
 #include "OpDalal.h"
+#include "OpDBO.h"
 #include "OpMajoritySelection.h"
 #include "OpRelationMerging.h"
 
@@ -37,6 +38,7 @@ namespace dlvhex {
 				OpUnion _union;
 				OpSetminus _setminus;
 				OpDalal _dalal;
+				OpDBO _dbo;
 				OpMajoritySelection _majorityselection;
 				OpRelationMerging _relationmerging;
 

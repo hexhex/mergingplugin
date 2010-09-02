@@ -9,6 +9,7 @@ noinst_HEADERS = DLVHexProcess.h \
 		 OpUnion.h \
 		 OpSetminus.h \
 		 OpDalal.h \
+		 OpDBO.h \
 		 OpMajoritySelection.h \
 		 OpRelationMerging.h
 
