@@ -1,5 +1,5 @@
-#ifndef __OPHAMMINGMIN_H_
-#define __OPHAMMINGMIN_H_
+#ifndef __OPDBO_H_
+#define __OPDBO_H_
 
 #include "IOperator.h"
 

@@ -181,7 +181,7 @@ void OpDBO::parseParameters(int arity, OperatorArguments& parameters, std::strin
 			}
 
 		// penalize function
-		}else if (argIt->first == std::string("bsdiatance")){
+		}else if (argIt->first == std::string("bsdistance")){
 			parsePenalize(argIt->second, penalize);
 			penalizeSet = true;
 
