@@ -70,7 +70,7 @@ std::string OpDBO::getInfo(){
 		 "								i.e.\"+,not,1\" and \"-,not-,1\"" << std::endl <<
 		 "				                         \"unfounded\" for penaltizing aggregated beliefs that are not in the individual's" <<
 		 "								i.e. \"not,+,1\" and \"not-,-,1\"" << std::endl <<
-		 "				                         \"aberration\" for penaltizing both ignoring and unfounded beliefs" << std::endl <<
+		 "				                         \"aberration\"/\"dalal\"/\"dal\" for penaltizing both ignoring and unfounded beliefs" << std::endl <<
 		 "								i.e. \"not,+,1\", \"not-,-,1\", \"not,+,1\" and \"not-,-,1\"" << std::endl <<
 		 "" << std::endl <<
 		 "				    Built-In aggregate functions are \"sum\", \"max\"" << std::endl <<
@@ -230,7 +230,7 @@ void OpDBO::parsePenalize(std::string& rule, float penalize[4][4]){
 		// not,+
 		penalize[1][0] = 1;
 	}
-	else if (rule == "aberration"){
+	else if ((rule == "aberration") || (rule == "dalal") || (rule == "dal")){
 		// +,not
 		// -,not-
 		// not,+
