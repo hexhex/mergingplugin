@@ -4,6 +4,8 @@
 #include <DLVHexProcess.h>
 #include <DlvhexSolver.h>
 
+#include <fstream>
+
 using namespace dlvhex;
 using namespace merging;
 using namespace dlvhex::merging::plugin;
@@ -96,10 +98,17 @@ std::string hash(std::string text){
 
 // ---------- HexCall ----------
 
-HexCall::HexCall(CallType ct, std::string prog, std::string args) : type(ct), program(prog), arguments(args), operatorImpl(NULL){
+HexCall::HexCall(CallType ct, std::string prog, std::string args, AtomSet facts) : type(ct), program(prog), arguments(args), operatorImpl(NULL), inputfacts(facts){
 	assert(ct == HexProgram || ct == HexFile);
-	// compute hash value for the program (source or path)
-	hashcode = hash(prog);
+	// compute hash value for the program
+	//// (source or path) and input parameters
+	std::stringstream h;
+	h << prog;
+	//h << std::endl;
+	//for (AtomSet::const_iterator it = inputfacts.begin(); it != inputfacts.end(); ++it){
+	//	h << (*it);
+	//}
+	hashcode = hash(h.str());
 }
 
 HexCall::HexCall(CallType ct, IOperator* op, bool deb, bool sil, std::vector<int> as, OperatorArguments kv) : type(ct), program(""), operatorImpl(op), debug(deb), silent(sil), asParams(as), kvParams(kv){
@@ -112,6 +121,8 @@ const bool HexCall::operator==(const HexCall &other) const{
 		case HexProgram:
 		case HexFile:
 			// Check if the programs (or the program paths) and the command line arguments are equivalent
+			// Programs can never be equivalent if they depend on input facts (since they might have changed)
+			if (hasInputFacts() || other.hasInputFacts()) return false;
 			if (getHashCode() != other.getHashCode() || arguments != other.arguments) return false;
 			return true;
 			break;
@@ -172,6 +183,16 @@ const std::string HexCall::getArguments() const{
 	return arguments;
 }
 
+const AtomSet HexCall::getFacts() const{
+	assert(getType() == HexProgram || getType() == HexFile);
+	return inputfacts;
+}
+
+const bool HexCall::hasInputFacts() const{
+	assert(getType() == HexProgram || getType() == HexFile);
+	return inputfacts.size() != 0;
+}
+
 const std::vector<int> HexCall::getAsParams() const{
 	assert(getType() == OperatorCall);
 	return asParams;
@@ -228,11 +249,11 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
   typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
   DlvhexConfiguration dlvhex;
 
-	// parse and assemble hex program (parameter 0)
+	// parse and assemble hex program (parameter 0) and add input facts
 	std::stringstream ss(unquote(call.getProgram()));
 	Program prog;
-	AtomSet facts;
 	HexParserDriver hpd;
+	AtomSet facts = call.getFacts();
 	hpd.parse(ss, prog, facts);
 
 	// solve hex program
@@ -256,8 +277,21 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
   typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
   DlvhexConfiguration dlvhex;
 
-	// split filenames
+	// load program from file
 	std::string filename = call.getProgram();
+	std::stringstream ss;
+	std::ifstream file(filename.c_str());
+	std::string line;
+	while(!file.eof()){
+		getline(file, line);
+		ss << line;
+	}
+
+	// parse it and add input facts
+	Program prog;
+	HexParserDriver hpd;
+	AtomSet facts = call.getFacts();
+	hpd.parse(ss, prog, facts);
 
 	// split command line arguments
 	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
@@ -268,7 +302,8 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	// solve hex program
 	HexAnswer* result = new HexAnswer();
 	ASPSolverManager& solver = ASPSolverManager::Instance();
-	solver.solveFile(dlvhex, filename, *result);
+//	solver.solveFile(dlvhex, filename, *result);
+	solver.solve(dlvhex, prog, facts, *result);
 
 	return result;
 }

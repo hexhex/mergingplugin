@@ -55,6 +55,51 @@ namespace dlvhex {
 			};
 
 			/**
+			 * This class implements an external atom which is capable of executing a hex program given as string. In contrast to HexAtom, it supports input facts.
+			 * Usage:
+			 * &hex[program, facts, cmdargs](R)
+			 *	program	... string containing a hex program as sourcecode
+			 *	facts	... name of a predicate specifying the input facts in higher-order notation
+			 *	cmdargs	... string of command line arguments passed to dlvhex
+			 *	R	... handle to the answer of the given program
+			 */
+			class CallHexAtom : public PluginAtom
+			{
+			private:
+				HexAnswerCache &resultsetCache;
+
+				std::string salt;	// salt for MD5 hashing
+			public:
+
+				CallHexAtom(HexAnswerCache &rsCache);
+				virtual ~CallHexAtom();
+				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
+			};
+
+			/**
+			 * This class implements an external atom which is capable of executing a hex program stored in a file. In contrast to HexAtom, it supports input facts.
+			 * Usage:
+			 * &hexfile[programpath, cmdargs](R)
+			 *	programpath	... string containing the path to a hex program
+			 *	facts	... name of a predicate specifying the input facts in higher-order notation
+			 *	cmdargs	... string of command line arguments passed to dlvhex
+			 *	R		... handle to the answer of the given program
+			 */
+			class CallHexFileAtom : public PluginAtom
+			{
+			private:
+				HexAnswerCache &resultsetCache;
+
+				std::string salt;	// salt for MD5 hashing
+			public:
+
+				CallHexFileAtom(HexAnswerCache &rsCache);
+
+				virtual ~CallHexFileAtom();
+				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
+			};
+
+			/**
 			 * This class implements an external atom which can be used to access the answer sets of a hex program or hex file executed before.
 			 * Usage:
 			 * &answersets[R](AS)

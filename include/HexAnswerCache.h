@@ -29,6 +29,7 @@ namespace dlvhex{
 				CallType type;
 				std::string program;
 				std::string arguments;
+				AtomSet inputfacts;
 				std::string hashcode;
 
 				std::vector<int> asParams;
@@ -37,13 +38,15 @@ namespace dlvhex{
 				bool debug;
 				bool silent;
 			public:
-				HexCall(CallType ct, std::string prog, std::string args);
+				HexCall(CallType ct, std::string prog, std::string args, AtomSet facts);
 				HexCall(CallType ct, IOperator* op, bool debug, bool silent, std::vector<int> as, OperatorArguments kv);
 				const bool operator==(const HexCall &other) const;
 
 				const CallType getType() const;
 				const std::string getProgram() const;
 				const std::string getArguments() const;
+				const AtomSet getFacts() const;
+				const bool hasInputFacts() const;
 				const std::vector<int> getAsParams() const;
 				const OperatorArguments getKvParams() const;
 				IOperator* getOperator() const;
@@ -83,6 +86,16 @@ namespace dlvhex{
 			/*! \fn const std::string HexCall::getArguments() const
 			 * \brief Returns the command line arguments for the program (only use this method for calls of type HexProgram or HexFile!)
 			 * \param std::string The command line arguments
+			 */
+
+			/*! \fn const AtomSet HexCall::getFacts() const
+			 * \brief Returns the facts passed to the called program.
+			 * \param AtomSet Set of facts
+			 */
+
+			/*! \fn const bool HexCall::hasInputFacts() const
+			 * \brief Returns true if the call passes at least one input fact to the subprogram.
+			 * \param bool True if the call passes at least one input fact to the subprogram, otherwise false
 			 */
 
 			/*! \fn const std::vector<int> HexCall::getAsParams() const

@@ -59,7 +59,7 @@ do
 	export DLVHEXPARAMETERS
 
 	# compare with reference output
-	if $CMPSCRIPT $INPUT $REFOUTPUT > /dev/null
+	if $CMPSCRIPT $INPUT $REFOUTPUT &> /dev/null
 	then
 		echo "PASS: $INPUT"
 	else

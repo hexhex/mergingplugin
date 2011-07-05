@@ -11,7 +11,7 @@ using namespace dlvhex::merging::plugin;
 HexAtom::HexAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 {
 	addInputConstant();	// program
-	addInputConstant();	// command line arguments
+	addInputTuple();	// command line arguments (optional)
 	setOutputArity(1);	// list of answer-set handles
 }
 
@@ -22,17 +22,23 @@ HexAtom::~HexAtom()
 void
 HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
-	std::string program("");
-	std::string cmdargs("");
+	std::string program;
+	std::string cmdargs;
+	AtomSet inputfacts;
 	try{
+		Tuple params = query.getInputTuple();
+
 		// resolve escape sequences
-		program = query.getInputTuple()[0].getUnquotedString();
+		program = params[0].getUnquotedString();
 
 		// Retrieve command line arguments
-		cmdargs = query.getInputTuple()[1].getUnquotedString();
+		if (params.size() > 1){
+			cmdargs = params[1].getUnquotedString();
+		}
 
 		// Build hex call identifier
-		HexCall hc(HexCall::HexProgram, program, cmdargs);
+		AtomSet inputfacts;
+		HexCall hc(HexCall::HexProgram, program, cmdargs, inputfacts);
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
@@ -51,7 +57,7 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 HexFileAtom::HexFileAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 {
 	addInputConstant();	// program path
-	addInputConstant();	// command line arguments
+	addInputTuple();	// command line arguments (optional)
 	setOutputArity(1);	// list of answer-set handles
 }
 
@@ -62,17 +68,138 @@ HexFileAtom::~HexFileAtom()
 void
 HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
-	std::string programpath("");
-	std::string cmdargs("");
+	std::string programpath;
+	std::string cmdargs;
+	AtomSet inputfacts;
 	try{
+		Tuple params = query.getInputTuple();
+
 		// load program
-		programpath = query.getInputTuple()[0].getUnquotedString();
+		programpath = params[0].getUnquotedString();
 
 		// Retrieve command line arguments
-		cmdargs = query.getInputTuple()[1].getUnquotedString();
+		if (params.size() > 1){
+			cmdargs = params[1].getUnquotedString();
+		}
 
 		// Build hex call identifier
-		HexCall hc(HexCall::HexFile, programpath, cmdargs);
+		HexCall hc(HexCall::HexFile, programpath, cmdargs, inputfacts);
+
+		// request entry from cache (this will automatically add it if it's not contained yet)
+		Tuple out;
+		out.push_back(Term(resultsetCache[hc]));
+		answer.addTuple(out);
+	}catch(...){
+		std::stringstream msg;
+		msg << "Nested Hex program \"" << programpath << "\" failed. Command line arguments were: " << cmdargs;
+		throw PluginError(msg.str());
+	}
+}
+
+
+// -------------------- CallHexAtom --------------------
+
+CallHexAtom::CallHexAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+{
+	addInputConstant();	// program
+	addInputPredicate();	// input facts
+	addInputTuple();	// command line arguments (optional)
+	setOutputArity(1);	// list of answer-set handles
+}
+
+CallHexAtom::~CallHexAtom()
+{
+}
+
+void
+CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
+{
+	std::string program;
+	std::string cmdargs;
+	AtomSet inputfacts;
+	try{
+		Tuple params = query.getInputTuple();
+
+		// resolve escape sequences
+		program = params[0].getUnquotedString();
+
+		// Retrieve command line arguments
+		std::string inputfactspred = params[1].getUnquotedString();
+		AtomSet f;
+		query.getInterpretation().matchPredicate(inputfactspred, f);
+
+		// convert from higher-order notation to first-order notation
+		for (AtomSet::const_iterator it = f.begin(); it != f.end(); ++it){
+			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
+			inputfacts.insert(atom);
+		}
+
+		// Retrieve command line arguments (if specified)
+		if (params.size() > 2){
+			cmdargs = params[2].getUnquotedString();
+		}
+
+		// Build hex call identifier
+		HexCall hc(HexCall::HexProgram, program, cmdargs, inputfacts);
+
+		// request entry from cache (this will automatically add it if it's not contained yet)
+		Tuple out;
+		out.push_back(Term(resultsetCache[hc]));
+		answer.addTuple(out);
+	}catch(...){
+		std::stringstream msg;
+		msg << "Nested Hex program \"" << program << "\" failed. Command line arguments were: " << cmdargs;
+		throw PluginError(msg.str());
+	}
+}
+
+
+// -------------------- CallHexFileAtom --------------------
+
+CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+{
+	addInputConstant();	// program path
+	addInputPredicate();	// predicate with input facts
+	addInputTuple();	// command line arguments (optional)
+	setOutputArity(1);	// list of answer-set handles
+}
+
+CallHexFileAtom::~CallHexFileAtom()
+{
+}
+
+void
+CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
+{
+	std::string programpath;
+	std::string cmdargs;
+	AtomSet inputfacts;
+	try{
+		Tuple params = query.getInputTuple();
+
+		// load program
+		programpath = params[0].getUnquotedString();
+
+		// Retrieve command line arguments
+		std::string inputfactspred = params[1].getUnquotedString();
+
+		// retrieve the facts over the specified predicate and pass them to the subprogram
+		AtomSet f;
+		query.getInterpretation().matchPredicate(inputfactspred, f);
+
+		// convert from higher-order notation to first-order notation
+		for (AtomSet::const_iterator it = f.begin(); it != f.end(); ++it){
+			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
+			inputfacts.insert(atom);
+		}
+
+		// Retrieve command line arguments
+		if (params.size() > 1){
+			cmdargs = params[2].getUnquotedString();
+		}
+
+		// Build hex call identifier
+		HexCall hc(HexCall::HexFile, programpath, cmdargs, inputfacts);
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;

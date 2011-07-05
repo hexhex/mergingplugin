@@ -182,6 +182,8 @@ namespace dlvhex {
 				// External atoms provided by this plugin
 				HexAtom* hex_atom;
 				HexFileAtom* hexfile_atom;
+				CallHexAtom* callhex_atom;
+				CallHexFileAtom* callhexfile_atom;
 				AnswerSetsAtom* as_atom;
 				PredicatesAtom* predicates_atom;
 				ArgumentsAtom* arguments_atom;
@@ -204,6 +206,8 @@ namespace dlvhex {
 				MergingPlugin(){
 					hex_atom = NULL;
 					hexfile_atom = NULL;
+					callhex_atom = NULL;
+					callhexfile_atom = NULL;
 					as_atom = NULL;
 					predicates_atom = NULL;
 					arguments_atom = NULL;
@@ -213,6 +217,8 @@ namespace dlvhex {
 					// Create external atoms
 					hex_atom = new HexAtom(resultsetCache);
 					hexfile_atom = new HexFileAtom(resultsetCache);
+					callhex_atom = new CallHexAtom(resultsetCache);
+					callhexfile_atom = new CallHexFileAtom(resultsetCache);
 					as_atom = new AnswerSetsAtom(resultsetCache);
 					predicates_atom = new PredicatesAtom(resultsetCache);
 					arguments_atom = new ArgumentsAtom(resultsetCache);
@@ -223,6 +229,8 @@ namespace dlvhex {
 				virtual ~MergingPlugin(){
 					if (hexfile_atom) delete hexfile_atom;
 					if (hex_atom) delete hex_atom;
+					if (callhexfile_atom) delete callhexfile_atom;
+					if (callhex_atom) delete callhex_atom;
 					if (as_atom) delete as_atom;
 					if (predicates_atom) delete predicates_atom;
 					if (arguments_atom) delete arguments_atom;
@@ -244,6 +252,8 @@ namespace dlvhex {
 				{
 					boost::shared_ptr<PluginAtom> hex_atom_ptr(hex_atom);
 					boost::shared_ptr<PluginAtom> hexfile_atom_ptr(hexfile_atom);
+					boost::shared_ptr<PluginAtom> callhex_atom_ptr(callhex_atom);
+					boost::shared_ptr<PluginAtom> callhexfile_atom_ptr(callhexfile_atom);
 					boost::shared_ptr<PluginAtom> as_atom_ptr(as_atom);
 					boost::shared_ptr<PluginAtom> predicates_atom_ptr(predicates_atom);
 					boost::shared_ptr<PluginAtom> arguments_atom_ptr(arguments_atom);
@@ -252,6 +262,8 @@ namespace dlvhex {
 					// Register external atoms
 					a["hex"] = hex_atom_ptr;
 					a["hexfile"] = hexfile_atom_ptr;
+					a["callhex"] = callhex_atom_ptr;
+					a["callhexfile"] = callhexfile_atom_ptr;
 					a["answersets"] = as_atom_ptr;
 					a["predicates"] = predicates_atom_ptr;
 					a["arguments"] = arguments_atom_ptr;

@@ -1,3 +1,5 @@
+../callhex1.hex callhex1.as
+../callhexfile1.hex callhexfile1.as
 ../runhex.hex runhex.as
 ../runhexfile.hex runhexfile.as
 ../runhexnested.hex runhexnested.as --filter=preds_of_inner_prog,preds_of_outer_prog

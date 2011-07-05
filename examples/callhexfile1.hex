@@ -1,0 +1,2 @@
+inp(x,a).
+h(Pred, Arity) :- &callhexfile["calledprog.hex",inp,""](P), &answersets[P](A), &predicates[P,A](Pred,Arity).
