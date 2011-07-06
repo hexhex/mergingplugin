@@ -120,10 +120,8 @@ const bool HexCall::operator==(const HexCall &other) const{
 	switch (type){
 		case HexProgram:
 		case HexFile:
-			// Check if the programs (or the program paths) and the command line arguments are equivalent
-			// Programs can never be equivalent if they depend on input facts (since they might have changed)
-			if (hasInputFacts() || other.hasInputFacts()) return false;
-			if (getHashCode() != other.getHashCode() || arguments != other.arguments) return false;
+			// Check if the programs (or the program paths), the command line arguments and the input facts are equivalent
+			if (getHashCode() != other.getHashCode() || arguments != other.getArguments() || inputfacts != other.getFacts()) return false;
 			return true;
 			break;
 
