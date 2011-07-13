@@ -125,12 +125,41 @@ CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 		// Retrieve command line arguments
 		std::string inputfactspred = params[1].getUnquotedString();
+
+/*
+	// Get predicate which specifies the input predicates:
+	AtomSet inputpreds;
+	query.getInterpretation().matchPredicate(inputfactspred, inputpreds);
+	for (AtomSet::const_iterator it = inputpreds.begin(); it != inputpreds.end(); ++it){
+		if (it->getArguments().size() != 1) throw PluginError("Input predicates must be unary");
+		// Read next input predicate name
+		std::string inputpredname = it->getArguments()[0].getUnquotedString();
+		// Read inputs over this predicate name
+		AtomSet facts;
+std::cout << "adding " << inputpredname << std::endl;
+		query.getInterpretation().matchPredicate(inputpredname, facts);
+		// convert from higher-order notation to first-order notation
+		for (AtomSet::const_iterator it = facts.begin(); it != facts.end(); ++it){
+			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
+			inputfacts.insert(atom);
+std::cout << "adding atom over " << inputpredname << std::endl;
+		}
+	}
+*/
+
+		// Read input facts
 		AtomSet f;
 		query.getInterpretation().matchPredicate(inputfactspred, f);
 
 		// convert from higher-order notation to first-order notation
 		for (AtomSet::const_iterator it = f.begin(); it != f.end(); ++it){
-			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
+			Tuple args = it->getArguments();
+			// read arity
+			int arity = it->getArguments()[0].getInt();
+			// delete superfluous parameters
+			args.erase(args.begin(), args.begin() + 1); // arity information
+			args.erase(args.end() - (args.size() - 1 - arity), args.end()); // number of existing args minus number of needed args			
+			AtomPtr atom = AtomPtr(new Atom(args));
 			inputfacts.insert(atom);
 		}
 
@@ -189,7 +218,13 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 
 		// convert from higher-order notation to first-order notation
 		for (AtomSet::const_iterator it = f.begin(); it != f.end(); ++it){
-			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
+			Tuple args = it->getArguments();
+			// read arity
+			int arity = it->getArguments()[0].getInt();
+			// delete superfluous parameters
+			args.erase(args.begin(), args.begin() + 1); // arity information
+			args.erase(args.end() - (args.size() - 1 - arity), args.end()); // number of existing args minus number of needed args			
+			AtomPtr atom = AtomPtr(new Atom(args));
 			inputfacts.insert(atom);
 		}
 

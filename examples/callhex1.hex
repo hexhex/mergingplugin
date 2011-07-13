@@ -1,2 +1,2 @@
-inp(x,a).
+inp(1,x,a).
 h(Pred, Arity) :- &callhex["b. c.",inp,""](P), &answersets[P](A), &predicates[P,A](Pred,Arity).
