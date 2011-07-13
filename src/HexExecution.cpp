@@ -156,6 +156,11 @@ std::cout << "adding atom over " << inputpredname << std::endl;
 			Tuple args = it->getArguments();
 			// read arity
 			int arity = it->getArguments()[0].getInt();
+			if (args.size() < 2) throw PluginError("Specified too few arguments over input predicate \"" + inputfactspred + "\"");
+			std::stringstream ss;
+			ss << "Specified too few arguments for " << arity << "-ary predicate \"" << it->getArguments()[1] << "\"";
+			if (args.size() < arity + 2) throw PluginError(ss.str());
+
 			// delete superfluous parameters
 			args.erase(args.begin(), args.begin() + 1); // arity information
 			args.erase(args.end() - (args.size() - 1 - arity), args.end()); // number of existing args minus number of needed args			
@@ -175,6 +180,8 @@ std::cout << "adding atom over " << inputpredname << std::endl;
 		Tuple out;
 		out.push_back(Term(resultsetCache[hc]));
 		answer.addTuple(out);
+	}catch(PluginError){
+		throw;
 	}catch(...){
 		std::stringstream msg;
 		msg << "Nested Hex program \"" << program << "\" failed. Command line arguments were: " << cmdargs;
@@ -221,6 +228,11 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 			Tuple args = it->getArguments();
 			// read arity
 			int arity = it->getArguments()[0].getInt();
+			if (args.size() < 2) throw PluginError("Specified too few arguments over input predicate \"" + inputfactspred + "\"");
+			std::stringstream ss;
+			ss << "Specified too few arguments for " << arity << "-ary predicate \"" << it->getArguments()[1] << "\"";
+			if (args.size() < arity + 2) throw PluginError(ss.str());
+
 			// delete superfluous parameters
 			args.erase(args.begin(), args.begin() + 1); // arity information
 			args.erase(args.end() - (args.size() - 1 - arity), args.end()); // number of existing args minus number of needed args			
@@ -240,6 +252,8 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 		Tuple out;
 		out.push_back(Term(resultsetCache[hc]));
 		answer.addTuple(out);
+	}catch(PluginError){
+		throw;
 	}catch(...){
 		std::stringstream msg;
 		msg << "Nested Hex program \"" << programpath << "\" failed. Command line arguments were: " << cmdargs;
