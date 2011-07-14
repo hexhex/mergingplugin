@@ -57,9 +57,10 @@ namespace dlvhex {
 			/**
 			 * This class implements an external atom which is capable of executing a hex program given as string. In contrast to HexAtom, it supports input facts.
 			 * Usage:
-			 * &hex[program, facts, cmdargs](R)
+			 * &callhex{n}[program, p[1], ..., p[n], cmdargs](R)
+			 *	n ... number of predicates with input parameters (0 to 32)
 			 *	program	... string containing a hex program as sourcecode
-			 *	facts	... name of a predicate specifying the input facts in higher-order notation
+			 *	p[1], ..., p[n]	... predicates specifying the input facts
 			 *	cmdargs	... string of command line arguments passed to dlvhex
 			 *	R	... handle to the answer of the given program
 			 */
@@ -67,11 +68,12 @@ namespace dlvhex {
 			{
 			private:
 				HexAnswerCache &resultsetCache;
+				int arity;
 
 				std::string salt;	// salt for MD5 hashing
 			public:
 
-				CallHexAtom(HexAnswerCache &rsCache);
+				CallHexAtom(HexAnswerCache &rsCache, int ar);
 				virtual ~CallHexAtom();
 				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
 			};
@@ -79,9 +81,10 @@ namespace dlvhex {
 			/**
 			 * This class implements an external atom which is capable of executing a hex program stored in a file. In contrast to HexAtom, it supports input facts.
 			 * Usage:
-			 * &hexfile[programpath, cmdargs](R)
+			 * &callhexfile{n}[programpath, p[1], ..., p[n], cmdargs](R)
+			 *	n ... number of predicates with input parameters (0 to 32)
 			 *	programpath	... string containing the path to a hex program
-			 *	facts	... name of a predicate specifying the input facts in higher-order notation
+			 *	p[1], ..., p[n]	... predicates specifying the input facts
 			 *	cmdargs	... string of command line arguments passed to dlvhex
 			 *	R		... handle to the answer of the given program
 			 */
@@ -89,11 +92,12 @@ namespace dlvhex {
 			{
 			private:
 				HexAnswerCache &resultsetCache;
+				int arity;
 
 				std::string salt;	// salt for MD5 hashing
 			public:
 
-				CallHexFileAtom(HexAnswerCache &rsCache);
+				CallHexFileAtom(HexAnswerCache &rsCache, int ar);
 
 				virtual ~CallHexFileAtom();
 				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);

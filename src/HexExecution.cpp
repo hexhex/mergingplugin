@@ -99,10 +99,12 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 // -------------------- CallHexAtom --------------------
 
-CallHexAtom::CallHexAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+CallHexAtom::CallHexAtom(HexAnswerCache &rsCache, int ar = 0) : resultsetCache(rsCache), arity(ar)
 {
 	addInputConstant();	// program
-	addInputPredicate();	// input facts
+	for (int i = 0; i < arity; i++){
+		addInputPredicate();	// input facts
+	}
 	addInputTuple();	// command line arguments (optional)
 	setOutputArity(1);	// list of answer-set handles
 }
@@ -123,10 +125,16 @@ CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		// resolve escape sequences
 		program = params[0].getUnquotedString();
 
+		// retrieve the facts over the specified predicate and pass them to the subprogram
+		for (int i = 0; i < arity; i++){
+			std::string inputfactspred = params[1 + i].getUnquotedString();
+			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
+		}
+
+/*
 		// Retrieve command line arguments
 		std::string inputfactspred = params[1].getUnquotedString();
 
-/*
 	// Get predicate which specifies the input predicates:
 	AtomSet inputpreds;
 	query.getInterpretation().matchPredicate(inputfactspred, inputpreds);
@@ -136,17 +144,15 @@ CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		std::string inputpredname = it->getArguments()[0].getUnquotedString();
 		// Read inputs over this predicate name
 		AtomSet facts;
-std::cout << "adding " << inputpredname << std::endl;
 		query.getInterpretation().matchPredicate(inputpredname, facts);
 		// convert from higher-order notation to first-order notation
 		for (AtomSet::const_iterator it = facts.begin(); it != facts.end(); ++it){
 			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
 			inputfacts.insert(atom);
-std::cout << "adding atom over " << inputpredname << std::endl;
 		}
 	}
 */
-
+/*
 		// Read input facts
 		AtomSet f;
 		query.getInterpretation().matchPredicate(inputfactspred, f);
@@ -167,10 +173,10 @@ std::cout << "adding atom over " << inputpredname << std::endl;
 			AtomPtr atom = AtomPtr(new Atom(args));
 			inputfacts.insert(atom);
 		}
-
+*/
 		// Retrieve command line arguments (if specified)
-		if (params.size() > 2){
-			cmdargs = params[2].getUnquotedString();
+		if (params.size() > 1 + arity){
+			cmdargs = params[1 + arity].getUnquotedString();
 		}
 
 		// Build hex call identifier
@@ -192,10 +198,12 @@ std::cout << "adding atom over " << inputpredname << std::endl;
 
 // -------------------- CallHexFileAtom --------------------
 
-CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache, int ar) : resultsetCache(rsCache), arity(ar)
 {
 	addInputConstant();	// program path
-	addInputPredicate();	// predicate with input facts
+	for (int i = 0; i < arity; i++){
+		addInputPredicate();	// input facts
+	}
 	addInputTuple();	// command line arguments (optional)
 	setOutputArity(1);	// list of answer-set handles
 }
@@ -216,6 +224,13 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 		// load program
 		programpath = params[0].getUnquotedString();
 
+		// retrieve the facts over the specified predicate and pass them to the subprogram
+		for (int i = 0; i < arity; i++){
+			std::string inputfactspred = params[1 + i].getUnquotedString();
+			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
+		}
+
+/*
 		// Retrieve command line arguments
 		std::string inputfactspred = params[1].getUnquotedString();
 
@@ -239,10 +254,11 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 			AtomPtr atom = AtomPtr(new Atom(args));
 			inputfacts.insert(atom);
 		}
+*/
 
 		// Retrieve command line arguments
-		if (params.size() > 1){
-			cmdargs = params[2].getUnquotedString();
+		if (params.size() > 1 + arity){
+			cmdargs = params[1 + arity].getUnquotedString();
 		}
 
 		// Build hex call identifier

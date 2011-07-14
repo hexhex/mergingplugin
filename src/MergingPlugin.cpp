@@ -173,6 +173,8 @@ namespace dlvhex {
 			class MergingPlugin : public PluginInterface
 			{
 			private:
+				static const int CALL_MAX_ARITY = 32;
+
 				bool silentMode;
 				bool debugMode;
 
@@ -182,8 +184,8 @@ namespace dlvhex {
 				// External atoms provided by this plugin
 				HexAtom* hex_atom;
 				HexFileAtom* hexfile_atom;
-				CallHexAtom* callhex_atom;
-				CallHexFileAtom* callhexfile_atom;
+				CallHexAtom* callhex_atom[CALL_MAX_ARITY];
+				CallHexFileAtom* callhexfile_atom[CALL_MAX_ARITY];
 				AnswerSetsAtom* as_atom;
 				PredicatesAtom* predicates_atom;
 				ArgumentsAtom* arguments_atom;
@@ -206,8 +208,10 @@ namespace dlvhex {
 				MergingPlugin(){
 					hex_atom = NULL;
 					hexfile_atom = NULL;
-					callhex_atom = NULL;
-					callhexfile_atom = NULL;
+					for (int i = 0; i < CALL_MAX_ARITY; i++){
+						callhex_atom[i] = NULL;
+						callhexfile_atom[i] = NULL;
+					}
 					as_atom = NULL;
 					predicates_atom = NULL;
 					arguments_atom = NULL;
@@ -217,8 +221,10 @@ namespace dlvhex {
 					// Create external atoms
 					hex_atom = new HexAtom(resultsetCache);
 					hexfile_atom = new HexFileAtom(resultsetCache);
-					callhex_atom = new CallHexAtom(resultsetCache);
-					callhexfile_atom = new CallHexFileAtom(resultsetCache);
+					for (int i = 0; i < CALL_MAX_ARITY; i++){
+						callhex_atom[i] = new CallHexAtom(resultsetCache, i);
+						callhexfile_atom[i] = new CallHexFileAtom(resultsetCache, i);
+					}
 					as_atom = new AnswerSetsAtom(resultsetCache);
 					predicates_atom = new PredicatesAtom(resultsetCache);
 					arguments_atom = new ArgumentsAtom(resultsetCache);
@@ -229,8 +235,10 @@ namespace dlvhex {
 				virtual ~MergingPlugin(){
 					if (hexfile_atom) delete hexfile_atom;
 					if (hex_atom) delete hex_atom;
-					if (callhexfile_atom) delete callhexfile_atom;
-					if (callhex_atom) delete callhex_atom;
+					for (int i = 0; i < CALL_MAX_ARITY; i++){
+						if (callhex_atom[i]) delete callhex_atom[i];
+						if (callhexfile_atom[i]) delete callhexfile_atom[i];
+					}
 					if (as_atom) delete as_atom;
 					if (predicates_atom) delete predicates_atom;
 					if (arguments_atom) delete arguments_atom;
@@ -252,8 +260,12 @@ namespace dlvhex {
 				{
 					boost::shared_ptr<PluginAtom> hex_atom_ptr(hex_atom);
 					boost::shared_ptr<PluginAtom> hexfile_atom_ptr(hexfile_atom);
-					boost::shared_ptr<PluginAtom> callhex_atom_ptr(callhex_atom);
-					boost::shared_ptr<PluginAtom> callhexfile_atom_ptr(callhexfile_atom);
+					boost::shared_ptr<PluginAtom> callhex_atom_ptr[CALL_MAX_ARITY];
+					boost::shared_ptr<PluginAtom> callhexfile_atom_ptr[CALL_MAX_ARITY];
+					for (int i = 0; i < CALL_MAX_ARITY; i++){
+						callhex_atom_ptr[i] = boost::shared_ptr<PluginAtom>(callhex_atom[i]);
+						callhexfile_atom_ptr[i] = boost::shared_ptr<PluginAtom>(callhexfile_atom[i]);
+					}
 					boost::shared_ptr<PluginAtom> as_atom_ptr(as_atom);
 					boost::shared_ptr<PluginAtom> predicates_atom_ptr(predicates_atom);
 					boost::shared_ptr<PluginAtom> arguments_atom_ptr(arguments_atom);
@@ -262,8 +274,14 @@ namespace dlvhex {
 					// Register external atoms
 					a["hex"] = hex_atom_ptr;
 					a["hexfile"] = hexfile_atom_ptr;
-					a["callhex"] = callhex_atom_ptr;
-					a["callhexfile"] = callhexfile_atom_ptr;
+					for (int i = 0; i < CALL_MAX_ARITY; i++){
+						std::stringstream callhex_ss("");
+						std::stringstream callhexfile_ss("");
+						callhex_ss << "callhex" << i;
+						callhexfile_ss << "callhexfile" << i;
+						a[callhex_ss.str().c_str()] = callhex_atom_ptr[i];
+						a[callhexfile_ss.str().c_str()] = callhexfile_atom_ptr[i];
+					}
 					a["answersets"] = as_atom_ptr;
 					a["predicates"] = predicates_atom_ptr;
 					a["arguments"] = arguments_atom_ptr;
