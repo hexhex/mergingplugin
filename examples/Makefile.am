@@ -1,6 +1,10 @@
 EXTRA_DIST = \
+  tests/nestedhexprograms.test \
+  callhex1.hex \
+  callhexfile1.hex \
   runhex.hex \
   runhexfile.hex \
+  runhexnested.hex \
   accesstuples1.hex \
   accesstuples2.hex \
   accesstuples3.hex \
@@ -11,15 +15,78 @@ EXTRA_DIST = \
   operators1.hex \
   operators2.hex \
   operators3.hex \
-  union1.rp \
-  union2.rp \
-  setminus1.rp \
   negatedatom.hex \
-  setminus2.rp \
-  minhamming.rp
+  tests/callhex1.as \
+  tests/callhexfile1.as \
+  tests/runhex.as \
+  tests/runhexfile.as \
+  tests/runhexnested.as \
+  tests/accesstuples1.as \
+  tests/accesstuples2.as \
+  tests/accesstuples3.as \
+  tests/accessarguments1.as \
+  tests/accessarguments2.as \
+  tests/accessarguments3.as \
+  tests/multipleanswersets.as \
+  tests/operators1.as \
+  tests/operators2.as \
+  tests/operators3.as \
+  tests/negatedatom.as \
+  tests/builtinoperators.test \
+  union1.mp \
+  union2.mp \
+  setminus1.mp \
+  setminus2.mp \
+  dalal1.mp \
+  dalal2.mp \
+  dalal3.mp \
+  dalal4.mp \
+  dalal5.mp \
+  dalal6.mp \
+  dalal7.mp \
+  dbo1.mp \
+  dbo2.mp \
+  dbo3.mp \
+  dbo4.mp \
+  dbo5.mp \
+  dbo6.mp \
+  dbo7.mp \
+  judgement1.mp \
+  judgement2.mp \
+  relationmerging1.mp \
+  relationmerging2.mp \
+  diagnosis1.mp \
+  diagnosis2.mp \
+  diagnosis3.mp \
+  diagnosis3-dbo.mp \
+  tests/union1.as \
+  tests/union2.as \
+  tests/setminus1.as \
+  tests/setminus2.as \
+  tests/dalal1.as \
+  tests/dalal2.as \
+  tests/dalal3.as \
+  tests/dalal4.as \
+  tests/dalal5.as \
+  tests/dalal6.as \
+  tests/dalal7.as \
+  tests/dbo1.as \
+  tests/dbo2.as \
+  tests/dbo3.as \
+  tests/dbo4.as \
+  tests/dbo5.as \
+  tests/dbo6.as \
+  tests/dbo7.as \
+  tests/judgement1.as \
+  tests/judgement2.as \
+  tests/relationmerging1.as \
+  tests/relationmerging2.as \
+  tests/diagnosis1.as \
+  tests/diagnosis2.as \
+  tests/diagnosis3.as \
+  tests/diagnosis3-dbo.as
 
 TESTS = tests/run-mergingplugin-tests.sh
 TESTS_ENVIRONMENT = DLVHEX=dlvhex MPCOMPILER=$(top_srcdir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
 
-SUBDIRS = \
-	  testoperators
+SUBDIRS = tests testoperators

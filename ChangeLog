@@ -1,3 +1,7 @@
+2011-08-09  Peter Schueller  <ps@kr.tuwien.ac.at>
+
+	* examples/Makefile.am: Fixing make distcheck.
+
 2010-07-14  Peter Schueller  <ps@kr.tuwien.ac.at>
 
 	* include/DlvhexSolver.h: Updated to revised ASPSolver API.
