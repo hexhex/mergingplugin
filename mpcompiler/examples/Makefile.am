@@ -40,4 +40,4 @@ EXTRA_DIST = \
   tests/externalsource2.as
 
 TESTS = tests/run-mpc-tests.sh
-TESTS_ENVIRONMENT = DLVHEX=dlvhex MPCOMPILER=$(top_srcdir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/mpcompiler/examples/tests RPCPARAMETERS="" DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src"
+TESTS_ENVIRONMENT = DLVHEX=dlvhex MPCOMPILER=$(top_builddir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/mpcompiler/examples/tests RPCPARAMETERS="" DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src"
