@@ -8,7 +8,7 @@ plugin_LTLIBRARIES = libdlvhexmerging.la
 # add all sources of your plugin
 #
 libdlvhexmerging_la_SOURCES = MergingPlugin.cpp DLVHexProcess.cpp DlvhexSolver.cpp HexExecution.cpp Operators.cpp HexAnswerCache.cpp OpUnion.cpp OpSetminus.cpp OpDalal.cpp OpDBO.cpp OpMajoritySelection.cpp OpRelationMerging.cpp
-libdlvhexmerging_la_LIBADD = $(CRYPTLIB) $(top_srcdir)/mpcompiler/src/libmpcompiler.la
+libdlvhexmerging_la_LIBADD = $(CRYPTLIB) $(top_builddir)/mpcompiler/src/libmpcompiler.la
 
 #
 # extend compiler flags by CFLAGS of other needed libraries

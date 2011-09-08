@@ -2,6 +2,9 @@ bin_PROGRAMS = mpcompiler
 mpcompiler_CXXFLAGS = $(AM_CFLAGS)
 mpcompiler_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h ParseTreeNode.cpp ParseTreeNodeIterator.cpp SpiritParser.cpp IParser.cpp CodeGenerator.cpp CompilerMain.cpp
 
+# we cannot do noinst_LTLIBRARIES as this will not create a real plugin module
+# check_LTLIBRARIES also does not work
+# so we use plugin_LTLIBRARIES
 noinst_LTLIBRARIES = libmpcompiler.la
 libmpcompiler_la_SOURCES = BisonScanner.l++ BisonParserImpl.ypp BisonParserImpl.h SpiritParser.cpp IParser.cpp ParseTreeNode.cpp ParseTreeNodeIterator.cpp CodeGenerator.cpp
 libmpcompiler_la_CXXFLAGS = $(AM_CFLAGS)

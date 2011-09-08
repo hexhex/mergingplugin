@@ -1,4 +1,5 @@
 EXTRA_DIST = \
+  tests/run-mergingplugin-tests.sh \
   tests/nestedhexprograms.test \
   callhex1.hex \
   callhexfile1.hex \
