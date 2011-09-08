@@ -89,4 +89,4 @@ EXTRA_DIST = \
 TESTS = tests/run-mergingplugin-tests.sh
 TESTS_ENVIRONMENT = DLVHEX=dlvhex MPCOMPILER=$(top_srcdir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
 
-SUBDIRS = tests testoperators
+SUBDIRS = testoperators
