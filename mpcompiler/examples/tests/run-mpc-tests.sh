@@ -35,7 +35,7 @@ TMPFILE=$($MKTEMP) # global temp. file for answer sets
 # library must not be installed
 
 # Tests
-echo ============ revision plan tests start ============
+echo ============ merging plan tests start ============
 
 for t in $(find $TESTDIR -name '*.test' -type f)
 do
@@ -72,7 +72,7 @@ done
 # cleanup
 rm -f $TMPFILE
 
-echo ========== revision plan tests completed ==========
+echo ========== merging plan tests completed ==========
 
 echo Tested $ntests revision plans
 echo $failed failed tests, $warned warnings

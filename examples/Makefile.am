@@ -1,8 +1,10 @@
 EXTRA_DIST = \
+  compare.sh \
   tests/run-mergingplugin-tests.sh \
   tests/nestedhexprograms.test \
   callhex1.hex \
   callhexfile1.hex \
+  calledprog.hex \
   runhex.hex \
   runhexfile.hex \
   runhexnested.hex \
@@ -60,6 +62,12 @@ EXTRA_DIST = \
   diagnosis2.mp \
   diagnosis3.mp \
   diagnosis3-dbo.mp \
+  abnormal1.hyp \
+  abnormal2.hyp \
+  abnormal3.hyp \
+  fault.obs \
+  fulladder.dl \
+  hexprog1.hex \
   tests/union1.as \
   tests/union2.as \
   tests/setminus1.as \
