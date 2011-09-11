@@ -5,19 +5,19 @@ predicate:ab/1;
 name:juror1;
 dlvmapping: "";
 dlvargs: "-FRmin fulladder.dl abnormal1.hyp fault.obs";
-args: "--plugindir=../src/.libs/ ";
+args: "--plugindir=../_build/src/.libs/:../src/.libs/ ";
 
 [belief base]
 name:juror2;
 dlvmapping: "";
 dlvargs: "-FRmin fulladder.dl abnormal2.hyp fault.obs";
-args: "--plugindir=../src/.libs/";
+args: "--plugindir=../_build/src/.libs/:../src/.libs/";
 
 [belief base]
 name:juror3;
 dlvmapping: "";
 dlvargs: "-FRmin fulladder.dl abnormal3.hyp fault.obs";
-args: "--plugindir=../src/.libs/";
+args: "--plugindir=../_build/src/.libs/:../src/.libs/";
 
 [merging plan]
 {
