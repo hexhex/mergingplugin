@@ -121,6 +121,10 @@ AC_ARG_ENABLE(userinstall,
              )
 AC_SUBST([plugindir])
 
+# substitute EXAMPLESDIR in examples
+examplesdir=../$srcdir/examples
+AC_SUBST([examplesdir])
+
 #
 # all needed makefiles
 #
@@ -135,6 +139,19 @@ AC_CONFIG_FILES([
            mpcompiler/include/Makefile 
            mpcompiler/src/Makefile
            mpcompiler/examples/Makefile
+           examples/diagnosis1.mp
+           examples/diagnosis2.mp
+           examples/diagnosis3.mp
+           examples/diagnosis3-dbo.mp
+           examples/callhexfile1.hex
+           examples/runhexfile.hex
+           examples/calledprog.hex
+           examples/hexprog1.hex
+           examples/fault.obs
+           examples/fulladder.dl
+           examples/abnormal1.hyp
+           examples/abnormal2.hyp
+           examples/abnormal3.hyp
 ])
 
 AC_OUTPUT

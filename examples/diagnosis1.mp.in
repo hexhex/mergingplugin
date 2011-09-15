@@ -4,26 +4,26 @@ predicate:ab/1;
 [belief base]
 name:juror1;
 dlvmapping: "";
-dlvargs: "-FRmin fulladder.dl abnormal1.hyp fault.obs";
+dlvargs: "-FRmin @examplesdir@/fulladder.dl @examplesdir@/abnormal1.hyp @examplesdir@/fault.obs";
 args: "--plugindir=../_build/src/.libs/:../src/.libs/";
 
-[belief base]
+[belief base] 
 name:juror2;
 dlvmapping: "";
-dlvargs: "-FRmin fulladder.dl abnormal2.hyp fault.obs";
+dlvargs: "-FRmin @examplesdir@/fulladder.dl @examplesdir@/abnormal2.hyp @examplesdir@/fault.obs";
 args: "--plugindir=../_build/src/.libs/:../src/.libs/";
 
 [belief base]
 name:juror3;
 dlvmapping: "";
-dlvargs: "-FRmin fulladder.dl abnormal3.hyp fault.obs";
+dlvargs: "-FRmin @examplesdir@/fulladder.dl @examplesdir@/abnormal3.hyp @examplesdir@/fault.obs";
 args: "--plugindir=../_build/src/.libs/:../src/.libs/";
 
 [merging plan]
 {
 	operator: dalal;
-	constraintfile: "fulladder.dl";
-	constraintfile: "fault.obs";
+	constraintfile: "@examplesdir@/fulladder.dl";
+	constraintfile: "@examplesdir@/fault.obs";
 	penalize: "ignoring";
 	maxint: "3";
 	aggregate:"sum";

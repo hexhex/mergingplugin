@@ -1,0 +1,3 @@
+x(a).
+y(c,d).
+h(Pred, Arity) :- &callhexfile2["@examplesdir@/calledprog.hex",x,y,""](P), &answersets[P](A), &predicates[P,A](Pred,Arity).

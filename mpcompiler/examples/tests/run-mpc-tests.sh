@@ -46,13 +46,6 @@ do
 	INPUT=$TESTDIR/$INPUT
 	REFOUTPUT=$TESTDIR/$REFOUTPUT
 
-	INPUT=$PWD/$INPUT
-	REFOUTPUT=$PWD/$REFOUTPUT
-	OLDWD=$PWD
-	# change working directory to directory of INPUT
-	WD=`dirname $INPUT`
-	cd $WD
-
 	if [ ! -f $INPUT ] || [ ! -f $REFOUTPUT ]; then
 	    test ! -f $INPUT && echo WARN: Could not find input file $INPUT
 	    test ! -f $REFERENCEOUTPUT && echo WARN: Could not find reference output file $REFOUTPUT
@@ -71,7 +64,6 @@ do
 		let failed++
 	fi
 
-	cd $OLDWD
 	DLVHEXPARAMETERS=$OLDDLVHEXPARAMETERS
 	export DLVHEXPARAMETERS
     done < $t # redirect test file to the while loop

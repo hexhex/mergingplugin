@@ -1,0 +1,1 @@
+answer(X) :- &hexfile["@examplesdir@/hexprog1.hex",""](X).
