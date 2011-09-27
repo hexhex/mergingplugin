@@ -152,6 +152,8 @@ AC_CONFIG_FILES([
            examples/abnormal1.hyp
            examples/abnormal2.hyp
            examples/abnormal3.hyp
+           mpcompiler/examples/externalsource1.hex
+           mpcompiler/examples/externalsource2.hex
 ])
 
 AC_OUTPUT

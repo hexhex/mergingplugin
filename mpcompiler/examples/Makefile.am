@@ -1,5 +1,6 @@
 EXTRA_DIST = \
   tests/run-mpc-tests.sh \
+  tests/mpcompilertests.test \
   emptyrevisionplan.mp \
   singleanswerset1.mp \
   singleanswerset2.mp \
