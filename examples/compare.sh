@@ -544,11 +544,17 @@ function compare {
 				nonerrextension=$extension1
 				nonerrfile=$1
 			fi
-			case "$nonerrextension1" in
-				"mp")   $MPCOMPILER < $nonerrfile | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
+			case "$nonerrextension" in
+				"mp")
+echo "File 1: $MPCOMPILER < $nonerrfile | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1"
+echo "File 2: none (call should cause an error)"
+					$MPCOMPILER < $nonerrfile | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
 					let rv=rv+$?
 					;;
-				"hex")  $DLVHEX --silent $DLVHEXPARAMETERS $nonerrfile > $TMPFILE_AS1
+				"hex")
+echo "File 1: $DLVHEX --silent $DLVHEXPARAMETERS $nonerrfile > $TMPFILE_AS1"
+echo "File 2: none (call should cause an error)"
+					$DLVHEX --silent $DLVHEXPARAMETERS $nonerrfile > $TMPFILE_AS1
 					let rv=rv+$?
 					;;
 			esac
@@ -568,77 +574,103 @@ function compare {
 				"mp/hex")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						$MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS1
+echo "File 1: $MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS1"
 						let rv=rv+$?
 						$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
+echo "File 2: $DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2"
 						let rv=rv+$?
 						extension="as"
 						;;
 				"hex/mp")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+echo "File 1: $DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1"
 						let rv=rv+$?
 						$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS2
+echo "File 2: $MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- > $TMPFILE_AS2"
 						let rv=rv+$?
 						extension="as"
 						;;
 				"mp/as")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						$MPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1
+echo "File 1: $MPCOMPILER < $1 | $DLVHEX $DLVHEXPARAMETERS --silent --filter=$filter -- > $TMPFILE_AS1"
 						let rv=rv+$?
 						cp $2 $TMPFILE_AS2
+echo "File 2: $2"
 						extension="as"
 						;;
 				"as/mp")	cp $1 $TMPFILE_AS1
+echo "File 1: $1"
 						$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
+echo "File 2: $MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2"
 						let rv=rv+$?
 						extension="as"
 						;;
 				"mp/dot")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						$MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT1
+echo "File 1: $MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT1"
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
+echo "File 2: $2"
 						extension="dot"
 						;;
 				"dot/mp")	filter=$($MPCOMPILER < $1 | tail -1 | sed "s/.*filter=\([^ ]*\)[ ].*/\1/")
 						let rv=rv+$?
 						cp $1 $TMPFILE_DOT1
+echo "File 1: $1"
 						$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT2
+echo "File 2: $MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS --filter=$filter -- | $GRAPHCONVERTER as dot > $TMPFILE_DOT2"
 						let rv=rv+$?
 						extension="dot"
 						;;
 				"hex/as")	$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+echo "File 1: $DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1"
 						let rv=rv+$?
 						cp $2 $TMPFILE_AS2
 						extension="as"
+echo "File 2: $2"
 						;;
 				"as/hex")	cp $1 $TMPFILE_AS1
+echo "File 1: $1"
 						$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
+echo "File 2: $DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2"
 						let rv=rv+$?
 						extension="as"
 						;;
 				"hex/as")	$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+echo "File 1: $DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1"
 						let rv=rv+$?
 						cp $2 $TMPFILE_AS2
+echo "File 2: $2"
 						extension="as"
 						;;
 				"hex/dot")	$DLVHEX --silent $DLVHEXPARAMETERS $1 | $GRAPHCONVERTER as dot > $TMPFILE_DOT1
+echo "File 1: $DLVHEX --silent $DLVHEXPARAMETERS $1 | $GRAPHCONVERTER as dot > $TMPFILE_DOT1"
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
+echo "File 2: $2"
 						extension="dot";
 						;;
 				"dot/hex")	cp $1 $TMPFILE_DOT1
+echo "File 1: $1"
 						$DLVHEX --silent $DLVHEXPARAMETERS $2 | $GRAPHCONVERTER as dot > $TMPFILE_DOT2
+echo "File 2: $DLVHEX --silent $DLVHEXPARAMETERS $2 | $GRAPHCONVERTER as dot > $TMPFILE_DOT2"
 						let rv=rv+$?
 						extension="dot";
 						;;
 				"as/dot")	$GRAPHCONVERTER as dot < $1 > $TMPFILE_DOT1
+echo "File 1: $GRAPHCONVERTER as dot < $1 > $TMPFILE_DOT1"
 						let rv=rv+$?
 						cp $2 $TMPFILE_DOT2
+echo "File 2: $2"
 						extension="dot"
 						;;
 				"dot/as")	cp $1 $TMPFILE_DOT1
+echo "File 1: $1"
 						$GRAPHCONVERTER as dot < $2 > $TMPFILE_DOT2
+echo "File 2: $GRAPHCONVERTER as dot < $2 > $TMPFILE_DOT2"
 						let rv=rv+$?
 						extension="dot"
 						;;
@@ -653,15 +685,19 @@ function compare {
 			case "$extension1" in
 				"mp")
 					$MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1
+echo "File 1: $MPCOMPILER < $1 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS1"
 					let rv=rv+$?
 					$MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2
+echo "File 2: $MPCOMPILER < $2 | $DLVHEX --silent $DLVHEXPARAMETERS -- > $TMPFILE_AS2"
 					let rv=rv+$?
 					extension="as"
 					;;
 				"hex")
 					$DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1
+echo "File 1: $DLVHEX --silent $DLVHEXPARAMETERS $1 > $TMPFILE_AS1"
 					let rv=rv+$?
 					$DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2
+echo "File 2: $DLVHEX --silent $DLVHEXPARAMETERS $2 > $TMPFILE_AS2"
 					let rv=rv+$?
 					extension="as"
 					;;
