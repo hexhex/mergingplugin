@@ -278,6 +278,8 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 
 
 	HexAnswer* result = new HexAnswer();
+	result->push_back(InterpretationPtr(new Interpretation()));
+	result->push_back(InterpretationPtr(new Interpretation()));
 	return result;
 /*
 		InputProviderPtr ip(new InputProvider());
@@ -436,6 +438,7 @@ void HexAnswerCache::load(const int index){
 
 	// store result in the cache
 	cache[index].second = result;
+//std::cout << "Have " << cache[index].size() << " answer sets" << std::endl;
 	elementsInCache++;
 
 	// make sure that the cache does not contain too many items
