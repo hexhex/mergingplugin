@@ -4,6 +4,9 @@
 #include "dlvhex/HexParser.hpp"
 #include "dlvhex/InputProvider.hpp"
 
+#include "dlvhex/InternalGrounder.hpp"
+#include "dlvhex/InternalGroundDASPSolver.hpp"
+
 #include <fstream>
 #include <iostream>
 
@@ -246,63 +249,27 @@ HexAnswerCache::~HexAnswerCache(){
 HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	assert(call.getType() == HexCall::HexProgram);
 
-	std::cout << "Loading program " << call.getProgram() << " with input facts " << call.getFacts() << std::endl;
-
-
-
-
-
-/*
-	// create inputprovider
-	InputProviderPtr inp(new InputProvider);
-
-	inp->addStringInput(call.getProgram(), "nestedprog");
-	//  put in program file
-	//  inp->addFileInput(scriptname);
-
-{
-    ASPSolver::DLVSoftware::Configuration dlvconfig;
-    ASPSolverManager mgr;
-    ASPSolverManager::ResultsPtr results = mgr.solve(dlvconfig, *inp, reg);
-    // we use the first answer set
-    // we warn if there are more only in debug mode
-    AnswerSet::Ptr as = results->getNextAnswerSet();
-}
-
-*/
-
-
-
-
-
-
-
 	HexAnswer* result = new HexAnswer();
-	result->push_back(InterpretationPtr(new Interpretation()));
-	result->push_back(InterpretationPtr(new Interpretation()));
+
+	InputProviderPtr ip(new InputProvider());
+	ip->addStringInput(call.getProgram(), "nestedprog");
+	ProgramCtx pc;
+	pc.changeRegistry(reg);
+	ModuleHexParser hp;
+	hp.parse(ip, pc);
+	pc.edb->getStorage() |= call.getFacts()->getStorage();
+
+	ASPProgram program(pc.registry(), pc.idb, pc.edb);
+	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
+	ASPProgram gprogram = ig->getGroundProgram();
+
+	InternalGroundDASPSolver igas(pc, gprogram);
+	InterpretationPtr as;
+	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
+		result->push_back(InterpretationPtr(new Interpretation(*as)));
+	}
+
 	return result;
-/*
-		InputProviderPtr ip(new InputProvider());
-		ip->addStringInput(call.getProgram(), "nestedprog");
-		ProgramCtx pc;
-		pc.changeRegistry(solver->getProgramContext().registry());
-		ModuleHexParser hp;
-		hp.parse(ip, pc);
-
-		ASPProgram program(pc.registry(), pc.idb, query.interpretation);
-		InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program, InternalGrounder::builtin));
-		ASPProgram gprogram = ig->getGroundProgram();
-		DBGLOG(DBG, "NONGROUND::");
-		DBGLOG(DBG, ig->getNongroundProgramString());
-		DBGLOG(DBG, "GROUND::");
-		DBGLOG(DBG, ig->getGroundProgramString());
-		// create a nogood for each ground rule
-		BOOST_FOREACH (ID ruleID, gprogram.idb){
-			Nogood ng = getRuleNogood(solver, query, pc.registry()->rules.getByID(ruleID));
-			DBGLOG(DBG, "Rule nogood: " << ng);
-		}
-*/
-
 
 
 
@@ -335,6 +302,29 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 
 HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	assert(call.getType() == HexCall::HexFile);
+
+	HexAnswer* result = new HexAnswer();
+
+	InputProviderPtr ip(new InputProvider());
+	ip->addFileInput(call.getProgram());
+	ProgramCtx pc;
+	pc.changeRegistry(reg);
+	ModuleHexParser hp;
+	hp.parse(ip, pc);
+	pc.edb->getStorage() |= call.getFacts()->getStorage();
+
+	ASPProgram program(pc.registry(), pc.idb, pc.edb);
+	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
+	ASPProgram gprogram = ig->getGroundProgram();
+
+	InternalGroundDASPSolver igas(pc, gprogram);
+	InterpretationPtr as;
+	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
+		result->push_back(InterpretationPtr(new Interpretation(*as)));
+	}
+
+	return result;
+
 /*
   typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
   DlvhexConfiguration dlvhex;
@@ -373,7 +363,7 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 
 HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){
 	assert(call.getType() == HexCall::OperatorCall);
-/*
+
 	HexAnswer opanswer;
 
 	// make a list of pointers to all answers passed to this operator
@@ -410,7 +400,6 @@ HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){
 	}
 
 	return new HexAnswer(opanswer);
-*/
 }
 
 void HexAnswerCache::load(const int index){

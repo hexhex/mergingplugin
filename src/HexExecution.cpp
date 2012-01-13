@@ -363,6 +363,7 @@ ArgumentsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 					t.push_back(ogatom.tuple[i]);
 					answer.get().push_back(t);
 				}
+				runningindex++;
 			}
 		}
 /*
