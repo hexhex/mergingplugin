@@ -3,6 +3,7 @@
 
 #include <PublicTypes.h>
 #include <IOperator.h>
+#include <dlvhex/Registry.hpp>
 
 DLVHEX_NAMESPACE_USE
 
@@ -29,7 +30,7 @@ namespace dlvhex{
 				CallType type;
 				std::string program;
 				std::string arguments;
-				AtomSet inputfacts;
+				InterpretationConstPtr inputfacts;
 				std::string hashcode;
 
 				std::vector<int> asParams;
@@ -38,14 +39,14 @@ namespace dlvhex{
 				bool debug;
 				bool silent;
 			public:
-				HexCall(CallType ct, std::string prog, std::string args, AtomSet facts);
+				HexCall(CallType ct, std::string prog, std::string args, InterpretationConstPtr facts);
 				HexCall(CallType ct, IOperator* op, bool debug, bool silent, std::vector<int> as, OperatorArguments kv);
 				const bool operator==(const HexCall &other) const;
 
 				const CallType getType() const;
 				const std::string getProgram() const;
 				const std::string getArguments() const;
-				const AtomSet getFacts() const;
+				const InterpretationConstPtr getFacts() const;
 				const bool hasInputFacts() const;
 				const std::vector<int> getAsParams() const;
 				const OperatorArguments getKvParams() const;
@@ -134,6 +135,7 @@ namespace dlvhex{
 			 */
 			class HexAnswerCache{
 			private:
+				RegistryPtr reg;
 				typedef std::pair<HexCall, HexAnswer* > HexAnswerCacheEntry;
 				std::vector<HexAnswerCacheEntry> cache;
 				std::vector<int> locks;
@@ -153,8 +155,9 @@ namespace dlvhex{
 				HexAnswerCache(int limit);
 				~HexAnswerCache();
 				const int operator[](const HexCall call);
-				HexAnswer* operator[](const int);
+				HexAnswer& operator[](const int);
 				const int size();
+				void setRegistry(RegistryPtr reg);
 			};
 
 			/*! \fn HexAnswerCache::HexAnswerCache()

@@ -12,7 +12,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "dlvhex/globals.h"
+#include <map>
 
 using namespace dlvhex::merging::plugin;
 
@@ -28,15 +28,17 @@ void OperatorAtom::registerBuiltInOperators(){
 	// Make sure that ptr does not get invalid before the destructor of this OperatorAtom is called.
 
 	// built-in operators
+/*
 	operators[_union.getName()] = &_union;
 	operators[_setminus.getName()] = &_setminus;
 	operators[_dalal.getName()] = &_dalal;
 	operators[_dbo.getName()] = &_dbo;
 	operators[_majorityselection.getName()] = &_majorityselection;
 	operators[_relationmerging.getName()] = &_relationmerging;
+*/
 }
 
-OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : PluginAtom("operator", 0), resultsetCache(rsCache)
 {
 	addInputConstant();	// operator name
 	addInputPredicate();	// predicate containing all the answer indices which shall be passed to the operator
@@ -44,9 +46,9 @@ OperatorAtom::OperatorAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
 	setOutputArity(1);	// answer index of result
 
 	registerBuiltInOperators();
-	if (!Globals::Instance()->getOption("Silent")){
-		std::cout << "mergingplugin: Loaded " << operators.size() << " built-in operators" << std::endl;
-	}
+//	if (!Globals::Instance()->getOption("Silent")){
+//		std::cout << "mergingplugin: Loaded " << operators.size() << " built-in operators" << std::endl;
+//	}
 }
 
 
@@ -57,46 +59,58 @@ OperatorAtom::~OperatorAtom()
 void
 OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
+	const Tuple& params = query.input;
+
 	// Extract operator name
-	std::string opname = query.getInputTuple()[0].getUnquotedString();
+	std::string opname = reg->terms.getByID(params[0]).getUnquotedString();
 
 	// Extract the predicate which is true for all indices of answers passed to the parameter
-	AtomSet opparams;
-	std::string predname = query.getInputTuple()[1].getUnquotedString();
+	ID argPred = params[1];
 
-	// retrieve the indices of the answers that are passed to the operator
-	query.getInterpretation().matchPredicate(predname, opparams);
-	std::vector<HexAnswer*> answers;
-	std::vector<int> answersIndices;
-	answers.resize(opparams.size());
-	for (int i = 0; i < opparams.size(); i++) answers[i] = NULL;
-	answersIndices.resize(opparams.size());
-	for (AtomSet::const_iterator it = opparams.begin(); it != opparams.end(); it++){
-		int answernrpos = it->getArgument(1).getInt();
-		int answernr = it->getArgument(2).getInt();
-		// index check
-		if (answernr < 0 || answernr >= resultsetCache.size()){
-			throw PluginError("An invalid answer handle was passed to external atom &operator");
+	// go through all input atoms over this predicate
+	std::map<int, int> argPairs;
+	for(Interpretation::Storage::enumerator it =
+	    query.interpretation->getStorage().first();
+	    it != query.interpretation->getStorage().end(); ++it){
+
+		ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+		const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+		if (ogatom.tuple[0] == argPred){
+			int pos = ogatom.tuple[1].address;
+			int handle = ogatom.tuple[2].address;
+			if (handle < 0 || handle >= resultsetCache.size()){
+				throw PluginError("An invalid answer handle was passed to external atom &operator");
+			}
+			argPairs[pos] = handle;
 		}
-		// check uniqueness of operator arguments
-		if (answers[answernrpos] != NULL){
-			std::stringstream ss;
-			ss << "Multiple answers were passed as " << answernrpos << "-th argument of operator \"" << opname << "\"";
-			throw PluginError(ss.str());
-		}
-		answers[answernrpos] = resultsetCache[answernr];
-		answersIndices[answernrpos] = answernr;
+	}
+	// construct argument vector
+	std::vector<int> argumentsIndices(argPairs.size());
+	typedef std::pair<int, int> Pair;
+	BOOST_FOREACH (Pair p, argPairs){
+		argumentsIndices[p.first] = p.second;
 	}
 
 	// Extract the operator's key-value arguments
-	AtomSet arguments;
-	std::string argumentspredname = query.getInputTuple()[2].getUnquotedString();
-	query.getInterpretation().matchPredicate(argumentspredname, arguments);
+	ID kvPred = params[2];
 	OperatorArguments parameters;
-	for (AtomSet::const_iterator it = arguments.begin(); it != arguments.end(); it++){
-		std::string key = it->getArgument(1).getUnquotedString();
-		std::string value = it->getArgument(2).getUnquotedString();
-		parameters.push_back(KeyValuePair(key, value));
+
+	// go through all input atoms over this predicate
+	for(Interpretation::Storage::enumerator it =
+	    query.interpretation->getStorage().first();
+	    it != query.interpretation->getStorage().end(); ++it){
+
+		ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+		const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+		if (ogatom.tuple[0] == kvPred){
+			std::string key = reg->terms.getByID(ogatom.tuple[1]).getUnquotedString();
+			std::string value = reg->terms.getByID(ogatom.tuple[2]).getUnquotedString();
+			parameters.push_back(KeyValuePair(key, value));
+		}
 	}
 
 	// If the operator name matches one of the loaded operators, it is executed
@@ -105,12 +119,12 @@ OperatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		IOperator* op = getOperator(opname); // throws an OperatorException of not found
 
 		// Assemble unique identifier for this operator application (consisting of operator name and argument indices, see below)
-		HexCall hc(HexCall::OperatorCall, op, debug, silent, answersIndices, parameters);
+		HexCall hc(HexCall::OperatorCall, op, debug, silent, argumentsIndices, parameters);
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
-		out.push_back(Term(resultsetCache[hc]));
-		answer.addTuple(out);
+		out.push_back(ID::termFromInteger(resultsetCache[hc]));
+		answer.get().push_back(out);
 	}catch(IOperator::OperatorException& oe){
 		throw PluginError(oe.getMessage());
 	}catch(std::runtime_error& e){

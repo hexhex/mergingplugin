@@ -4,7 +4,7 @@
 #include <HexAnswerCache.h>
 #include <dlvhex/PluginInterface.h>
 #include <dlvhex/ASPSolver.h>
-#include <dlvhex/HexParserDriver.h>
+//#include <dlvhex/HexParserDriver.h>
 #include <stdlib.h>
 #include <string>
 
@@ -71,6 +71,8 @@ namespace dlvhex {
 				int arity;
 
 				std::string salt;	// salt for MD5 hashing
+
+				static std::string getName(int arity);
 			public:
 
 				CallHexAtom(HexAnswerCache &rsCache, int ar);
@@ -95,6 +97,8 @@ namespace dlvhex {
 				int arity;
 
 				std::string salt;	// salt for MD5 hashing
+
+				static std::string getName(int arity);
 			public:
 
 				CallHexFileAtom(HexAnswerCache &rsCache, int ar);

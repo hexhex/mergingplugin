@@ -3,7 +3,6 @@
 
 #include <dlvhex/Process.h>
 #include <dlvhex/DLVProcess.h>
-#include <dlvhex/globals.h>
 
 #include <iostream>
 #include <sstream>

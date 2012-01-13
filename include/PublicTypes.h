@@ -2,7 +2,7 @@
 #define __PUBLICTYPES_H_
 
 #include <vector>
-#include <dlvhex/AtomSet.h>
+#include <dlvhex/PluginInterface.h>
 
 DLVHEX_NAMESPACE_USE
 
@@ -14,7 +14,7 @@ namespace dlvhex{
 			// Operators take a list of key-value pairs as arguments
 			typedef std::vector<KeyValuePair> OperatorArguments;
 			// The answer of a hex program is a set of answer sets
-			typedef std::vector<AtomSet> HexAnswer;
+			typedef std::vector<InterpretationPtr> HexAnswer;
 		}
 	}
 }

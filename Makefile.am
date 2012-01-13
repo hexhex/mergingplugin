@@ -6,8 +6,10 @@ include doxygen.am
 SUBDIRS = \
 	  mpcompiler/ \
           include/ \
-          src/ \
-          examples/
+          src/
+
+# \
+#          examples/
 
 EXTRA_DIST = doxygen.am doxygen.cfg documentation.dox
 

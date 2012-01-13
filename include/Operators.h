@@ -2,17 +2,19 @@
 #define __OPERATORS_H_
 
 #include <HexAnswerCache.h>
-#include <dlvhex/PluginInterface.h>
+#include <dlvhex/ComfortPluginInterface.hpp>
 #include <stdlib.h>
 #include <vector>
 #include <IOperator.h>
 
+/*
 #include "OpUnion.h"
 #include "OpSetminus.h"
 #include "OpDalal.h"
 #include "OpDBO.h"
 #include "OpMajoritySelection.h"
 #include "OpRelationMerging.h"
+*/
 
 namespace dlvhex {
 	namespace merging {
@@ -34,14 +36,14 @@ namespace dlvhex {
 				HexAnswerCache& resultsetCache;
 
 				std::map<std::string, IOperator*> operators;
-
+/*
 				OpUnion _union;
 				OpSetminus _setminus;
 				OpDalal _dalal;
 				OpDBO _dbo;
 				OpMajoritySelection _majorityselection;
 				OpRelationMerging _relationmerging;
-
+*/
 				void registerBuiltInOperators();
 			public:
 				OperatorAtom(HexAnswerCache &rsCache);

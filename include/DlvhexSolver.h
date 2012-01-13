@@ -4,8 +4,7 @@
 #include <dlvhex/ASPSolverManager.h>
 
 #include "dlvhex/Process.h"
-#include "dlvhex/Program.h"
-#include "dlvhex/AtomSet.h"
+#include "dlvhex/ComfortPluginInterface.hpp"
 #include "dlvhex/DLVresultParserDriver.h"
 #include "dlvhex/PrintVisitor.h"
 

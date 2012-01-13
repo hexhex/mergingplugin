@@ -4,11 +4,13 @@
 #include <string>
 #include <sstream>
 
+#include <dlvhex/Registry.hpp>
+
 using namespace dlvhex::merging::plugin;
 
 // -------------------- HexAtom --------------------
 
-HexAtom::HexAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+HexAtom::HexAtom(HexAnswerCache &rsCache) : PluginAtom("hex", 1), resultsetCache(rsCache)
 {
 	addInputConstant();	// program
 	addInputTuple();	// command line arguments (optional)
@@ -22,28 +24,30 @@ HexAtom::~HexAtom()
 void
 HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
 	std::string program;
 	std::string cmdargs;
-	AtomSet inputfacts;
+	InterpretationConstPtr inputfacts;
 	try{
-		Tuple params = query.getInputTuple();
+		const Tuple& params = query.input;
 
 		// resolve escape sequences
-		program = params[0].getUnquotedString();
+		program = reg->terms.getByID(params[0]).getUnquotedString();
 
 		// Retrieve command line arguments
 		if (params.size() > 1){
-			cmdargs = params[1].getUnquotedString();
+			cmdargs = reg->terms.getByID(params[1]).getUnquotedString();
 		}
 
 		// Build hex call identifier
-		AtomSet inputfacts;
+		InterpretationConstPtr inputfacts;
 		HexCall hc(HexCall::HexProgram, program, cmdargs, inputfacts);
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
-		out.push_back(Term(resultsetCache[hc]));
-		answer.addTuple(out);
+		out.push_back(ID::termFromInteger(resultsetCache[hc]));
+		answer.get().push_back(out);
 	}catch(...){
 		std::stringstream msg;
 		msg << "Nested Hex program \"" << program << "\" failed. Command line arguments were: " << cmdargs;
@@ -51,10 +55,9 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	}
 }
 
-
 // -------------------- HexFileAtom --------------------
 
-HexFileAtom::HexFileAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+HexFileAtom::HexFileAtom(HexAnswerCache &rsCache) : PluginAtom("hexfile", 1), resultsetCache(rsCache)
 {
 	addInputConstant();	// program path
 	addInputTuple();	// command line arguments (optional)
@@ -68,18 +71,20 @@ HexFileAtom::~HexFileAtom()
 void
 HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
 	std::string programpath;
 	std::string cmdargs;
-	AtomSet inputfacts;
+	InterpretationConstPtr inputfacts;
 	try{
-		Tuple params = query.getInputTuple();
+		const Tuple& params = query.input;
 
 		// load program
-		programpath = params[0].getUnquotedString();
+		programpath = reg->terms.getByID(params[0]).getUnquotedString();
 
 		// Retrieve command line arguments
 		if (params.size() > 1){
-			cmdargs = params[1].getUnquotedString();
+			cmdargs = reg->terms.getByID(params[1]).getUnquotedString();
 		}
 
 		// Build hex call identifier
@@ -87,8 +92,8 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
-		out.push_back(Term(resultsetCache[hc]));
-		answer.addTuple(out);
+		out.push_back(ID::termFromInteger(resultsetCache[hc]));
+		answer.get().push_back(out);
 	}catch(...){
 		std::stringstream msg;
 		msg << "Nested Hex program \"" << programpath << "\" failed. Command line arguments were: " << cmdargs;
@@ -96,10 +101,15 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	}
 }
 
-
 // -------------------- CallHexAtom --------------------
 
-CallHexAtom::CallHexAtom(HexAnswerCache &rsCache, int ar = 0) : resultsetCache(rsCache), arity(ar)
+std::string CallHexAtom::getName(int arity){
+	std::stringstream ss;
+	ss << "callhex" << arity;
+	return ss.str();
+}
+
+CallHexAtom::CallHexAtom(HexAnswerCache &rsCache, int ar = 0) : PluginAtom(getName(ar), 1), resultsetCache(rsCache), arity(ar)
 {
 	addInputConstant();	// program
 	for (int i = 0; i < arity; i++){
@@ -116,67 +126,26 @@ CallHexAtom::~CallHexAtom()
 void
 CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
 	std::string program;
 	std::string cmdargs;
-	AtomSet inputfacts;
+	InterpretationConstPtr inputfacts = query.interpretation;
 	try{
-		Tuple params = query.getInputTuple();
+		const Tuple& params = query.input;
 
 		// resolve escape sequences
-		program = params[0].getUnquotedString();
+		program = reg->terms.getByID(params[0]).getUnquotedString();
 
-		// retrieve the facts over the specified predicate and pass them to the subprogram
-		for (int i = 0; i < arity; i++){
-			std::string inputfactspred = params[1 + i].getUnquotedString();
-			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
-		}
+//		// retrieve the facts over the specified predicate and pass them to the subprogram
+//		for (int i = 0; i < arity; i++){
+//			std::string inputfactspred = params[1 + i].getUnquotedString();
+//			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
+//		}
 
-/*
-		// Retrieve command line arguments
-		std::string inputfactspred = params[1].getUnquotedString();
-
-	// Get predicate which specifies the input predicates:
-	AtomSet inputpreds;
-	query.getInterpretation().matchPredicate(inputfactspred, inputpreds);
-	for (AtomSet::const_iterator it = inputpreds.begin(); it != inputpreds.end(); ++it){
-		if (it->getArguments().size() != 1) throw PluginError("Input predicates must be unary");
-		// Read next input predicate name
-		std::string inputpredname = it->getArguments()[0].getUnquotedString();
-		// Read inputs over this predicate name
-		AtomSet facts;
-		query.getInterpretation().matchPredicate(inputpredname, facts);
-		// convert from higher-order notation to first-order notation
-		for (AtomSet::const_iterator it = facts.begin(); it != facts.end(); ++it){
-			AtomPtr atom = AtomPtr(new Atom(it->getArguments()));
-			inputfacts.insert(atom);
-		}
-	}
-*/
-/*
-		// Read input facts
-		AtomSet f;
-		query.getInterpretation().matchPredicate(inputfactspred, f);
-
-		// convert from higher-order notation to first-order notation
-		for (AtomSet::const_iterator it = f.begin(); it != f.end(); ++it){
-			Tuple args = it->getArguments();
-			// read arity
-			int arity = it->getArguments()[0].getInt();
-			if (args.size() < 2) throw PluginError("Specified too few arguments over input predicate \"" + inputfactspred + "\"");
-			std::stringstream ss;
-			ss << "Specified too few arguments for " << arity << "-ary predicate \"" << it->getArguments()[1] << "\"";
-			if (args.size() < arity + 2) throw PluginError(ss.str());
-
-			// delete superfluous parameters
-			args.erase(args.begin(), args.begin() + 1); // arity information
-			args.erase(args.end() - (args.size() - 1 - arity), args.end()); // number of existing args minus number of needed args			
-			AtomPtr atom = AtomPtr(new Atom(args));
-			inputfacts.insert(atom);
-		}
-*/
 		// Retrieve command line arguments (if specified)
 		if (params.size() > 1 + arity){
-			cmdargs = params[1 + arity].getUnquotedString();
+			cmdargs = reg->terms.getByID(params[1 + arity]).getUnquotedString();
 		}
 
 		// Build hex call identifier
@@ -184,8 +153,8 @@ CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
-		out.push_back(Term(resultsetCache[hc]));
-		answer.addTuple(out);
+		out.push_back(ID::termFromInteger(resultsetCache[hc]));
+		answer.get().push_back(out);
 	}catch(PluginError){
 		throw;
 	}catch(...){
@@ -198,7 +167,13 @@ CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 // -------------------- CallHexFileAtom --------------------
 
-CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache, int ar) : resultsetCache(rsCache), arity(ar)
+std::string CallHexFileAtom::getName(int arity){
+	std::stringstream ss;
+	ss << "callhexfile" << arity;
+	return ss.str();
+}
+
+CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache, int ar) : PluginAtom(getName(ar), 1), resultsetCache(rsCache), arity(ar)
 {
 	addInputConstant();	// program path
 	for (int i = 0; i < arity; i++){
@@ -215,50 +190,26 @@ CallHexFileAtom::~CallHexFileAtom()
 void
 CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
 	std::string programpath;
 	std::string cmdargs;
-	AtomSet inputfacts;
+	InterpretationConstPtr inputfacts = query.interpretation;
 	try{
-		Tuple params = query.getInputTuple();
+		const Tuple& params = query.input;
 
 		// load program
-		programpath = params[0].getUnquotedString();
+		programpath = reg->terms.getByID(params[0]).getUnquotedString();
 
 		// retrieve the facts over the specified predicate and pass them to the subprogram
-		for (int i = 0; i < arity; i++){
-			std::string inputfactspred = params[1 + i].getUnquotedString();
-			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
-		}
-
-/*
-		// Retrieve command line arguments
-		std::string inputfactspred = params[1].getUnquotedString();
-
-		// retrieve the facts over the specified predicate and pass them to the subprogram
-		AtomSet f;
-		query.getInterpretation().matchPredicate(inputfactspred, f);
-
-		// convert from higher-order notation to first-order notation
-		for (AtomSet::const_iterator it = f.begin(); it != f.end(); ++it){
-			Tuple args = it->getArguments();
-			// read arity
-			int arity = it->getArguments()[0].getInt();
-			if (args.size() < 2) throw PluginError("Specified too few arguments over input predicate \"" + inputfactspred + "\"");
-			std::stringstream ss;
-			ss << "Specified too few arguments for " << arity << "-ary predicate \"" << it->getArguments()[1] << "\"";
-			if (args.size() < arity + 2) throw PluginError(ss.str());
-
-			// delete superfluous parameters
-			args.erase(args.begin(), args.begin() + 1); // arity information
-			args.erase(args.end() - (args.size() - 1 - arity), args.end()); // number of existing args minus number of needed args			
-			AtomPtr atom = AtomPtr(new Atom(args));
-			inputfacts.insert(atom);
-		}
-*/
+//		for (int i = 0; i < arity; i++){
+//			std::string inputfactspred = params[1 + i].getUnquotedString();
+//			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
+//		}
 
 		// Retrieve command line arguments
 		if (params.size() > 1 + arity){
-			cmdargs = params[1 + arity].getUnquotedString();
+			cmdargs = reg->terms.getByID(params[1 + arity]).getUnquotedString();
 		}
 
 		// Build hex call identifier
@@ -266,8 +217,8 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
-		out.push_back(Term(resultsetCache[hc]));
-		answer.addTuple(out);
+		out.push_back(ID::termFromInteger(resultsetCache[hc]));
+		answer.get().push_back(out);
 	}catch(PluginError){
 		throw;
 	}catch(...){
@@ -277,10 +228,9 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 	}
 }
 
-
 // -------------------- AnswerSetsAtom --------------------
 
-AnswerSetsAtom::AnswerSetsAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+AnswerSetsAtom::AnswerSetsAtom(HexAnswerCache &rsCache) : PluginAtom("answersets", 1), resultsetCache(rsCache)
 {
 	addInputConstant();	// answer index
 	setOutputArity(1);	// list of answer-set handles
@@ -294,7 +244,7 @@ void
 AnswerSetsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
 	// Retrieve answer index
-	int answerindex = query.getInputTuple()[0].getInt();
+	int answerindex = query.input[0].address;
 
 	// check index validity
 	if (answerindex < 0 || answerindex >= resultsetCache.size()){
@@ -302,10 +252,10 @@ AnswerSetsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 	}else{
 		// Return handles to all answer-sets of the given answer (all integers from 0 to the number of answer-sets minus 1)
 		int i = 0;
-		for (HexAnswer::iterator it = resultsetCache[answerindex]->begin(); it != resultsetCache[answerindex]->end(); it++){
+		for (HexAnswer::iterator it = resultsetCache[answerindex].begin(); it != resultsetCache[answerindex].end(); it++){
 			Tuple out;
-			out.push_back(Term(i++));
-			answer.addTuple(out);
+			out.push_back(ID::termFromInteger(i++));
+			answer.get().push_back(out);
 		}
 	}
 }
@@ -313,7 +263,7 @@ AnswerSetsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 // -------------------- PredicatesAtom --------------------
 
-PredicatesAtom::PredicatesAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+PredicatesAtom::PredicatesAtom(HexAnswerCache &rsCache) : PluginAtom("predicates", 1), resultsetCache(rsCache)
 {
 	addInputConstant();	// answer index
 	addInputConstant();	// answerset index
@@ -327,32 +277,38 @@ PredicatesAtom::~PredicatesAtom()
 void
 PredicatesAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
 	// Retrieve answer index and answer-set index
-	int answerindex = query.getInputTuple()[0].getInt();
-	int answersetindex = query.getInputTuple()[1].getInt();
+	int answerindex = query.input[0].address;
+	int answersetindex = query.input[1].address;
 
 	// check index validity
 	if (answerindex < 0 || answerindex >= resultsetCache.size()){
 		throw PluginError("An invalid answer handle was passed to atom &predicates");
-	}else if(answersetindex < 0 || answersetindex >= resultsetCache[answerindex]->size()){
+	}else if(answersetindex < 0 || answersetindex >= resultsetCache[answerindex].size()){
 		throw PluginError("An invalid answer-set handle was passed to atom &predicates");
 	}else{
 		// Go through all atoms of the given answer_set
-		int i = 0;
-		for (AtomSet::const_iterator it = (*(resultsetCache[answerindex]))[answersetindex].begin(); it != (*(resultsetCache[answerindex]))[answersetindex].end(); it++){
-			// Return predicate name and arity of the atom
-			Tuple out;
-			out.push_back(Term(it->getPredicate().getString()));
-			out.push_back(Term(it->getArity()));
-			answer.addTuple(out);
+		for(Interpretation::Storage::enumerator it =
+		    (resultsetCache[answerindex])[answersetindex]->getStorage().first();
+		    it != (resultsetCache[answerindex])[answersetindex]->getStorage().end(); ++it){
+
+			ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+			const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+			Tuple t;
+			t.push_back(ogatom.tuple[0]);
+			t.push_back(ID::termFromInteger(ogatom.tuple.size() - 1));
+			answer.get().push_back(t);
 		}
 	}
 }
 
 
-// -------------------- PredicatesAtom --------------------
+// -------------------- ArgumentsAtom --------------------
 
-ArgumentsAtom::ArgumentsAtom(HexAnswerCache &rsCache) : resultsetCache(rsCache)
+ArgumentsAtom::ArgumentsAtom(HexAnswerCache &rsCache) : PluginAtom("arguments", 1), resultsetCache(rsCache)
 {
 	addInputConstant();	// answer index
 	addInputConstant();	// answerset index
@@ -367,40 +323,74 @@ ArgumentsAtom::~ArgumentsAtom()
 void
 ArgumentsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 {
+	RegistryPtr reg = query.interpretation->getRegistry();
+
 	// Extract answer index, answerset index and predicate to retrieve
-	int answerindex = query.getInputTuple()[0].getInt();
-	int answersetindex = query.getInputTuple()[1].getInt();
-	std::string predicate = query.getInputTuple()[2].getUnquotedString();
+	int answerindex = query.input[0].address;
+	int answersetindex = query.input[1].address;
+	ID predicate = query.input[2];
 
 	// check index validity
 	if (answerindex < 0 || answerindex >= resultsetCache.size()){
 		throw PluginError("An invalid answer handle was passed to atom &arguments");
-	}else if(answersetindex < 0 || answersetindex >= resultsetCache[answerindex]->size()){
+	}else if(answersetindex < 0 || answersetindex >= resultsetCache[answerindex].size()){
 		throw PluginError("An invalid answer-set handle was passed to atom &arguments");
 	}else{
+		int runningindex = 0;
+
+		// Go through all atoms of the given answer_set
+		for(Interpretation::Storage::enumerator it =
+		    (resultsetCache[answerindex])[answersetindex]->getStorage().first();
+		    it != (resultsetCache[answerindex])[answersetindex]->getStorage().end(); ++it){
+
+			ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+			const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+			// If the atom is built upon the given predicate, return it's parameters
+			if (ogatom.tuple[0] == predicate){
+				// special case of index "s": positive or strongly negated
+//				Tuple ts;
+//				ts.push_back(ID::termFromInteger(runningindex));
+//				ts.push_back(reg->terms.storeAndGetID(Term(ID::MAINKIND_TERM | ID::SUBKIND_TERM_CONSTANT, "s")));
+//				ts.push_back(ID::termFromInteger(it->isStronglyNegated() ? 1 : 0));
+//				answer.get().push_back(ts);
+
+				// Go through all parameters
+				for (int i = 1; i < ogatom.tuple.size(); ++i){
+					Tuple t;
+					t.push_back(ID::termFromInteger(runningindex));
+					t.push_back(ID::termFromInteger(i - 1));
+					t.push_back(ogatom.tuple[i]);
+					answer.get().push_back(t);
+				}
+			}
+		}
+/*
 		// Go through all atoms of the given answer_set
 		int runningindex = 0;
 		for (AtomSet::const_iterator it = (*(resultsetCache[answerindex]))[answersetindex].begin(); it != (*(resultsetCache[answerindex]))[answersetindex].end(); it++){
 			// If the atom is built upon the given predicate, return it's parameters
 			if (it->getPredicate() == predicate){
 				// special case of index "s": positive or strongly negated
-				Tuple outsign;
-				outsign.push_back(Term(runningindex));
-				outsign.push_back(Term("s"));
-				outsign.push_back(Term(it->isStronglyNegated() ? 1 : 0));
-				answer.addTuple(outsign);
+				ComfortTuple outsign;
+				outsign.push_back(ComfortTerm::createInteger(runningindex));
+				outsign.push_back(ComfortTerm::createConstant("s"));
+				outsign.push_back(ComfortTerm::createInteger(it->isStronglyNegated() ? 1 : 0));
+				answer.insert(outsign);
 
 				// Go through all parameters
 				for (int argindex = 0; argindex < it->getArity(); argindex++){
 					// For each: Return a running index (since the same predicate can occur arbitrary often within an answer-set), the argument index and the value
-					Tuple out;
-					out.push_back(Term(runningindex));
-					out.push_back(Term(argindex));
+					ComfortTuple out;
+					out.push_back(ComfortTerm::createInteger(runningindex));
+					out.push_back(ComfortTerm::createInteger(argindex));
 					out.push_back(it->getArgument(argindex + 1));
-					answer.addTuple(out);
+					answer.insert(out);
 				}
 				runningindex++;
 			}
 		}
+*/
 	}
 }
+

@@ -1,10 +1,11 @@
 #include <HexAnswerCache.h>
 
 #include <HexExecution.h>
-#include <DLVHexProcess.h>
-#include <DlvhexSolver.h>
+#include "dlvhex/HexParser.hpp"
+#include "dlvhex/InputProvider.hpp"
 
 #include <fstream>
+#include <iostream>
 
 using namespace dlvhex;
 using namespace merging;
@@ -98,7 +99,7 @@ std::string hash(std::string text){
 
 // ---------- HexCall ----------
 
-HexCall::HexCall(CallType ct, std::string prog, std::string args, AtomSet facts) : type(ct), program(prog), arguments(args), operatorImpl(NULL), inputfacts(facts){
+HexCall::HexCall(CallType ct, std::string prog, std::string args, InterpretationConstPtr facts) : type(ct), program(prog), arguments(args), operatorImpl(NULL), inputfacts(facts){
 	assert(ct == HexProgram || ct == HexFile);
 	// compute hash value for the program
 	//// (source or path) and input parameters
@@ -121,7 +122,7 @@ const bool HexCall::operator==(const HexCall &other) const{
 		case HexProgram:
 		case HexFile:
 			// Check if the programs (or the program paths), the command line arguments and the input facts are equivalent
-			if (getHashCode() != other.getHashCode() || arguments != other.getArguments() || inputfacts != other.getFacts()) return false;
+			if (getHashCode() != other.getHashCode() || arguments != other.getArguments() || inputfacts->getStorage() != other.getFacts()->getStorage()) return false;
 			return true;
 			break;
 
@@ -181,14 +182,15 @@ const std::string HexCall::getArguments() const{
 	return arguments;
 }
 
-const AtomSet HexCall::getFacts() const{
+const InterpretationConstPtr HexCall::getFacts() const{
 	assert(getType() == HexProgram || getType() == HexFile);
 	return inputfacts;
 }
 
 const bool HexCall::hasInputFacts() const{
 	assert(getType() == HexProgram || getType() == HexFile);
-	return inputfacts.size() != 0;
+	if (inputfacts == InterpretationConstPtr()) return false;
+	return inputfacts->getStorage().count() != 0;
 }
 
 const std::vector<int> HexCall::getAsParams() const{
@@ -244,6 +246,65 @@ HexAnswerCache::~HexAnswerCache(){
 HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	assert(call.getType() == HexCall::HexProgram);
 
+	std::cout << "Loading program " << call.getProgram() << " with input facts " << call.getFacts() << std::endl;
+
+
+
+
+
+/*
+	// create inputprovider
+	InputProviderPtr inp(new InputProvider);
+
+	inp->addStringInput(call.getProgram(), "nestedprog");
+	//  put in program file
+	//  inp->addFileInput(scriptname);
+
+{
+    ASPSolver::DLVSoftware::Configuration dlvconfig;
+    ASPSolverManager mgr;
+    ASPSolverManager::ResultsPtr results = mgr.solve(dlvconfig, *inp, reg);
+    // we use the first answer set
+    // we warn if there are more only in debug mode
+    AnswerSet::Ptr as = results->getNextAnswerSet();
+}
+
+*/
+
+
+
+
+
+
+
+	HexAnswer* result = new HexAnswer();
+	return result;
+/*
+		InputProviderPtr ip(new InputProvider());
+		ip->addStringInput(call.getProgram(), "nestedprog");
+		ProgramCtx pc;
+		pc.changeRegistry(solver->getProgramContext().registry());
+		ModuleHexParser hp;
+		hp.parse(ip, pc);
+
+		ASPProgram program(pc.registry(), pc.idb, query.interpretation);
+		InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program, InternalGrounder::builtin));
+		ASPProgram gprogram = ig->getGroundProgram();
+		DBGLOG(DBG, "NONGROUND::");
+		DBGLOG(DBG, ig->getNongroundProgramString());
+		DBGLOG(DBG, "GROUND::");
+		DBGLOG(DBG, ig->getGroundProgramString());
+		// create a nogood for each ground rule
+		BOOST_FOREACH (ID ruleID, gprogram.idb){
+			Nogood ng = getRuleNogood(solver, query, pc.registry()->rules.getByID(ruleID));
+			DBGLOG(DBG, "Rule nogood: " << ng);
+		}
+*/
+
+
+
+
+/*
   typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
   DlvhexConfiguration dlvhex;
 
@@ -267,11 +328,12 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	solver.solve(dlvhex, prog, facts, *result);
 
 	return result;
+*/
 }
 
 HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	assert(call.getType() == HexCall::HexFile);
-
+/*
   typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
   DlvhexConfiguration dlvhex;
 
@@ -304,11 +366,12 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	solver.solve(dlvhex, prog, facts, *result);
 
 	return result;
+*/
 }
 
 HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){
 	assert(call.getType() == HexCall::OperatorCall);
-
+/*
 	HexAnswer opanswer;
 
 	// make a list of pointers to all answers passed to this operator
@@ -345,6 +408,7 @@ HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){
 	}
 
 	return new HexAnswer(opanswer);
+*/
 }
 
 void HexAnswerCache::load(const int index){
@@ -429,7 +493,7 @@ const int HexAnswerCache::operator[](const HexCall call){
 	return index;
 }
 
-HexAnswer* HexAnswerCache::operator[](const int index){
+HexAnswer& HexAnswerCache::operator[](const int index){
 	assert(index >=0 && index < size());
 
 	// find the entry for this call
@@ -439,9 +503,13 @@ HexAnswer* HexAnswerCache::operator[](const int index){
 	}
 	access(index);
 	// now it's in the cache for sure
-	return cache[index].second;
+	return *(cache[index].second);
 }
 
 const int HexAnswerCache::size(){
 	return cache.size();
+}
+
+void HexAnswerCache::setRegistry(RegistryPtr reg){
+	this->reg = reg;
 }

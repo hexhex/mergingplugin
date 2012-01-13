@@ -1,17 +1,18 @@
-noinst_HEADERS = DLVHexProcess.h \
-		 DlvhexSolver.h \
-		 ArbProcess.h \
+noinst_HEADERS = HexExecution.h \
 		 HexExecution.h \
-		 Operators.h \
-		 HexExecution.h \
-		 Operators.h \
 		 HexAnswerCache.h \
+		 Operators.h \
 		 OpUnion.h \
-		 OpSetminus.h \
-		 OpDalal.h \
-		 OpDBO.h \
-		 OpMajoritySelection.h \
-		 OpRelationMerging.h
+		 OpSetminus.h
+
+#DLVHexProcess.h \
+#DlvhexSolver.h \
+#ArbProcess.h \
+#Operators.h \
+#OpDalal.h \
+#OpDBO.h \
+#OpMajoritySelection.h \
+#OpRelationMerging.h
 
 pkginclude_HEADERS = \
 	PublicTypes.h \
