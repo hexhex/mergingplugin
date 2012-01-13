@@ -42,15 +42,26 @@ void SimulatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginEr
 	// get ASP filename
 	std::string programpath = reg->terms.getByID(params[0]).getUnquotedString();
 
-	// evaluate it
-	InputProviderPtr ip(new InputProvider());
-	ip->addFileInput(programpath);
-	ProgramCtx pc;
-	pc.changeRegistry(reg);
-	ModuleHexParser hp;
-	hp.parse(ip, pc);
-std::cout << "INPUT: " << query.interpretation << std::endl;
+	// if we access this file for the first time, parse the content
+	if (programs.find(programpath) == programs.end()){
+		DBGLOG(DBG, "Parsing simulation program");
+		InputProviderPtr ip(new InputProvider());
+		ip->addFileInput(programpath);
+		Logger::Levels l = Logger::Instance().getPrintLevels();	// workaround: verbose causes the parse call below to fail (registry pointer is 0)
+		Logger::Instance().setPrintLevels(0);
+		programs[programpath].changeRegistry(reg);
+		ModuleHexParser hp;
+		hp.parse(ip, programs[programpath]);
+		Logger::Instance().setPrintLevels(l);
+	}
+	ProgramCtx& pc = programs[programpath];
+
+	// construct edb
+	DBGLOG(DBG, "Constructing EDB");
+	InterpretationPtr edb = InterpretationPtr(new Interpretation(*pc.edb));
+
 	// go through all input atoms
+	DBGLOG(DBG, "Rewriting input");
 	for(Interpretation::Storage::enumerator it =
 	    query.interpretation->getStorage().first();
 	    it != query.interpretation->getStorage().end(); ++it){
@@ -65,7 +76,7 @@ std::cout << "INPUT: " << query.interpretation << std::endl;
 				// replace the predicate by "in[inp]"
 				std::stringstream inPredStr;
 				inPredStr << "in" << inp;
-				Term inPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_PREDICATE, inPredStr.str());
+				Term inPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_CONSTANT, inPredStr.str());
 				ID inPredID = reg->storeTerm(inPredTerm);
 				OrdinaryAtom oareplace = ogatom;
 				oareplace.tuple[0] = inPredID;
@@ -74,7 +85,7 @@ std::cout << "INPUT: " << query.interpretation << std::endl;
 				ID oareplaceID = reg->storeOrdinaryGAtom(oareplace);
 
 				// set this atom in the input interpretation
-				pc.edb->getStorage().set_bit(oareplaceID.address);
+				edb->getStorage().set_bit(oareplaceID.address);
 				found = true;
 				break;
 			}
@@ -82,15 +93,18 @@ std::cout << "INPUT: " << query.interpretation << std::endl;
 		assert(found);
 	}
 
-	ASPProgram program(pc.registry(), pc.idb, pc.edb);
+	DBGLOG(DBG, "Grounding simulation program");
+	ASPProgram program(pc.registry(), pc.idb, edb);
 	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
 	ASPProgram gprogram = ig->getGroundProgram();
 
+	DBGLOG(DBG, "Evaluating simulation program");
 	InternalGroundDASPSolver igas(pc, gprogram);
 	InterpretationPtr as = igas.projectToOrdinaryAtoms(igas.getNextModel());
 	if (as != InterpretationPtr()){
 
 		// extract parameters from all atoms over predicate "out"
+		DBGLOG(DBG, "Rewrting output");
 		Term outPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_PREDICATE, "out");
 		ID outPredID = reg->storeTerm(outPredTerm);
 		for(Interpretation::Storage::enumerator it =
@@ -100,22 +114,15 @@ std::cout << "INPUT: " << query.interpretation << std::endl;
 			ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
 			const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
 
-std::cout << "check: " << std::endl;
 			if (ogatom.tuple[0] == outPredID){
-std::cout << "OUTPUT: " << std::endl;
 				Tuple t;
 				for (int ot = 1; ot < ogatom.tuple.size(); ++ot){
-std::cout << ogatom.tuple[ot] << ", ";
 					t.push_back(ogatom.tuple[ot]);
 				}
-std::cout << std::endl;
 				answer.get().push_back(t);
 			}
 		}
 	}
-//	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
-//		result->push_back(InterpretationPtr(new Interpretation(*as)));
-//	}
 }
 
 // -------------------- HexAtom --------------------

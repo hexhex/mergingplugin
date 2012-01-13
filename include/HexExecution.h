@@ -7,6 +7,7 @@
 //#include <dlvhex/HexParserDriver.h>
 #include <stdlib.h>
 #include <string>
+#include <map>
 
 namespace dlvhex {
 	namespace merging {
@@ -15,6 +16,7 @@ namespace dlvhex {
 			{
 			private:
 				int inputArity, outputArity;
+				std::map<std::string, ProgramCtx> programs;
 
 				std::string getName(int inar, int outar);
 			public:
