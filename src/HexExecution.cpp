@@ -3,10 +3,120 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 #include <dlvhex/Registry.hpp>
 
+#include "dlvhex/HexParser.hpp"
+#include "dlvhex/InputProvider.hpp"
+
+#include "dlvhex/InternalGrounder.hpp"
+#include "dlvhex/InternalGroundDASPSolver.hpp"
+
 using namespace dlvhex::merging::plugin;
+
+// -------------------- SimulatorAtom --------------------
+
+std::string SimulatorAtom::getName(int inar, int outar){
+	std::stringstream ss;
+	ss << "simulator" << inar << "_" << outar;
+	return ss.str();
+}
+
+SimulatorAtom::SimulatorAtom(int inar, int outar) : PluginAtom(getName(inar, outar), 0), inputArity(inar), outputArity(outar){
+
+	addInputConstant();
+	for (int i = 0; i < inar; ++i) addInputPredicate();
+	setOutputArity(outar);
+}
+
+SimulatorAtom::~SimulatorAtom(){
+}
+
+void SimulatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError){
+
+	RegistryPtr reg = query.interpretation->getRegistry();
+
+	const Tuple& params = query.input;
+
+	// get ASP filename
+	std::string programpath = reg->terms.getByID(params[0]).getUnquotedString();
+
+	// evaluate it
+	InputProviderPtr ip(new InputProvider());
+	ip->addFileInput(programpath);
+	ProgramCtx pc;
+	pc.changeRegistry(reg);
+	ModuleHexParser hp;
+	hp.parse(ip, pc);
+std::cout << "INPUT: " << query.interpretation << std::endl;
+	// go through all input atoms
+	for(Interpretation::Storage::enumerator it =
+	    query.interpretation->getStorage().first();
+	    it != query.interpretation->getStorage().end(); ++it){
+
+		ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+		const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+		// check if the predicate matches any of the input parameters to simulator atom
+		bool found = false;
+		for (int inp = 1; inp < params.size(); ++inp){
+			if (ogatom.tuple[0] == params[inp]){
+				// replace the predicate by "in[inp]"
+				std::stringstream inPredStr;
+				inPredStr << "in" << inp;
+				Term inPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_PREDICATE, inPredStr.str());
+				ID inPredID = reg->storeTerm(inPredTerm);
+				OrdinaryAtom oareplace = ogatom;
+				oareplace.tuple[0] = inPredID;
+
+				// get ID of replaced atom
+				ID oareplaceID = reg->storeOrdinaryGAtom(oareplace);
+
+				// set this atom in the input interpretation
+				pc.edb->getStorage().set_bit(oareplaceID.address);
+				found = true;
+				break;
+			}
+		}
+		assert(found);
+	}
+
+	ASPProgram program(pc.registry(), pc.idb, pc.edb);
+	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
+	ASPProgram gprogram = ig->getGroundProgram();
+
+	InternalGroundDASPSolver igas(pc, gprogram);
+	InterpretationPtr as = igas.projectToOrdinaryAtoms(igas.getNextModel());
+	if (as != InterpretationPtr()){
+
+		// extract parameters from all atoms over predicate "out"
+		Term outPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_PREDICATE, "out");
+		ID outPredID = reg->storeTerm(outPredTerm);
+		for(Interpretation::Storage::enumerator it =
+		    as->getStorage().first();
+		    it != as->getStorage().end(); ++it){
+
+			ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+			const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+std::cout << "check: " << std::endl;
+			if (ogatom.tuple[0] == outPredID){
+std::cout << "OUTPUT: " << std::endl;
+				Tuple t;
+				for (int ot = 1; ot < ogatom.tuple.size(); ++ot){
+std::cout << ogatom.tuple[ot] << ", ";
+					t.push_back(ogatom.tuple[ot]);
+				}
+std::cout << std::endl;
+				answer.get().push_back(t);
+			}
+		}
+	}
+//	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
+//		result->push_back(InterpretationPtr(new Interpretation(*as)));
+//	}
+}
 
 // -------------------- HexAtom --------------------
 

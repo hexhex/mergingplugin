@@ -11,6 +11,20 @@
 namespace dlvhex {
 	namespace merging {
 		namespace plugin{
+			class SimulatorAtom : public PluginAtom
+			{
+			private:
+				int inputArity, outputArity;
+
+				std::string getName(int inar, int outar);
+			public:
+
+				SimulatorAtom(int inar, int outar);
+
+				virtual ~SimulatorAtom();
+				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);
+			};
+
 			/**
 			 * This class implements an external atom which is capable of executing a hex program given as string.
 			 * Usage:

@@ -196,6 +196,11 @@ namespace dlvhex {
 						ret.push_back(PluginAtomPtr(new CallHexAtom(resultsetCache, i), PluginPtrDeleter<PluginAtom>()));
 						ret.push_back(PluginAtomPtr(new CallHexFileAtom(resultsetCache, i), PluginPtrDeleter<PluginAtom>()));
 					}
+					for (int in = 0; in <= 5; ++in){
+						for (int out = 0; out <= 5; ++out){
+							ret.push_back(PluginAtomPtr(new SimulatorAtom(in, out), PluginPtrDeleter<PluginAtom>()));
+						}
+					}
 					ret.push_back(PluginAtomPtr(new AnswerSetsAtom(resultsetCache), PluginPtrDeleter<PluginAtom>()));
 					ret.push_back(PluginAtomPtr(new PredicatesAtom(resultsetCache), PluginPtrDeleter<PluginAtom>()));
 					ret.push_back(PluginAtomPtr(new ArgumentsAtom(resultsetCache), PluginPtrDeleter<PluginAtom>()));
