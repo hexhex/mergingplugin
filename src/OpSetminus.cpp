@@ -12,7 +12,7 @@ std::string OpSetminus::getInfo(){
 	std::stringstream ss;
 	ss <<	"     setminus" << std::endl <<
 		"     --------" << std::endl << std::endl <<
-		"Expects exactly two inputs" << std::endl;
+		"Expects exactly two inputs" << std::endl <<
 		"Computes the pairwise difference of answer-sets of the first argument minus the second one.";
 	return ss.str();
 }

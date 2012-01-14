@@ -7,9 +7,9 @@
 #include <vector>
 #include <IOperator.h>
 
-/*
 #include "OpUnion.h"
 #include "OpSetminus.h"
+/*
 #include "OpDalal.h"
 #include "OpDBO.h"
 #include "OpMajoritySelection.h"
@@ -36,9 +36,10 @@ namespace dlvhex {
 				HexAnswerCache& resultsetCache;
 
 				std::map<std::string, IOperator*> operators;
-/*
+
 				OpUnion _union;
 				OpSetminus _setminus;
+/*
 				OpDalal _dalal;
 				OpDBO _dbo;
 				OpMajoritySelection _majorityselection;

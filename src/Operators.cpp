@@ -28,9 +28,9 @@ void OperatorAtom::registerBuiltInOperators(){
 	// Make sure that ptr does not get invalid before the destructor of this OperatorAtom is called.
 
 	// built-in operators
-/*
 	operators[_union.getName()] = &_union;
 	operators[_setminus.getName()] = &_setminus;
+/*
 	operators[_dalal.getName()] = &_dalal;
 	operators[_dbo.getName()] = &_dbo;
 	operators[_majorityselection.getName()] = &_majorityselection;

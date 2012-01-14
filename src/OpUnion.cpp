@@ -13,8 +13,8 @@ std::string OpUnion::getInfo(){
 	std::stringstream ss;
 	ss <<	"     union" << std::endl <<
 		"     -----" << std::endl << std::endl <<
-		"Expects exactly two inputs" << std::endl;
-		"Computes the pairwise union of answer-sets of it's arguments.";
+		"Expects exactly two inputs" << std::endl <<
+		"Computes the pairwise union of answer-sets of its arguments.";
 	return ss.str();
 }
 
