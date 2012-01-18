@@ -151,13 +151,15 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 		err << "Error during code generation for revision plan: Either mapping rules OR an external program can be defined. For belief base \"" << name << "\" both were found." << std::endl;
 	}else{
 		if (externalprogram){
-			os << "sources(" << name << ", AnswerNr) :- &hexfile[\"";
+			os << "sources(" << name << ", AnswerNr) :- &callhexfile0[\"";
 			os << filename;
-			os << "\", \"" << args << (useInputRewriter ? std::string(" --inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+			os << "\"](" << "AnswerNr" << ")." << std::endl;
+// , \"" << args << (useInputRewriter ? std::string(" --inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"
 		}else{
-			os << "sources(" << name << ", AnswerNr) :- &hex[\"" << std::endl;
+			os << "sources(" << name << ", AnswerNr) :- &callhex0[\"";
 			os << mappings;
-			os << "\", \"" << args << (useInputRewriter ? std::string(" --inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"](" << "AnswerNr" << ")." << std::endl;
+			os << "\"](" << "AnswerNr" << ")." << std::endl;
+// , \"" << args << (useInputRewriter ? std::string(" --inputrewriter=\"") + inputrewriter + std::string("\"") : "") << "\"
 		}
 	}
 }
@@ -323,7 +325,7 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 	//	2. There must be selected exactly one answer set
 	//	3. For the selected answer set: "copy" it's content into the real answer set with simple mapping rules
 	os << "% Each answer set can be selected or not" << std::endl;
-	os << "selectedas(AnswerSetNr) v -selectedas(AnswerSetNr) :- finalanswersets(AnswerNr, AnswerSetNr)." << std::endl;
+	os << "selectedas(AnswerSetNr) v nselectedas(AnswerSetNr) :- finalanswersets(AnswerNr, AnswerSetNr)." << std::endl;
 	os << std::endl;
 	os << "% Select exactly one:" << std::endl;
 	os << "%    Select at least one" << std::endl;
@@ -365,7 +367,7 @@ void CodeGenerator::writeAnswerSetExtraction(ParseTreeNode *parsetree, std::ostr
 			}else{
 				os << "%    " << currentPred << " with arity " << currentArity << std::endl;
 				os << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 0)." << std::endl;
-				os << "-" << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 1)." << std::endl;
+//				os << "-" << currentPred << " :- finalresult(AnswerNr), selectedas(AnswerSetNr), &predicates[AnswerNr, AnswerSetNr](" << currentPred << ", 0), &arguments[AnswerNr, AnswerSetNr, " << currentPred << "](RunningNr, s, 1)." << std::endl;
 			}
 		}
 	}else{

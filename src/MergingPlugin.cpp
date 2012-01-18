@@ -190,7 +190,7 @@ namespace dlvhex {
 				std::vector<std::string> searchpaths;
 
 				// Strings containing the paths and/or program names of input and output rewriters
-				PluginConverter *inputrewriter;
+				PluginConverterPtr inputrewriter;
 
 				// pointers to selected atoms
 				OperatorAtom* operator_atom;
@@ -208,15 +208,15 @@ namespace dlvhex {
 					operator_atom = new OperatorAtom(resultsetCache);
 				}
 
-				virtual PluginConverter*
-				createConverter()
+				virtual PluginConverterPtr
+				createConverter(ProgramCtx& ctx)
 				{
 					return inputrewriter;
 				}
 
 				virtual std::vector<PluginAtomPtr> createAtoms(ProgramCtx& ctx) const
 				{
-					resultsetCache.setRegistry(ctx.registry());
+					resultsetCache.setProgramCtx(ctx);
 
 					std::vector<PluginAtomPtr> ret;
 			
@@ -281,7 +281,7 @@ namespace dlvhex {
 						if (	option.substr(0, std::string("--inputrewriter=").size()) == std::string("--inputrewriter=") ||
 							option.substr(0, std::string("--irw=").size()) == std::string("--irw=")){
 							if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv and --merging counts as rewriter)");
-							inputrewriter = new Rewriter(removeQuotes(option.substr(option.find_first_of('=', 0) + 1)));
+							inputrewriter = PluginConverterPtr(new Rewriter(removeQuotes(option.substr(option.find_first_of('=', 0) + 1))));
 
 							found.push_back(it);
 						}
@@ -289,9 +289,9 @@ namespace dlvhex {
 						// merging plans
 						if (	option.substr(0, std::string("--merging").size()) == std::string("--merging")){
 							if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv and --merging counts as rewriter)");							if (option.substr(0, std::string("--mergingdump").size()) == std::string("--mergingdump")){
-								inputrewriter = new MPCompiler(true);
+								inputrewriter = PluginConverterPtr(new MPCompiler(true));
 							}else{
-								inputrewriter = new MPCompiler(false);
+								inputrewriter = PluginConverterPtr(new MPCompiler(false));
 							}
 
 							found.push_back(it);
@@ -314,7 +314,7 @@ namespace dlvhex {
 								dlvargs = "--";
 							}
 							if (inputrewriter) throw PluginError("Multiple rewriters were passed! (option --dlv and --merging counts as rewriter)");
-							inputrewriter = new DLV(dlvargs);
+							inputrewriter = PluginConverterPtr(new DLV(dlvargs));
 
 							found.push_back(it);
 						}

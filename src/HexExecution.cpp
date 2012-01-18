@@ -466,11 +466,12 @@ ArgumentsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 			// If the atom is built upon the given predicate, return it's parameters
 			if (ogatom.tuple[0] == predicate){
 				// special case of index "s": positive or strongly negated
-//				Tuple ts;
-//				ts.push_back(ID::termFromInteger(runningindex));
-//				ts.push_back(reg->terms.storeAndGetID(Term(ID::MAINKIND_TERM | ID::SUBKIND_TERM_CONSTANT, "s")));
-//				ts.push_back(ID::termFromInteger(it->isStronglyNegated() ? 1 : 0));
-//				answer.get().push_back(ts);
+				Tuple ts;
+				ts.push_back(ID::termFromInteger(runningindex));
+				Term t(ID::MAINKIND_TERM | ID::SUBKIND_TERM_CONSTANT, "s");
+				ts.push_back(reg->storeTerm(t));
+				ts.push_back(ID::termFromInteger(/*it->isStronglyNegated() ? 1 :*/ 0));	// TODO: check if the atom is strongly negated
+				answer.get().push_back(ts);
 
 				// Go through all parameters
 				for (int i = 1; i < ogatom.tuple.size(); ++i){
@@ -483,32 +484,6 @@ ArgumentsAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 				runningindex++;
 			}
 		}
-/*
-		// Go through all atoms of the given answer_set
-		int runningindex = 0;
-		for (AtomSet::const_iterator it = (*(resultsetCache[answerindex]))[answersetindex].begin(); it != (*(resultsetCache[answerindex]))[answersetindex].end(); it++){
-			// If the atom is built upon the given predicate, return it's parameters
-			if (it->getPredicate() == predicate){
-				// special case of index "s": positive or strongly negated
-				ComfortTuple outsign;
-				outsign.push_back(ComfortTerm::createInteger(runningindex));
-				outsign.push_back(ComfortTerm::createConstant("s"));
-				outsign.push_back(ComfortTerm::createInteger(it->isStronglyNegated() ? 1 : 0));
-				answer.insert(outsign);
-
-				// Go through all parameters
-				for (int argindex = 0; argindex < it->getArity(); argindex++){
-					// For each: Return a running index (since the same predicate can occur arbitrary often within an answer-set), the argument index and the value
-					ComfortTuple out;
-					out.push_back(ComfortTerm::createInteger(runningindex));
-					out.push_back(ComfortTerm::createInteger(argindex));
-					out.push_back(it->getArgument(argindex + 1));
-					answer.insert(out);
-				}
-				runningindex++;
-			}
-		}
-*/
 	}
 }
 

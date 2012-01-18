@@ -135,6 +135,7 @@ namespace dlvhex{
 			 */
 			class HexAnswerCache{
 			private:
+				ProgramCtx* ctx;
 				RegistryPtr reg;
 				typedef std::pair<HexCall, HexAnswer* > HexAnswerCacheEntry;
 				std::vector<HexAnswerCacheEntry> cache;
@@ -147,6 +148,12 @@ namespace dlvhex{
 				void access(const int index);
 				void reduceCache();
 
+				class SubprogramAnswerSetCallback : public ModelCallback{
+				public:
+					std::vector<InterpretationPtr> answersets;
+					virtual bool operator()(AnswerSetPtr model);
+				};
+
 				HexAnswer* loadHexProgram(const HexCall& call);
 				HexAnswer* loadHexFile(const HexCall& call);
 				HexAnswer* loadOperatorCall(const HexCall& call);
@@ -157,7 +164,7 @@ namespace dlvhex{
 				const int operator[](const HexCall call);
 				HexAnswer& operator[](const int);
 				const int size();
-				void setRegistry(RegistryPtr reg);
+				void setProgramCtx(ProgramCtx& ctx);
 			};
 
 			/*! \fn HexAnswerCache::HexAnswerCache()

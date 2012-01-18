@@ -10,6 +10,38 @@
 #include <fstream>
 #include <iostream>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "dlvhex/ProgramCtx.h"
+#include "dlvhex/Registry.hpp"
+#include "dlvhex/PluginContainer.h"
+#include "dlvhex/ASPSolverManager.h"
+#include "dlvhex/ASPSolver.h"
+#include "dlvhex/State.h"
+#include "dlvhex/EvalGraphBuilder.hpp"
+#include "dlvhex/EvalHeuristicBase.hpp"
+#include "dlvhex/EvalHeuristicOldDlvhex.hpp"
+#include "dlvhex/EvalHeuristicTrivial.hpp"
+#include "dlvhex/EvalHeuristicEasy.hpp"
+#include "dlvhex/EvalHeuristicFromFile.hpp"
+#include "dlvhex/OnlineModelBuilder.hpp"
+#include "dlvhex/OfflineModelBuilder.hpp"
+
+
+
+
 using namespace dlvhex;
 using namespace merging;
 using namespace dlvhex::merging::plugin;
@@ -251,14 +283,57 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 
 	HexAnswer* result = new HexAnswer();
 
+	DBGLOG(DBG, "Parsing nested program");
 	InputProviderPtr ip(new InputProvider());
 	ip->addStringInput(call.getProgram(), "nestedprog");
-	ProgramCtx pc;
+	ProgramCtx pc = *ctx;
+	pc.idb.clear();
+	pc.edb = InterpretationPtr(new Interpretation(reg));
 	pc.changeRegistry(reg);
 	ModuleHexParser hp;
 	hp.parse(ip, pc);
 	pc.edb->getStorage() |= call.getFacts()->getStorage();
 
+	DBGLOG(DBG, "Setting eval heuristics");
+	pc.evalHeuristic.reset(new EvalHeuristicEasy);
+	pc.modelBuilderFactory = boost::factory<OnlineModelBuilder<FinalEvalGraph>*>();
+
+	DBGLOG(DBG, "Associate PluginAtom instances with ExternalAtom instances");
+	pc.associateExtAtomsWithPluginAtoms(pc.idb, true);
+
+	DBGLOG(DBG, "State pipeline");
+	pc.changeState(StatePtr(new SafetyCheckState));
+
+	DBGLOG(DBG, "... safetyCheck");
+	pc.safetyCheck();
+	DBGLOG(DBG, "... createDependencyGraph");
+	pc.createDependencyGraph();
+	DBGLOG(DBG, "... optimizeEDBDependencyGraph");
+	pc.optimizeEDBDependencyGraph();
+	DBGLOG(DBG, "... createComponentGraph");
+	pc.createComponentGraph();
+	DBGLOG(DBG, "... createEvalGraph");
+	pc.createEvalGraph();
+	DBGLOG(DBG, "... setupProgramCtx");
+	pc.setupProgramCtx();
+
+	DBGLOG(DBG, "Clear callbacks");
+	pc.modelCallbacks.clear();
+	pc.finalCallbacks.clear();
+
+	DBGLOG(DBG, "Setting AnswerSetCallback");
+	SubprogramAnswerSetCallback* spasc = new SubprogramAnswerSetCallback();
+	ModelCallbackPtr spascp = ModelCallbackPtr(spasc);
+	pc.modelCallbacks.push_back(spascp);
+
+	DBGLOG(DBG, "evaluate");
+	pc.evaluate();
+
+	BOOST_FOREACH (InterpretationPtr intr, spasc->answersets){
+		result->push_back(intr);
+	}
+/*
+// WORKS
 	ASPProgram program(pc.registry(), pc.idb, pc.edb);
 	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
 	ASPProgram gprogram = ig->getGroundProgram();
@@ -268,6 +343,8 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
 		result->push_back(InterpretationPtr(new Interpretation(*as)));
 	}
+*/
+
 
 	return result;
 
@@ -305,22 +382,58 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 
 	HexAnswer* result = new HexAnswer();
 
+	DBGLOG(DBG, "Parsing nested program");
 	InputProviderPtr ip(new InputProvider());
 	ip->addFileInput(call.getProgram());
-	ProgramCtx pc;
+	ProgramCtx pc = *ctx;
+
+//DBGLOG(DBG, "Setup plugin container");
+//pc.setupPluginContainer(ctx->pluginContainer());
+
+	pc.idb.clear();
+	pc.edb = InterpretationPtr(new Interpretation(reg));
 	pc.changeRegistry(reg);
 	ModuleHexParser hp;
 	hp.parse(ip, pc);
 	pc.edb->getStorage() |= call.getFacts()->getStorage();
 
-	ASPProgram program(pc.registry(), pc.idb, pc.edb);
-	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
-	ASPProgram gprogram = ig->getGroundProgram();
+	DBGLOG(DBG, "Setting eval heuristics");
+	pc.evalHeuristic.reset(new EvalHeuristicEasy);
+	pc.modelBuilderFactory = boost::factory<OnlineModelBuilder<FinalEvalGraph>*>();
 
-	InternalGroundDASPSolver igas(pc, gprogram);
-	InterpretationPtr as;
-	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
-		result->push_back(InterpretationPtr(new Interpretation(*as)));
+	DBGLOG(DBG, "Associate PluginAtom instances with ExternalAtom instances");
+	pc.associateExtAtomsWithPluginAtoms(pc.idb, true);
+
+	DBGLOG(DBG, "State pipeline");
+	pc.changeState(StatePtr(new SafetyCheckState));
+
+	DBGLOG(DBG, "... safetyCheck");
+	pc.safetyCheck();
+	DBGLOG(DBG, "... createDependencyGraph");
+	pc.createDependencyGraph();
+	DBGLOG(DBG, "... optimizeEDBDependencyGraph");
+	pc.optimizeEDBDependencyGraph();
+	DBGLOG(DBG, "... createComponentGraph");
+	pc.createComponentGraph();
+	DBGLOG(DBG, "... createEvalGraph");
+	pc.createEvalGraph();
+	DBGLOG(DBG, "... setupProgramCtx");
+	pc.setupProgramCtx();
+
+	DBGLOG(DBG, "Clear callbacks");
+	pc.modelCallbacks.clear();
+	pc.finalCallbacks.clear();
+
+	DBGLOG(DBG, "Setting AnswerSetCallback");
+	SubprogramAnswerSetCallback* spasc = new SubprogramAnswerSetCallback();
+	ModelCallbackPtr spascp = ModelCallbackPtr(spasc);
+	pc.modelCallbacks.push_back(spascp);
+
+	DBGLOG(DBG, "evaluate");
+	pc.evaluate();
+
+	BOOST_FOREACH (InterpretationPtr intr, spasc->answersets){
+		result->push_back(intr);
 	}
 
 	return result;
@@ -469,6 +582,11 @@ void HexAnswerCache::reduceCache(){
 	}
 }
 
+bool HexAnswerCache::SubprogramAnswerSetCallback::operator()(AnswerSetPtr model){
+	answersets.push_back(model->interpretation);
+	return true;
+}
+
 const int HexAnswerCache::operator[](const HexCall call){
 	int index = 0;
 	for (std::vector<HexAnswerCacheEntry>::iterator it = cache.begin(); it != cache.end(); ++it, index++){
@@ -502,6 +620,7 @@ const int HexAnswerCache::size(){
 	return cache.size();
 }
 
-void HexAnswerCache::setRegistry(RegistryPtr reg){
-	this->reg = reg;
+void HexAnswerCache::setProgramCtx(ProgramCtx& ctx){
+	this->ctx = &ctx;
+	this->reg = ctx.registry();
 }
