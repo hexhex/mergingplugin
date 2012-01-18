@@ -35,7 +35,7 @@ HexAnswer OpSetminus::apply(int arity, std::vector<HexAnswer*>& arguments, Opera
 			InterpretationPtr set = InterpretationPtr(new Interpretation(*(*arguments[0])[answerSetNr1]));
 
 			// Subtract the second one
-			set->getStorage() &= ((*arguments[1])[answerSetNr2])->getStorage();
+			set->getStorage() -= ((*arguments[1])[answerSetNr2])->getStorage();
 
 			result.push_back(set);
 		}
