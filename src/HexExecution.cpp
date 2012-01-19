@@ -145,26 +145,27 @@ HexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 	std::string program;
 	std::string cmdargs;
-	InterpretationConstPtr inputfacts;
+	InterpretationConstPtr inputfacts = query.interpretation;
 	try{
 		const Tuple& params = query.input;
 
 		// resolve escape sequences
 		program = reg->terms.getByID(params[0]).getUnquotedString();
 
-		// Retrieve command line arguments
+		// Retrieve command line arguments (if specified)
 		if (params.size() > 1){
 			cmdargs = reg->terms.getByID(params[1]).getUnquotedString();
 		}
 
 		// Build hex call identifier
-		InterpretationConstPtr inputfacts;
 		HexCall hc(HexCall::HexProgram, program, cmdargs, inputfacts);
 
 		// request entry from cache (this will automatically add it if it's not contained yet)
 		Tuple out;
 		out.push_back(ID::termFromInteger(resultsetCache[hc]));
 		answer.get().push_back(out);
+	}catch(PluginError){
+		throw;
 	}catch(...){
 		std::stringstream msg;
 		msg << "Nested Hex program \"" << program << "\" failed. Command line arguments were: " << cmdargs;
@@ -192,7 +193,7 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 	std::string programpath;
 	std::string cmdargs;
-	InterpretationConstPtr inputfacts;
+	InterpretationConstPtr inputfacts = query.interpretation;
 	try{
 		const Tuple& params = query.input;
 
@@ -211,6 +212,8 @@ HexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 		Tuple out;
 		out.push_back(ID::termFromInteger(resultsetCache[hc]));
 		answer.get().push_back(out);
+	}catch(PluginError){
+		throw;
 	}catch(...){
 		std::stringstream msg;
 		msg << "Nested Hex program \"" << programpath << "\" failed. Command line arguments were: " << cmdargs;
@@ -253,12 +256,6 @@ CallHexAtom::retrieve(const Query& query, Answer& answer) throw (PluginError)
 
 		// resolve escape sequences
 		program = reg->terms.getByID(params[0]).getUnquotedString();
-
-//		// retrieve the facts over the specified predicate and pass them to the subprogram
-//		for (int i = 0; i < arity; i++){
-//			std::string inputfactspred = params[1 + i].getUnquotedString();
-//			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
-//		}
 
 		// Retrieve command line arguments (if specified)
 		if (params.size() > 1 + arity){
@@ -317,12 +314,6 @@ CallHexFileAtom::retrieve(const Query& query, Answer& answer) throw (PluginError
 
 		// load program
 		programpath = reg->terms.getByID(params[0]).getUnquotedString();
-
-		// retrieve the facts over the specified predicate and pass them to the subprogram
-//		for (int i = 0; i < arity; i++){
-//			std::string inputfactspred = params[1 + i].getUnquotedString();
-//			query.getInterpretation().matchPredicate(inputfactspred, inputfacts);
-//		}
 
 		// Retrieve command line arguments
 		if (params.size() > 1 + arity){

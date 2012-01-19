@@ -1,1 +1,1 @@
-predicates(Pred, Arity) :- &hexfile["hexprog1.hex",""](Answer), &answersets[Answer](AnswerSet), &predicates[Answer, AnswerSet](Pred, Arity).
+predicates(Pred, Arity) :- &hexfile["hexprog1.hex"](Answer), &answersets[Answer](AnswerSet), &predicates[Answer, AnswerSet](Pred, Arity).

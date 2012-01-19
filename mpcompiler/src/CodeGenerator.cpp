@@ -102,18 +102,21 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 		if (key == (std::string("name"))){
 			name = value;
 		}
+/*
 		if (key == (std::string("inputrewriter"))){
 			inputrewriter = value;
 			useInputRewriter = true;
 		}
+*/
 		if (key == (std::string("mapping"))){
 			mappingrules = true;
-			mappings = mappings + "     " + value + "\n";
+			mappings = mappings + value;
 		}
 		if (key == (std::string("source"))){
 			externalprogram = true;
 			filename = filename + std::string(filename.length() > 0 ? " " : "") + value;
 		}
+/*
 		if (key == (std::string("args"))){
 			args = args + " " + value;
 		}
@@ -131,7 +134,9 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 			mappings = mappings + "     " + value + "\n";
 			usedlv = true;
 		}
+*/
 	}
+/*
 	if (usedlv){
 		if (externalprogram){
 			args += " --dlv=\\'" + dlvargs + " " + filename + "\\'";
@@ -142,6 +147,7 @@ void CodeGenerator::translateBeliefBase(ParseTreeNode *parsetree, std::ostream &
 			filename = "";
 		}
 	}
+*/
 
 	os << "% Belief base \"" << name << "\"" << std::endl;
 

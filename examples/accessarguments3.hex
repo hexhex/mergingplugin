@@ -1,4 +1,4 @@
-answer(Prog1) :- &hexfile["hexprog1.hex",""](Prog1).
+answer(Prog1) :- &hexfile["hexprog1.hex"](Prog1).
 
 facts(Pred) :- answer(Answer), &answersets[Answer](AnswerSet), &predicates[Answer, AnswerSet](Pred, 0).
 

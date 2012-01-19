@@ -5,16 +5,11 @@ predicate: c/0;
 
 [belief base]
 name: kb1;
-mapping: "
-	a.
-";
+mapping: "a.";
 
 [belief base]
 name: kb2;
-mapping: "
-	b.
-	c :- b.
-";
+mapping: "b. c :- b.";
 
 [merging plan]
 {

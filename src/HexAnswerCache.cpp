@@ -285,7 +285,7 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 
 	DBGLOG(DBG, "Parsing nested program");
 	InputProviderPtr ip(new InputProvider());
-	ip->addStringInput(call.getProgram(), "nestedprog");
+	ip->addStringInput(unquote(call.getProgram()), "nestedprog");
 	ProgramCtx pc = *ctx;
 	pc.idb.clear();
 	pc.edb = InterpretationPtr(new Interpretation(reg));

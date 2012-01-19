@@ -3,7 +3,6 @@
 // this include is necessary
 //
 
-#include <dlvhex/AtomSet.h>
 #include "IOperator.h"
 
 #include <fstream>
@@ -30,11 +29,11 @@ class TestOp1 : public IOperator{
 	HexAnswer
 	apply(int arity, std::vector<HexAnswer*>& answers, OperatorArguments& parameters) throw (OperatorException)
 	{
-		std::vector<dlvhex::AtomSet> result;
-		dlvhex::AtomSet as;
-		as.insert(dlvhex::AtomPtr(new dlvhex::Atom("foo")));
-		as.insert(dlvhex::AtomPtr(new dlvhex::Atom("xyz")));
-		result.push_back(as);
+		HexAnswer result;
+//		dlvhex::AtomSet as;
+//		as.insert(dlvhex::AtomPtr(new dlvhex::Atom("foo")));
+//		as.insert(dlvhex::AtomPtr(new dlvhex::Atom("xyz")));
+//		result.push_back(as);
 		return result;
 	}
 };
@@ -55,6 +54,21 @@ class TestOp2 : public IOperator{
 				result.push_back((*currentAnswer)[answerSetNr]);
 			}
 		}
+/*
+	for (int answerSetNr1 = 0; answerSetNr1 < arguments[0]->size(); answerSetNr1++){
+		for (int answerSetNr2 = 0; answerSetNr2 < arguments[1]->size(); answerSetNr2++){
+			// Take the first answer-set
+			InterpretationPtr set = InterpretationPtr(new Interpretation(*(*arguments[0])[answerSetNr1]));
+
+			// Add the second one
+			set->getStorage() |= ((*arguments[1])[answerSetNr2])->getStorage();
+
+			result.push_back(set);
+		}
+	}
+*/
+
+
 		return result;
 	}
 };

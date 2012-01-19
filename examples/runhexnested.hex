@@ -1,8 +1,4 @@
-answer(X) :- &hex["
-	a. b :- a.
-	answer(A) :- &hex[\'x.y :- x.\',\'\'](A).
-	predicates(Pred, Arity) :- answer(A), &answersets[A](AS), &predicates[A, AS](Pred, Arity).
-","--filter=predicates,a,b --plugindir=../src/"](X).
+answer(X) :- &hex["a. b :- a. answer(A) :- &hex[\'x.y :- x.\',\'\'](A). predicates(Pred, Arity) :- answer(A), &answersets[A](AS), &predicates[A, AS](Pred, Arity)."](X).
 
 preds_of_inner_prog(PInner) :- answer(A), &answersets[A](AS), &predicates[A, AS](Pred, Arity), &arguments[A, AS, Pred](R, 0, PInner).
 preds_of_outer_prog(POuter) :- answer(A), &answersets[A](AS), &predicates[A, AS](POuter, Arity).
