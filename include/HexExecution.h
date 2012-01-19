@@ -4,7 +4,7 @@
 #include <HexAnswerCache.h>
 #include <dlvhex/PluginInterface.h>
 #include <dlvhex/ASPSolver.h>
-//#include <dlvhex/HexParserDriver.h>
+#include <dlvhex/ProgramCtx.h>
 #include <stdlib.h>
 #include <string>
 #include <map>
@@ -15,13 +15,14 @@ namespace dlvhex {
 			class SimulatorAtom : public PluginAtom
 			{
 			private:
+				ProgramCtx& ctx;
 				int inputArity, outputArity;
 				std::map<std::string, ProgramCtx> programs;
 
 				std::string getName(int inar, int outar);
 			public:
 
-				SimulatorAtom(int inar, int outar);
+				SimulatorAtom(ProgramCtx& ctx, int inar, int outar);
 
 				virtual ~SimulatorAtom();
 				virtual void retrieve(const Query& query, Answer& answer) throw (PluginError);

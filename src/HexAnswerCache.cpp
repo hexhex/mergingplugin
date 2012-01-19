@@ -3,27 +3,8 @@
 #include <HexExecution.h>
 #include "dlvhex/HexParser.hpp"
 #include "dlvhex/InputProvider.hpp"
-
 #include "dlvhex/InternalGrounder.hpp"
 #include "dlvhex/InternalGroundDASPSolver.hpp"
-
-#include <fstream>
-#include <iostream>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include "dlvhex/ProgramCtx.h"
 #include "dlvhex/Registry.hpp"
 #include "dlvhex/PluginContainer.h"
@@ -39,8 +20,8 @@
 #include "dlvhex/OnlineModelBuilder.hpp"
 #include "dlvhex/OfflineModelBuilder.hpp"
 
-
-
+#include <fstream>
+#include <iostream>
 
 using namespace dlvhex;
 using namespace merging;
@@ -347,34 +328,6 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 
 
 	return result;
-
-
-
-/*
-  typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
-  DlvhexConfiguration dlvhex;
-
-	// parse and assemble hex program (parameter 0) and add input facts
-	std::stringstream ss(unquote(call.getProgram()));
-	Program prog;
-	HexParserDriver hpd;
-	AtomSet facts = call.getFacts();
-	hpd.parse(ss, prog, facts);
-
-	// solve hex program
-
-	// split command line arguments
-	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
-	for (int i = 0; i < cmdargsSplit.size(); i++){
-		dlvhex.options.arguments.push_back(cmdargsSplit[i]);
-	}
-
-	HexAnswer* result = new HexAnswer();
-	ASPSolverManager& solver = ASPSolverManager::Instance();
-	solver.solve(dlvhex, prog, facts, *result);
-
-	return result;
-*/
 }
 
 HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
@@ -386,9 +339,6 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	InputProviderPtr ip(new InputProvider());
 	ip->addFileInput(call.getProgram());
 	ProgramCtx pc = *ctx;
-
-//DBGLOG(DBG, "Setup plugin container");
-//pc.setupPluginContainer(ctx->pluginContainer());
 
 	pc.idb.clear();
 	pc.edb = InterpretationPtr(new Interpretation(reg));
@@ -437,41 +387,6 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	}
 
 	return result;
-
-/*
-  typedef ASPSolverManager::SoftwareConfiguration<DlvhexSolver> DlvhexConfiguration;
-  DlvhexConfiguration dlvhex;
-
-	// load program from file
-	std::string filename = call.getProgram();
-	std::stringstream ss;
-	std::ifstream file(filename.c_str());
-	std::string line;
-	while(!file.eof()){
-		getline(file, line);
-		ss << line;
-	}
-
-	// parse it and add input facts
-	Program prog;
-	HexParserDriver hpd;
-	AtomSet facts = call.getFacts();
-	hpd.parse(ss, prog, facts);
-
-	// split command line arguments
-	std::vector<std::string> cmdargsSplit = splitArguments(unquote(call.getArguments()));
-	for (int i = 0; i < cmdargsSplit.size(); i++){
-		dlvhex.options.arguments.push_back(cmdargsSplit[i]);
-	}
-
-	// solve hex program
-	HexAnswer* result = new HexAnswer();
-	ASPSolverManager& solver = ASPSolverManager::Instance();
-//	solver.solveFile(dlvhex, filename, *result);
-	solver.solve(dlvhex, prog, facts, *result);
-
-	return result;
-*/
 }
 
 HexAnswer* HexAnswerCache::loadOperatorCall(const HexCall& call){

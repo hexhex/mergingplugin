@@ -148,16 +148,16 @@ namespace dlvhex{
 				void access(const int index);
 				void reduceCache();
 
+				HexAnswer* loadHexProgram(const HexCall& call);
+				HexAnswer* loadHexFile(const HexCall& call);
+				HexAnswer* loadOperatorCall(const HexCall& call);
+			public:
 				class SubprogramAnswerSetCallback : public ModelCallback{
 				public:
 					std::vector<InterpretationPtr> answersets;
 					virtual bool operator()(AnswerSetPtr model);
 				};
 
-				HexAnswer* loadHexProgram(const HexCall& call);
-				HexAnswer* loadHexFile(const HexCall& call);
-				HexAnswer* loadOperatorCall(const HexCall& call);
-			public:
 				HexAnswerCache();
 				HexAnswerCache(int limit);
 				~HexAnswerCache();

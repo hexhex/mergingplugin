@@ -1,5 +1,6 @@
 #include <HexExecution.h>
 #include <DLVHexProcess.h>
+#include <HexAnswerCache.h>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -9,9 +10,22 @@
 
 #include "dlvhex/HexParser.hpp"
 #include "dlvhex/InputProvider.hpp"
-
 #include "dlvhex/InternalGrounder.hpp"
 #include "dlvhex/InternalGroundDASPSolver.hpp"
+#include "dlvhex/ProgramCtx.h"
+#include "dlvhex/Registry.hpp"
+#include "dlvhex/PluginContainer.h"
+#include "dlvhex/ASPSolverManager.h"
+#include "dlvhex/ASPSolver.h"
+#include "dlvhex/State.h"
+#include "dlvhex/EvalGraphBuilder.hpp"
+#include "dlvhex/EvalHeuristicBase.hpp"
+#include "dlvhex/EvalHeuristicOldDlvhex.hpp"
+#include "dlvhex/EvalHeuristicTrivial.hpp"
+#include "dlvhex/EvalHeuristicEasy.hpp"
+#include "dlvhex/EvalHeuristicFromFile.hpp"
+#include "dlvhex/OnlineModelBuilder.hpp"
+#include "dlvhex/OfflineModelBuilder.hpp"
 
 using namespace dlvhex::merging::plugin;
 
@@ -23,7 +37,7 @@ std::string SimulatorAtom::getName(int inar, int outar){
 	return ss.str();
 }
 
-SimulatorAtom::SimulatorAtom(int inar, int outar) : PluginAtom(getName(inar, outar), 0), inputArity(inar), outputArity(outar){
+SimulatorAtom::SimulatorAtom(ProgramCtx& ctx, int inar, int outar) : PluginAtom(getName(inar, outar), 0), inputArity(inar), outputArity(outar), ctx(ctx){
 
 	addInputConstant();
 	for (int i = 0; i < inar; ++i) addInputPredicate();
@@ -34,6 +48,192 @@ SimulatorAtom::~SimulatorAtom(){
 }
 
 void SimulatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginError){
+
+
+#if 0
+
+	RegistryPtr reg = query.interpretation->getRegistry();
+
+	const Tuple& params = query.input;
+
+	// get ASP filename
+	std::string programpath = reg->terms.getByID(params[0]).getUnquotedString();
+
+/*
+	DBGLOG(DBG, "Nested program");
+	InputProviderPtr ip(new InputProvider());
+	ip->addFileInput(programpath);
+	ProgramCtx pc = ctx;
+
+	pc.idb.clear();
+	pc.edb = InterpretationPtr(new Interpretation(reg));
+	pc.changeRegistry(reg);
+	ModuleHexParser hp;
+	hp.parse(ip, pc);
+*/
+
+	// if we access this file for the first time, parse the content
+	if (programs.find(programpath) == programs.end()){
+		DBGLOG(DBG, "Parsing simulation program");
+		InputProviderPtr ip(new InputProvider());
+		ip->addFileInput(programpath);
+		Logger::Levels l = Logger::Instance().getPrintLevels();	// workaround: verbose causes the parse call below to fail (registry pointer is 0)
+		Logger::Instance().setPrintLevels(0);
+		programs[programpath] = ctx;
+		programs[programpath].changeRegistry(reg);
+		programs[programpath].idb.clear();
+		programs[programpath].edb = InterpretationPtr(new Interpretation(reg));
+		ModuleHexParser hp;
+		hp.parse(ip, programs[programpath]);
+		Logger::Instance().setPrintLevels(l);
+
+
+		DBGLOG(DBG, "Setting eval heuristics");
+		programs[programpath].evalHeuristic.reset(new EvalHeuristicEasy);
+		programs[programpath].modelBuilderFactory = boost::factory<OnlineModelBuilder<FinalEvalGraph>*>();
+
+		DBGLOG(DBG, "Associate PluginAtom instances with ExternalAtom instances");
+		programs[programpath].associateExtAtomsWithPluginAtoms(programs[programpath].idb, true);
+
+		DBGLOG(DBG, "State pipeline");
+		programs[programpath].changeState(StatePtr(new SafetyCheckState));
+
+		DBGLOG(DBG, "... safetyCheck");
+		programs[programpath].safetyCheck();
+		DBGLOG(DBG, "... createDependencyGraph");
+		programs[programpath].createDependencyGraph();
+		DBGLOG(DBG, "... optimizeEDBDependencyGraph");
+		programs[programpath].optimizeEDBDependencyGraph();
+		DBGLOG(DBG, "... createComponentGraph");
+		programs[programpath].createComponentGraph();
+		DBGLOG(DBG, "... createEvalGraph");
+		programs[programpath].createEvalGraph();
+		DBGLOG(DBG, "... setupProgramCtx");
+		programs[programpath].setupProgramCtx();
+
+		DBGLOG(DBG, "Clear callbacks");
+		programs[programpath].modelCallbacks.clear();
+		programs[programpath].finalCallbacks.clear();
+	}
+	ProgramCtx pc = programs[programpath];
+
+	pc.edb = InterpretationPtr(new Interpretation(reg));
+	pc.edb->add(*(programs[programpath].edb));
+
+
+
+
+/*
+
+
+DBGLOG(DBG, "Setting eval heuristics");
+pc.evalHeuristic.reset(new EvalHeuristicEasy);
+pc.modelBuilderFactory = boost::factory<OnlineModelBuilder<FinalEvalGraph>*>();
+
+DBGLOG(DBG, "Associate PluginAtom instances with ExternalAtom instances");
+pc.associateExtAtomsWithPluginAtoms(programs[programpath].idb, true);
+
+DBGLOG(DBG, "State pipeline");
+pc.changeState(StatePtr(new SafetyCheckState));
+
+DBGLOG(DBG, "... safetyCheck");
+pc.safetyCheck();
+DBGLOG(DBG, "... createDependencyGraph");
+pc.createDependencyGraph();
+DBGLOG(DBG, "... optimizeEDBDependencyGraph");
+pc.optimizeEDBDependencyGraph();
+DBGLOG(DBG, "... createComponentGraph");
+pc.createComponentGraph();
+DBGLOG(DBG, "... createEvalGraph");
+pc.createEvalGraph();
+DBGLOG(DBG, "... setupProgramCtx");
+pc.setupProgramCtx();
+
+DBGLOG(DBG, "Clear callbacks");
+pc.modelCallbacks.clear();
+pc.finalCallbacks.clear();
+
+
+*/
+
+
+
+
+
+
+	// construct edb
+	DBGLOG(DBG, "Constructing EDB");
+
+	// go through all input atoms
+	DBGLOG(DBG, "Rewriting input");
+	for(Interpretation::Storage::enumerator it =
+	    query.interpretation->getStorage().first();
+	    it != query.interpretation->getStorage().end(); ++it){
+
+		ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+		const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+		// check if the predicate matches any of the input parameters to simulator atom
+		bool found = false;
+		for (int inp = 1; inp < params.size(); ++inp){
+			if (ogatom.tuple[0] == params[inp]){
+				// replace the predicate by "in[inp]"
+				std::stringstream inPredStr;
+				inPredStr << "in" << inp;
+				Term inPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_CONSTANT, inPredStr.str());
+				ID inPredID = reg->storeTerm(inPredTerm);
+				OrdinaryAtom oareplace = ogatom;
+				oareplace.tuple[0] = inPredID;
+
+				// get ID of replaced atom
+				ID oareplaceID = reg->storeOrdinaryGAtom(oareplace);
+
+				// set this atom in the input interpretation
+				pc.edb->getStorage().set_bit(oareplaceID.address);
+				found = true;
+				break;
+			}
+		}
+		assert(found);
+	}
+DBGLOG(DBG, "EDB: " << *(pc.edb));
+
+	DBGLOG(DBG, "Setting AnswerSetCallback");
+	HexAnswerCache::SubprogramAnswerSetCallback* spasc = new HexAnswerCache::SubprogramAnswerSetCallback();
+	ModelCallbackPtr spascp = ModelCallbackPtr(spasc);
+	pc.modelCallbacks.push_back(spascp);
+
+	DBGLOG(DBG, "evaluate");
+	pc.evaluate();
+
+	InterpretationPtr as;
+	if (spasc->answersets.size() > 0) as = spasc->answersets[0];
+
+	if (as != InterpretationPtr()){
+
+		// extract parameters from all atoms over predicate "out"
+		DBGLOG(DBG, "Rewrting output");
+		Term outPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_PREDICATE, "out");
+		ID outPredID = reg->storeTerm(outPredTerm);
+		for(Interpretation::Storage::enumerator it =
+		    as->getStorage().first();
+		    it != as->getStorage().end(); ++it){
+
+			ID ogid(ID::MAINKIND_ATOM | ID::SUBKIND_ATOM_ORDINARYG, *it);
+			const OrdinaryAtom& ogatom = reg->ogatoms.getByID(ogid);
+
+			if (ogatom.tuple[0] == outPredID){
+				Tuple t;
+				for (int ot = 1; ot < ogatom.tuple.size(); ++ot){
+					t.push_back(ogatom.tuple[ot]);
+				}
+				answer.get().push_back(t);
+			}
+		}
+	}
+
+#endif
+
 
 	RegistryPtr reg = query.interpretation->getRegistry();
 
@@ -105,7 +305,7 @@ void SimulatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginEr
 
 		// extract parameters from all atoms over predicate "out"
 		DBGLOG(DBG, "Rewrting output");
-		Term outPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_PREDICATE, "out");
+		Term outPredTerm(ID::MAINKIND_TERM | ID::SUBKIND_TERM_CONSTANT, "out");
 		ID outPredID = reg->storeTerm(outPredTerm);
 		for(Interpretation::Storage::enumerator it =
 		    as->getStorage().first();

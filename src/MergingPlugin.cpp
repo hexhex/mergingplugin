@@ -229,7 +229,7 @@ namespace dlvhex {
 					}
 					for (int in = 0; in <= SIMULATOR_MAX_ARITY; ++in){
 						for (int out = 0; out <= SIMULATOR_MAX_ARITY; ++out){
-							ret.push_back(PluginAtomPtr(new SimulatorAtom(in, out), PluginPtrDeleter<PluginAtom>()));
+							ret.push_back(PluginAtomPtr(new SimulatorAtom(ctx, in, out), PluginPtrDeleter<PluginAtom>()));
 						}
 					}
 					ret.push_back(PluginAtomPtr(new AnswerSetsAtom(resultsetCache), PluginPtrDeleter<PluginAtom>()));
