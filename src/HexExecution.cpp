@@ -294,9 +294,9 @@ DBGLOG(DBG, "EDB: " << *(pc.edb));
 	}
 
 	DBGLOG(DBG, "Grounding simulation program");
-	ASPProgram program(pc.registry(), pc.idb, edb);
+	OrdinaryASPProgram program(pc.registry(), pc.idb, edb);
 	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
-	ASPProgram gprogram = ig->getGroundProgram();
+	OrdinaryASPProgram gprogram = ig->getGroundProgram();
 
 	DBGLOG(DBG, "Evaluating simulation program");
 	InternalGroundDASPSolver igas(pc, gprogram);
