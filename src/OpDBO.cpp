@@ -1,13 +1,13 @@
 #include <OpDBO.h>
 
-#include <dlvhex/AggregateAtom.h>
-#include <dlvhex/DLVProcess.h>
-#include <dlvhex/ASPSolverManager.h>
-#include <dlvhex/ASPSolver.h>
-#include <dlvhex/Registry.h>
-#include <dlvhex/HexParserDriver.h>
+#include <dlvhex2/AggregateAtom.h>
+#include <dlvhex2/DLVProcess.h>
+#include <dlvhex2/ASPSolverManager.h>
+#include <dlvhex2/ASPSolver.h>
+#include <dlvhex2/Registry.h>
+#include <dlvhex2/HexParserDriver.h>
 
-#include <dlvhex/PrintVisitor.h>
+#include <dlvhex2/PrintVisitor.h>
 #include <DLVHexProcess.h>
 
 #include <iostream>

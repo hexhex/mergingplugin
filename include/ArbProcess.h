@@ -1,8 +1,8 @@
 #ifndef __ARBPROCESS_h_
 #define __ARBPROCESS_h_
 
-#include <dlvhex/Process.h>
-#include <dlvhex/DLVProcess.h>
+#include <dlvhex2/Process.h>
+#include <dlvhex2/DLVProcess.h>
 
 #include <stdio.h>
 

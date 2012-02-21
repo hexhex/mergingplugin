@@ -2,9 +2,9 @@
 #define __HEXEXECUTION_H_
 
 #include <HexAnswerCache.h>
-#include <dlvhex/PluginInterface.h>
-#include <dlvhex/ASPSolver.h>
-#include <dlvhex/ProgramCtx.h>
+#include <dlvhex2/PluginInterface.h>
+#include <dlvhex2/ASPSolver.h>
+#include <dlvhex2/ProgramCtx.h>
 #include <stdlib.h>
 #include <string>
 #include <map>

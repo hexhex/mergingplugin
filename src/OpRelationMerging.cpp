@@ -1,11 +1,11 @@
 #include "OpRelationMerging.h"
 
-#include <dlvhex/PrintVisitor.h>
-#include <dlvhex/AggregateAtom.h>
-#include <dlvhex/DLVProcess.h>
-#include <dlvhex/ASPSolver.h>
-#include <dlvhex/Registry.h>
-#include <dlvhex/HexParserDriver.h>
+#include <dlvhex2/PrintVisitor.h>
+#include <dlvhex2/AggregateAtom.h>
+#include <dlvhex2/DLVProcess.h>
+#include <dlvhex2/ASPSolver.h>
+#include <dlvhex2/Registry.h>
+#include <dlvhex2/HexParserDriver.h>
 
 #include <sstream>
 #include <set>

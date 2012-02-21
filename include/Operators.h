@@ -2,7 +2,7 @@
 #define __OPERATORS_H_
 
 #include <HexAnswerCache.h>
-#include <dlvhex/ComfortPluginInterface.hpp>
+#include <dlvhex2/ComfortPluginInterface.h>
 #include <stdlib.h>
 #include <vector>
 #include <IOperator.h>

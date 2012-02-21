@@ -3,7 +3,7 @@
 
 #include <PublicTypes.h>
 #include <IOperator.h>
-#include <dlvhex/Registry.hpp>
+#include <dlvhex2/Registry.h>
 
 DLVHEX_NAMESPACE_USE
 

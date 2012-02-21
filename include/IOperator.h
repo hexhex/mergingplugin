@@ -2,7 +2,7 @@
 #define __IOPERATOR_H_
 
 #include "PublicTypes.h"
-#include <dlvhex/ComfortPluginInterface.hpp>
+#include <dlvhex2/ComfortPluginInterface.h>
 #include <stdlib.h>
 #include <vector>
 #include <string>

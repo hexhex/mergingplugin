@@ -3,8 +3,8 @@
 
 #include "IOperator.h"
 
-#include <dlvhex/Program.h>
-#include <dlvhex/AtomSet.h>
+#include <dlvhex2/Program.h>
+#include <dlvhex2/AtomSet.h>
 
 DLVHEX_NAMESPACE_USE
 

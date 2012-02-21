@@ -1,8 +1,8 @@
 #ifndef __DLVHexProcess_h_
 #define __DLVHexProcess_h_
 
-#include <dlvhex/Process.h>
-#include <dlvhex/DLVProcess.h>
+#include <dlvhex2/Process.h>
+#include <dlvhex2/DLVProcess.h>
 
 #include <iostream>
 #include <sstream>

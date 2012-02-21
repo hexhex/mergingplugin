@@ -2,7 +2,7 @@
 #define __PUBLICTYPES_H_
 
 #include <vector>
-#include <dlvhex/PluginInterface.h>
+#include <dlvhex2/PluginInterface.h>
 
 DLVHEX_NAMESPACE_USE
 

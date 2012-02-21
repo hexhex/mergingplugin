@@ -3,10 +3,10 @@
 
 #include <dlvhex/ASPSolverManager.h>
 
-#include "dlvhex/Process.h"
-#include "dlvhex/ComfortPluginInterface.hpp"
-#include "dlvhex/DLVresultParserDriver.h"
-#include "dlvhex/PrintVisitor.h"
+#include "dlvhex2/Process.h"
+#include "dlvhex2/ComfortPluginInterface.h"
+#include "dlvhex2/DLVresultParserDriver.h"
+#include "dlvhex2/PrintVisitor.h"
 
 #include <iostream>
 #include <sstream>
