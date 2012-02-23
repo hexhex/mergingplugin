@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 //
 // this include is necessary
 //
@@ -437,10 +441,12 @@ namespace dlvhex {
 	} // namespace merging
 } // namespace dlvhex
 
+//
+// let it be loaded by dlvhex!
+//
 
-//
-// and let it be loaded by dlvhex!
-//
+IMPLEMENT_PLUGINABIVERSIONFUNCTION
+
 extern "C"
 void*
 PLUGINIMPORTFUNCTION()

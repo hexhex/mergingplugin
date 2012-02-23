@@ -1,18 +1,13 @@
-AC_PREREQ(2.64)
-
-AC_INIT([dlvhex-mergingplugin],[1.1.0],[christoph.redl@tuwien.ac.at])
-
+AC_PREREQ([2.64])
+AC_INIT([dlvhex-mergingplugin],[2.0.0],[christoph.redl@tuwien.ac.at])
 AC_CONFIG_SRCDIR([src/MergingPlugin.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/config.h])
 
-MAJOR=`echo $PACKAGE_VERSION | sed "s/^\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/"`
-MINOR=`echo $PACKAGE_VERSION | sed "s/^\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/"`
-MICRO=`echo $PACKAGE_VERSION | sed "s/^\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/"`
-
-AC_DEFINE_UNQUOTED([MERGINGPLUGIN_MAJOR], [$MAJOR], [Major version number of the merging-plugin])
-AC_DEFINE_UNQUOTED([MERGINGPLUGIN_MINOR], [$MINOR], [Minor version number of the merging-plugin])
-AC_DEFINE_UNQUOTED([MERGINGPLUGIN_MICRO], [$MICRO], [Micro version number of the merging-plugin])
+# for documentation of the versioning scheme see
+# https://sourceforge.net/apps/trac/dlvhex/wiki/LibraryVersions
+DLVHEX_DEFINE_VERSION([MERGINGPLUGIN],[$PACKAGE_VERSION])
+DLVHEX_DEFINE_VERSION([DLVHEX_ABI],[7.0.0])
 
 
 AM_INIT_AUTOMAKE
@@ -33,6 +28,10 @@ AC_PROG_CC
 AC_PROG_LEX
 AC_PROG_YACC
 
+# Checks for programs.
+AC_PROG_CXX
+AC_LANG([C++])
+
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS([sys/param.h])
@@ -41,8 +40,10 @@ AC_CHECK_HEADERS([sys/param.h])
 AC_HEADER_STDBOOL
 AC_C_CONST
 
-# we build a module library
+# Checks for library functions.
+AC_LIBTOOL_DLOPEN # we build a module library
 AC_DISABLE_STATIC # we don't need a static library
+AC_PROG_LIBTOOL
 LT_INIT
 
 
@@ -66,7 +67,7 @@ DX_INIT_DOXYGEN([dlvhex-mergingplugin], [doxygen.cfg], [doc/sdk])
 #
 # of course we need dlvhex itself!
 #
-PKG_CHECK_MODULES([DLVHEX], [dlvhex >= 1.7])
+DLVHEX_REQUIRE([2.0.0])
 
 # we need the crypt library for MD5 computation
 AC_CHECK_LIB(crypt, crypt, [CRYPTLIB="-lcrypt"])
@@ -116,8 +117,8 @@ CPPFLAGS="$CPPFLAGS -DUSER_PLUGIN_DIR='\"$userplugindir\"'"
 
 AC_ARG_ENABLE(userinstall, 
              [  --enable-userinstall    Install plugin into home directory],
-             [plugindir=$HOME/`pkg-config dlvhex --variable=userplugindir`],
-             [plugindir=`pkg-config dlvhex --variable=sysplugindir`]
+             [plugindir=$HOME/$DLVHEX_USERPLUGINDIR],
+             [plugindir=$DLVHEX_SYSPLUGINDIR]
              )
 AC_SUBST([plugindir])
 

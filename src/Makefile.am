@@ -1,15 +1,15 @@
 #
 # replace 'plugin' on the right side by your plugin's name
 #
-plugin_LTLIBRARIES = libdlvhexmerging.la
+plugin_LTLIBRARIES = libdlvhexplugin_merging.la
 
 #
 # replace 'plugin' on the left side as above and
 # add all sources of your plugin
 #
-libdlvhexmerging_la_SOURCES = MergingPlugin.cpp HexExecution.cpp HexAnswerCache.cpp Operators.cpp OpUnion.cpp OpSetminus.cpp
+libdlvhexplugin_merging_la_SOURCES = MergingPlugin.cpp HexExecution.cpp HexAnswerCache.cpp Operators.cpp OpUnion.cpp OpSetminus.cpp
 # DLVHexProcess.cpp DlvhexSolver.cpp OpDalal.cpp OpDBO.cpp OpMajoritySelection.cpp OpRelationMerging.cpp
-libdlvhexmerging_la_LIBADD = $(CRYPTLIB) $(top_builddir)/mpcompiler/src/libmpcompiler.la
+libdlvhexplugin_merging_la_LIBADD = $(CRYPTLIB) $(top_builddir)/mpcompiler/src/libmpcompiler.la
 
 #
 # extend compiler flags by CFLAGS of other needed libraries
@@ -21,14 +21,14 @@ AM_CPPFLAGS = \
 	$(BOOST_CPPFLAGS) \
 	$(CRYPTLIB_CFLAGS)
 
-libdlvhexmerging_la_LDFLAGS = -avoid-version -module
+libdlvhexplugin_merging_la_LDFLAGS = -avoid-version -module
 
 
-libdlvhexmerging-static.la: $(libdlvhexmerging_la_OBJECTS)
-	$(CXXLINK) -avoid-version -module -rpath $(plugindir) $(libdlvhexmerging_la_OBJECTS)
+libdlvhexplugin_merging-static.la: $(libdlvhexplugin_merging_la_OBJECTS)
+	$(CXXLINK) -avoid-version -module -rpath $(plugindir) $(libdlvhexplugin_merging_la_OBJECTS)
 
-install-static: libdlvhexmerging-static.la
-	$(LIBTOOL) --mode=install $(INSTALL) -s libdlvhexmerging-static.la $(DESTDIR)$(plugindir)/libdlvhexmerging-static.la
+install-static: libdlvhexplugin_merging-static.la
+	$(LIBTOOL) --mode=install $(INSTALL) -s libdlvhexplugin_merging-static.la $(DESTDIR)$(plugindir)/libdlvhexplugin_merging-static.la
 
 uninstall-static:
-	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(plugindir)/libdlvhexmerging-static.la
+	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(plugindir)/libdlvhexplugin_merging-static.la
