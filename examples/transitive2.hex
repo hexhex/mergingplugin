@@ -1,0 +1,1 @@
+preds(P) :- &callhexfile0["transitive3.hex", ""](H), &answersets[H](AH), &predicates[H, AH](P, A).

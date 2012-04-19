@@ -263,69 +263,13 @@ HexAnswer* HexAnswerCache::loadHexProgram(const HexCall& call){
 	assert(call.getType() == HexCall::HexProgram);
 
 	HexAnswer* result = new HexAnswer();
-
-	DBGLOG(DBG, "Parsing nested program");
 	InputProviderPtr ip(new InputProvider());
 	ip->addStringInput(unquote(call.getProgram()), "nestedprog");
-	ProgramCtx pc = *ctx;
-	pc.idb.clear();
-	pc.edb = InterpretationPtr(new Interpretation(reg));
-	pc.changeRegistry(reg);
-	ModuleHexParser hp;
-	hp.parse(ip, pc);
-	pc.edb->getStorage() |= call.getFacts()->getStorage();
 
-	DBGLOG(DBG, "Setting eval heuristics");
-	pc.evalHeuristic.reset(new EvalHeuristicEasy);
-	pc.modelBuilderFactory = boost::factory<OnlineModelBuilder<FinalEvalGraph>*>();
-
-	DBGLOG(DBG, "Associate PluginAtom instances with ExternalAtom instances");
-	pc.associateExtAtomsWithPluginAtoms(pc.idb, true);
-
-	DBGLOG(DBG, "State pipeline");
-	pc.changeState(StatePtr(new SafetyCheckState));
-
-	DBGLOG(DBG, "... safetyCheck");
-	pc.safetyCheck();
-	DBGLOG(DBG, "... createDependencyGraph");
-	pc.createDependencyGraph();
-	DBGLOG(DBG, "... optimizeEDBDependencyGraph");
-	pc.optimizeEDBDependencyGraph();
-	DBGLOG(DBG, "... createComponentGraph");
-	pc.createComponentGraph();
-	DBGLOG(DBG, "... createEvalGraph");
-	pc.createEvalGraph();
-	DBGLOG(DBG, "... setupProgramCtx");
-	pc.setupProgramCtx();
-
-	DBGLOG(DBG, "Clear callbacks");
-	pc.modelCallbacks.clear();
-	pc.finalCallbacks.clear();
-
-	DBGLOG(DBG, "Setting AnswerSetCallback");
-	SubprogramAnswerSetCallback* spasc = new SubprogramAnswerSetCallback();
-	ModelCallbackPtr spascp = ModelCallbackPtr(spasc);
-	pc.modelCallbacks.push_back(spascp);
-
-	DBGLOG(DBG, "evaluate");
-	pc.evaluate();
-
-	BOOST_FOREACH (InterpretationPtr intr, spasc->answersets){
+	std::vector<InterpretationPtr> answer = ctx->evaluateSubprogram(ip, call.getFacts());
+	BOOST_FOREACH (InterpretationPtr intr, answer){
 		result->push_back(intr);
 	}
-/*
-// WORKS
-	ASPProgram program(pc.registry(), pc.idb, pc.edb);
-	InternalGrounderPtr ig = InternalGrounderPtr(new InternalGrounder(pc, program));
-	ASPProgram gprogram = ig->getGroundProgram();
-
-	InternalGroundDASPSolver igas(pc, gprogram);
-	InterpretationPtr as;
-	while ((as = igas.projectToOrdinaryAtoms(igas.getNextModel())) != InterpretationPtr()){
-		result->push_back(InterpretationPtr(new Interpretation(*as)));
-	}
-*/
-
 
 	return result;
 }
@@ -338,51 +282,9 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 	DBGLOG(DBG, "Parsing nested program");
 	InputProviderPtr ip(new InputProvider());
 	ip->addFileInput(call.getProgram());
-	ProgramCtx pc = *ctx;
 
-	pc.idb.clear();
-	pc.edb = InterpretationPtr(new Interpretation(reg));
-	pc.changeRegistry(reg);
-	ModuleHexParser hp;
-	hp.parse(ip, pc);
-	pc.edb->getStorage() |= call.getFacts()->getStorage();
-
-	DBGLOG(DBG, "Setting eval heuristics");
-	pc.evalHeuristic.reset(new EvalHeuristicEasy);
-	pc.modelBuilderFactory = boost::factory<OnlineModelBuilder<FinalEvalGraph>*>();
-
-	DBGLOG(DBG, "Associate PluginAtom instances with ExternalAtom instances");
-	pc.associateExtAtomsWithPluginAtoms(pc.idb, true);
-
-	DBGLOG(DBG, "State pipeline");
-	pc.changeState(StatePtr(new SafetyCheckState));
-
-	DBGLOG(DBG, "... safetyCheck");
-	pc.safetyCheck();
-	DBGLOG(DBG, "... createDependencyGraph");
-	pc.createDependencyGraph();
-	DBGLOG(DBG, "... optimizeEDBDependencyGraph");
-	pc.optimizeEDBDependencyGraph();
-	DBGLOG(DBG, "... createComponentGraph");
-	pc.createComponentGraph();
-	DBGLOG(DBG, "... createEvalGraph");
-	pc.createEvalGraph();
-	DBGLOG(DBG, "... setupProgramCtx");
-	pc.setupProgramCtx();
-
-	DBGLOG(DBG, "Clear callbacks");
-	pc.modelCallbacks.clear();
-	pc.finalCallbacks.clear();
-
-	DBGLOG(DBG, "Setting AnswerSetCallback");
-	SubprogramAnswerSetCallback* spasc = new SubprogramAnswerSetCallback();
-	ModelCallbackPtr spascp = ModelCallbackPtr(spasc);
-	pc.modelCallbacks.push_back(spascp);
-
-	DBGLOG(DBG, "evaluate");
-	pc.evaluate();
-
-	BOOST_FOREACH (InterpretationPtr intr, spasc->answersets){
+	std::vector<InterpretationPtr> answer = ctx->evaluateSubprogram(ip, call.getFacts());
+	BOOST_FOREACH (InterpretationPtr intr, answer){
 		result->push_back(intr);
 	}
 

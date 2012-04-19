@@ -14,3 +14,4 @@
 ../operators2.hex operators2.as --operatorpath=./testoperators/src/.libs/libdlvhextestoperators.so --filter=result
 ../operators3.hex operators3.as --operatorpath=./testoperators/src/.libs/libdlvhextestoperators.so --filter=result
 ../negatedatom.hex negatedatom.as
+../transitive1.hex transitive.as
