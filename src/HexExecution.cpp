@@ -37,7 +37,7 @@ std::string SimulatorAtom::getName(int inar, int outar){
 	return ss.str();
 }
 
-SimulatorAtom::SimulatorAtom(ProgramCtx& ctx, int inar, int outar) : PluginAtom(getName(inar, outar), 0), inputArity(inar), outputArity(outar), ctx(ctx){
+SimulatorAtom::SimulatorAtom(ProgramCtx& ctx, int inar, int outar) : PluginAtom(getName(inar, outar), inar == 0 /* only monotonic if we have no predicate input */), inputArity(inar), outputArity(outar), ctx(ctx){
 
 	addInputConstant();
 	for (int i = 0; i < inar; ++i) addInputPredicate();
@@ -243,7 +243,7 @@ std::string CallHexAtom::getName(int arity){
 	return ss.str();
 }
 
-CallHexAtom::CallHexAtom(HexAnswerCache &rsCache, int ar = 0) : PluginAtom(getName(ar), 1), resultsetCache(rsCache), arity(ar)
+CallHexAtom::CallHexAtom(HexAnswerCache &rsCache, int ar = 0) : PluginAtom(getName(ar), ar == 0 /* only monotonic if we have no predicate input */), resultsetCache(rsCache), arity(ar)
 {
 	addInputConstant();	// program
 	for (int i = 0; i < arity; i++){
@@ -301,7 +301,7 @@ std::string CallHexFileAtom::getName(int arity){
 	return ss.str();
 }
 
-CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache, int ar) : PluginAtom(getName(ar), 1), resultsetCache(rsCache), arity(ar)
+CallHexFileAtom::CallHexFileAtom(HexAnswerCache &rsCache, int ar) : PluginAtom(getName(ar), ar == 0 /* only monotonic if we have no predicate input */), resultsetCache(rsCache), arity(ar)
 {
 	addInputConstant();	// program path
 	for (int i = 0; i < arity; i++){
