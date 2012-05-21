@@ -279,7 +279,6 @@ HexAnswer* HexAnswerCache::loadHexFile(const HexCall& call){
 
 	HexAnswer* result = new HexAnswer();
 
-	DBGLOG(DBG, "Parsing nested program");
 	InputProviderPtr ip(new InputProvider());
 	ip->addFileInput(call.getProgram());
 
