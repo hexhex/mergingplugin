@@ -96,6 +96,6 @@ EXTRA_DIST = \
   tests/diagnosis3-dbo.as
 
 TESTS = tests/run-mergingplugin-tests.sh
-TESTS_ENVIRONMENT = DLVHEX=dlvhex2 MPCOMPILER=$(top_builddir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
+TESTS_ENVIRONMENT = DLVHEX=dlvhex2 MPCOMPILER=$(top_builddir)/mpcompiler/src/mpcompiler CMPSCRIPT=$(top_srcdir)/examples/compare.sh TESTDIR=$(top_srcdir)/examples/tests DLVHEXPARAMETERS="--plugindir=!:$(top_builddir)/src" SYSPLUGINDIR=$(sysplugindir) USERPLUGINDIR=$(userplugindir)
 
 SUBDIRS = testoperators
