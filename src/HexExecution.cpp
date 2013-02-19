@@ -113,8 +113,8 @@ void SimulatorAtom::retrieve(const Query& query, Answer& answer) throw (PluginEr
 	OrdinaryASPProgram gprogram = ig->getGroundProgram();
 
 	DBGLOG(DBG, "Evaluating simulation program");
-	InternalGroundDASPSolver igas(pc, gprogram);
-	InterpretationPtr as = igas.projectToOrdinaryAtoms(igas.getNextModel());
+	GenuineSolverPtr igas = GenuineSolver::getInstance(pc, gprogram);
+	InterpretationPtr as = igas->getNextModel();
 	if (as != InterpretationPtr()){
 
 		// extract parameters from all atoms over predicate "out"
